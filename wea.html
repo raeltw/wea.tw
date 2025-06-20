@@ -1,0 +1,537 @@
+﻿<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>氣象局資料下載器 - 自動執行 (程式碼編輯器風格)</title>
+
+    <meta name="app-version" content="2.2.2"> <meta name="last-update" content="2025-06-20 11:58 CST"> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+
+
+    <style>
+        body {
+            margin: 0;
+            padding: 25px; 
+            background-color: #000000; /* 純黑背景 */
+            color: #B0C4DE; /* 淺鋼藍色，作為主要文字顏色，更沉穩 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+            font-family: sans-serif; /* 不指定特定字體 */
+            position: relative;
+        }
+        .container {
+            max-width: 950px; 
+            width: 100%;
+            padding: 40px; 
+            background-color: #0A0A0A; /* 比純黑略淺的背景，增加層次 */
+            border-radius: 12px; 
+            box-shadow: 0 8px 30px rgba(0,0,0,0.98); /* 更深沉的陰影 */
+            text-align: center;
+        }
+        /* 取代 H1 H2 等標題的樣式，使用通用 class */
+        .main-title, .section-title {
+            color: #629755; /* 精準綠色，模擬程式碼中的字串綠 */
+            margin-bottom: 30px; 
+            font-weight: bold;
+            letter-spacing: 1px; /* 微調字距 */
+            text-transform: none; 
+            line-height: 1.2; 
+            text-shadow: none; 
+        }
+        .main-title {
+            font-size: 3.2em; 
+            margin-top: 0; 
+        }
+        .section-title.large {
+            font-size: 2.5em;
+        }
+        .section-title {
+            font-size: 1.8em;
+            border-bottom: 1px solid rgba(98, 151, 85, 0.4); /* 半透明綠色分隔線 */
+            padding-bottom: 8px; 
+            margin-top: 45px; 
+            margin-bottom: 25px; 
+        }
+
+        p, small {
+            line-height: 2.0; 
+            color: #B0C4DE; 
+            margin-bottom: 15px; 
+        }
+        
+        button {
+            background-color: #1A73E8; /* 深藍色，穩定而有科技感 */
+            color: white; 
+            padding: 18px 35px; 
+            border: none;
+            border-radius: 6px; 
+            cursor: pointer;
+            font-size: 20px; 
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            display: block;
+            margin: 40px auto 40px auto; 
+            font-weight: bold;
+            letter-spacing: 0.8px; 
+            box-shadow: 0 6px 20px rgba(0,0,0,0.9); 
+        }
+        button:hover {
+            background-color: #155FB2; /* hover 時更深的藍色 */
+            transform: translateY(-4px); 
+            box-shadow: 0 10px 25px rgba(0,0,0,1.0); 
+        }
+        #weatherData {
+            margin-top: 35px; 
+            padding: 30px; 
+            background-color: #1A1A1A; /* 比容器略深，突出內容 */
+            border: 1px solid #3A3A3A; /* 柔和的深灰邊框 */
+            border-radius: 10px; 
+            min-height: 80px;
+            color: #B0C4DE; 
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8); /* 內部陰影 */
+        }
+        .error-message {
+            color: #FF4136; /* 鮮明的紅色 */
+            font-weight: bold;
+            font-size: 1.2em; 
+        }
+        .loading-message {
+            color: #629755; /* 載入訊息使用新的綠色強調色 */
+            font-style: italic;
+            font-size: 1.1em;
+        }
+        /* Highlight.js 的 pre 和 code 標籤樣式 - 強制覆蓋背景色 */
+        pre code.hljs {
+            background-color: #000000 !important; /* 強制純黑背景 */
+            padding: 0; 
+            margin: 0;
+            display: block; 
+            text-align: left;
+            overflow-x: auto;
+            white-space: pre; 
+            word-wrap: normal; 
+        }
+        pre {
+            background-color: #000000; /* JSON 程式碼區塊外部背景也設為純黑 */
+            color: #D4D4D4; /* 程式碼文字用淺灰 */
+            padding: 25px; 
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-top: 30px;
+            text-align: left;
+            border: 1px dashed #3A3A3A; 
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.7); 
+            line-height: 1.6; 
+        }
+        .data-section {
+            margin-bottom: 30px; 
+            padding-bottom: 25px;
+            border-bottom: 1px dashed rgba(98, 151, 85, 0.3); /* 半透明綠色分隔線 */
+        }
+        .data-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .data-item {
+            margin-bottom: 12px; 
+            padding-left: 20px; 
+            border-left: 4px solid #629755; /* 綠色邊框 */
+            word-break: break-all;
+        }
+        .data-item strong {
+            color: #629755; /* 路徑名稱的前綴部分使用精準綠色 */
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        .data-item strong .final-key {
+            color: #D19A66; /* 暗橘色 */
+            font-weight: bold; /* 保持粗體 */
+        }
+        .data-item span {
+            color: #B0C4DE; 
+        }
+        .data-item.nested { 
+            border-left: 4px solid #4C7741; /* 更深的綠色邊框 */
+            background-color: #151515; /* 巢狀背景略深 */
+            padding: 15px 20px;
+            margin-top: 15px;
+            border-radius: 8px;
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.6); 
+        }
+        .hidden {
+            display: none !important;
+        }
+        
+        #versionInfo {
+            position: absolute;
+            top: 30px; 
+            right: 30px; 
+            color: rgba(176, 196, 222, 0.7); /* 版本資訊文字顏色調整為淺鋼藍色半透明，低調清晰 */
+            font-size: 14px; 
+            text-align: right;
+            line-height: 1.6;
+        }
+
+        .highlight-info {
+            background-color: #111111; /* 亮點資訊區塊背景 */
+            border: 1px solid #282828; 
+            border-radius: 10px; 
+            padding: 20px;
+            margin-bottom: 30px; 
+            text-align: left;
+            box-shadow: 0 0 10px rgba(0,0,0,0.6); 
+        }
+        .highlight-info p {
+            margin: 8px 0; 
+            color: #E0E0E0; /* 確保亮點資訊文字清晰，比 body 文字稍亮 */
+            font-size: 1.15em; 
+        }
+        .highlight-info p strong {
+            color: #629755; /* 亮點資訊標籤使用精準綠色 */
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="versionInfo">
+        版本：<span id="appVersion"></span><br>
+        更新時間：<span id="updateTime"></span>
+    </div>
+
+    <div class="container">
+        <div id="mainTitle" class="main-title">中央氣象署觀測資料查詢</div>
+        
+        <div id="resultTitle" class="section-title large">查詢結果</div>
+        <div id="weatherData">
+            <p>正在檢查 URL 參數...</p>
+        </div>
+    </div>
+
+    <script>
+        // 氣象局 API 的基本 URL
+        const BASE_API_URL = "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001";
+
+        // Helper function to clean parameter values
+        function cleanParam(paramValue) {
+            if (paramValue) {
+                return paramValue.replace(/;+$/, '').trim();
+            }
+            return paramValue;
+        }
+
+        /**
+         * 安全地從物件中獲取巢狀屬性值。
+         * 如果找不到路徑則返回預設值。
+         * @param {Object} obj 要從中取值的物件
+         * @param {string} path 屬性路徑，例如 "GeoInfo.CountyName"
+         * @param {any} defaultValue 找不到時的預設值，預設為 'N/A'
+         * @returns {any} 找到的值或預設值
+         */
+        function getSafeValue(obj, path, defaultValue = 'N/A') {
+            const parts = path.split('.');
+            let current = obj;
+            
+            for (let i = 0; i < parts.length; i++) {
+                const part = parts[i];
+                if (current === null || typeof current !== 'object' || !current.hasOwnProperty(part)) {
+                    // 由於這是資料本身可能缺失的問題，移除 console.warn 以減少不必要的輸出
+                    return defaultValue;
+                }
+                current = current[part];
+            }
+            return (current === null || current === undefined) ? defaultValue : current;
+        }
+
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            // 從 meta 標籤中讀取版本和更新時間
+            const appVersion = document.querySelector('meta[name="app-version"]').content;
+            const updateTime = document.querySelector('meta[name="last-update"]').content;
+
+            document.getElementById('appVersion').textContent = appVersion;
+            document.getElementById('updateTime').textContent = updateTime;
+
+            const mainTitle = document.getElementById('mainTitle');
+            const resultTitle = document.getElementById('resultTitle');
+            const weatherDataDisplay = document.getElementById('weatherData');
+
+            const params = new URLSearchParams(window.location.search);
+            
+            const authKeyFromUrl = cleanParam(params.get('key'));
+            const stationIdFromUrl = cleanParam(params.get('station1'));
+            
+            if (authKeyFromUrl && stationIdFromUrl) {
+                mainTitle.textContent = "即時氣象觀測結果";
+                weatherDataDisplay.innerHTML = '<p class="loading-message">載入中，請稍候...</p>'; // 先顯示載入訊息
+                await fetchWeatherData(authKeyFromUrl, stationIdFromUrl);
+            } else {
+                mainTitle.textContent = "錯誤：缺少必要參數"; // 標題只顯示錯誤提示
+                weatherDataDisplay.innerHTML = `
+                    <p class="error-message">錯誤：無法自動取得氣象資料。</p>
+                    <p>請確認您的 URL 中是否包含正確的 <code>key</code> (Authorization Key) 和 <code>station1</code> (氣象站 ID) 參數。</p>
+                    <p>範例 URL: <code>file:///你的路徑/檔案名.html?key=你的APIKey&station1=氣象站ID</code></p>
+                    <p class="error-message">注意：參數之間請使用 <code>&amp;</code> (and 符號) 分隔，參數值尾部不應有多餘的 <code>;</code> (分號)。</p>
+                `;
+            }
+        });
+
+        async function fetchWeatherData(authorizationKeyParam, stationIdParam) {
+            const weatherDataDisplay = document.getElementById('weatherData');
+            
+            const authorizationKey = authorizationKeyParam;
+            const stationId = stationIdParam;
+
+            if (!authorizationKey) {
+                weatherDataDisplay.innerHTML = '<p class="error-message">錯誤：URL 中缺少 Authorization Key。</p>';
+                return;
+            }
+            if (!stationId) {
+                weatherDataDisplay.innerHTML = '<p class="error-message">錯誤：URL 中缺少氣象站 ID。</p>';
+                return;
+            }
+
+            const requestUrl = `${BASE_API_URL}?Authorization=${authorizationKey}&StationId=${stationId}`;
+
+            console.log("正在請求的 URL:", requestUrl);
+
+            try {
+                const response = await fetch(requestUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP 錯誤！狀態碼: ${response.status} - ${response.statusText}`);
+                }
+                const data = await response.json();
+
+                console.log("氣象局回傳的原始資料:", data);
+                
+                if (data.success === 'true' && data.records && data.records.Station && data.records.Station.length > 0) {
+                    const stationData = data.records.Station[0];
+
+                    let htmlContent = `
+                        <div class="section-title">氣象站名稱：<span style="color: #629755;">${stationData.StationName || 'N/A'}</span> (ID: ${stationId})</div>
+                    `;
+                    
+                    const countyName = getSafeValue(stationData, 'GeoInfo.CountyName');
+                    const townName = getSafeValue(stationData, 'GeoInfo.TownName');
+                    const obsDateTime = getSafeValue(stationData, 'ObsTime.DateTime');
+                    
+                    const obsTimeFormatted = obsDateTime !== 'N/A' ? obsDateTime.replace('T', ' ').substring(0, 19) : 'N/A'; 
+
+                    // ==========================================================
+                    // 新增指定天氣元素到 highlight-info 區塊
+                    // ==========================================================
+                    const weather = getSafeValue(stationData, 'WeatherElement.Weather');
+                    const precipitation = getSafeValue(stationData, 'WeatherElement.Now.Precipitation');
+                    const airTemperature = getSafeValue(stationData, 'WeatherElement.AirTemperature');
+                    const relativeHumidity = getSafeValue(stationData, 'WeatherElement.RelativeHumidity');
+                    const dailyHighTemp = getSafeValue(stationData, 'WeatherElement.DailyExtreme.DailyHigh.TemperatureInfo.AirTemperature');
+                    const dailyHighTempTime = getSafeValue(stationData, 'WeatherElement.DailyExtreme.DailyHigh.TemperatureInfo.Occurred_at.DateTime');
+                    const dailyLowTemp = getSafeValue(stationData, 'WeatherElement.DailyExtreme.DailyLow.TemperatureInfo.AirTemperature');
+                    const dailyLowTempTime = getSafeValue(stationData, 'WeatherElement.DailyExtreme.DailyLow.TemperatureInfo.Occurred_at.DateTime');
+                    const sunshineDuration = getSafeValue(stationData, 'WeatherElement.SunshineDuration');
+
+                    const dailyHighTempTimeFormatted = dailyHighTempTime !== 'N/A' ? dailyHighTempTime.replace('T', ' ').substring(0, 19) : 'N/A';
+                    const dailyLowTempTimeFormatted = dailyLowTempTime !== 'N/A' ? dailyLowTempTime.replace('T', ' ').substring(0, 19) : 'N/A';
+
+                    htmlContent += `
+                        <div class="highlight-info">
+                            <p><strong>觀測地點:</strong> ${countyName} ${townName}</p>
+                            <p><strong>觀測時間:</strong> ${obsTimeFormatted}</p>
+                            <p><strong>天氣現象:</strong> ${weather}</p>
+                            <p><strong>當日降水量:</strong> ${precipitation} 毫米</p>
+                            <p><strong>氣溫:</strong> ${airTemperature} &deg;C</p>
+                            <p><strong>相對濕度:</strong> ${relativeHumidity} %</p>
+                            <p><strong>當日最高溫:</strong> ${dailyHighTemp} &deg;C (發生時間: ${dailyHighTempTimeFormatted})</p>
+                            <p><strong>當日最低溫:</strong> ${dailyLowTemp} &deg;C (發生時間: ${dailyLowTempTimeFormatted})</p>
+                            <p><strong>日照時數:</strong> ${sunshineDuration} 小時</p>
+                        </div>
+                        <hr style="border-top: 1px dashed rgba(98, 151, 85, 0.4); margin: 25px 0;"> 
+                    `;
+                    // ==========================================================
+
+                    // ==========================================================
+                    // 新增「站點基礎資料 (完整路徑顯示)」區塊
+                    // ==========================================================
+                    htmlContent += `
+                        <div class="section-title">站點基礎資料 (完整路徑顯示)：</div>
+                        <div class="data-section">
+                    `;
+                    const tempStationData = { ...stationData }; 
+                    delete tempStationData.WeatherElement; 
+                    delete tempStationData.RainfallElement; 
+
+                    if (tempStationData) {
+                        htmlContent += displayDataWithFullPath(tempStationData, 'Station'); 
+                    } else {
+                        htmlContent += `<p>無站點基礎資料。</p>`;
+                    }
+                    htmlContent += `</div>`;
+                    // ==========================================================
+
+                    htmlContent += `
+                        <div class="section-title">所有天氣元素 (完整路徑顯示)：</div>
+                        <div class="data-section">
+                    `;
+                    
+                    if (stationData.WeatherElement) {
+                        htmlContent += displayDataWithFullPath(stationData.WeatherElement, 'WeatherElement'); 
+                    } else {
+                        htmlContent += `<p>無天氣元素資料。</p>`;
+                    }
+
+                    if (stationData.RainfallElement) { 
+                        htmlContent += `
+                            <hr style="border-top: 1px dashed rgba(98, 151, 85, 0.4); margin: 25px 0;"> 
+                            <div class="section-title">所有降雨元素 (完整路徑顯示)：</div>
+                        `;
+                        htmlContent += displayDataWithFullPath(stationData.RainfallElement, 'RainfallElement'); 
+                    } else {
+                        // htmlContent += `<p>無降雨元素資料。</p>`; 
+                    }
+
+
+                    htmlContent += `</div>`;
+
+                    htmlContent += '<div class="section-title">完整原始資料 (JSON)：</div>';
+                    htmlContent += `<pre><code class="json">${JSON.stringify(data, null, 2)}</code></pre>`;
+
+                    weatherDataDisplay.innerHTML = htmlContent;
+
+                } else {
+                    weatherDataDisplay.innerHTML = `<p class="error-message">錯誤：取得資料失敗或資料格式不正確。請檢查 URL 中的 API Key 或 Station ID 是否正確。</p>
+                        <br><p class="error-message">原始回應訊息：${data.records.Message || JSON.stringify(data.records)}</p>`;
+                    console.error("API 回應不成功:", data);
+                }
+
+            } catch (error) {
+                console.error('在獲取氣象資料時發生錯誤:', error);
+                weatherDataDisplay.innerHTML = `<p class="error-message">載入資料時發生錯誤：${error.message} <br>請檢查網路連線或 URL 中的參數。</p>`;
+            }
+        }
+
+        /**
+         * 遞迴函式，用於將物件或陣列展開成 HTML 列表，並顯示完整路徑
+         * 適用於任何巢狀結構
+         * @param {Object|Array} item 要展開的物件或陣列
+         * @param {string} currentPath 當前元素的完整路徑前綴
+         * @returns {string} 生成的 HTML 字串
+         */
+        function displayDataWithFullPath(item, currentPath = '') {
+            let html = '';
+
+            if (item === null || item === undefined) {
+                if (currentPath) {
+                    // 解析路徑，將最後一個關鍵字變色
+                    const lastDotIndex = currentPath.lastIndexOf('.');
+                    const lastBracketIndex = currentPath.lastIndexOf('[');
+                    const lastSplitIndex = Math.max(lastDotIndex, lastBracketIndex);
+
+                    let pathPrefix = '';
+                    let finalKey = currentPath;
+
+                    if (lastSplitIndex !== -1) {
+                        pathPrefix = currentPath.substring(0, lastSplitIndex + 1);
+                        finalKey = currentPath.substring(lastSplitIndex + 1);
+                    }
+
+                    // 針對陣列索引的特殊處理：如果最後是 ]，則將整個 [...] 部分視為 finalKey
+                    if (finalKey.endsWith(']')) {
+                        const firstBracketInFinalKey = finalKey.indexOf('[');
+                        if (firstBracketInFinalKey !== -1) {
+                            pathPrefix += finalKey.substring(0, firstBracketInFinalKey);
+                            finalKey = finalKey.substring(firstBracketInFinalKey);
+                        }
+                    }
+
+                    return `<div class="data-item"><strong>${pathPrefix}<span class="final-key">${finalKey}</span>:</strong> <span>N/A</span></div>`;
+                }
+                return ''; 
+            }
+
+            if (typeof item === 'object' && !Array.isArray(item)) {
+                for (const key in item) {
+                    if (Object.prototype.hasOwnProperty.call(item, key)) {
+                        const value = item[key];
+                        const newPath = currentPath ? `${currentPath}.${key}` : key;
+
+                        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+                            html += displayDataWithFullPath(value, newPath);
+                        } else if (Array.isArray(value)) {
+                            value.forEach((element, index) => {
+                                html += displayDataWithFullPath(element, `${newPath}[${index}]`);
+                            });
+                        } else {
+                            // 解析路徑，將最後一個關鍵字變色
+                            const lastDotIndex = newPath.lastIndexOf('.');
+                            const lastBracketIndex = newPath.lastIndexOf('[');
+                            const lastSplitIndex = Math.max(lastDotIndex, lastBracketIndex);
+
+                            let pathPrefix = '';
+                            let finalKey = newPath;
+
+                            if (lastSplitIndex !== -1) {
+                                pathPrefix = newPath.substring(0, lastSplitIndex + 1);
+                                finalKey = newPath.substring(lastSplitIndex + 1);
+                            }
+
+                            // 針對陣列索引的特殊處理：如果最後是 ]，則將整個 [...] 部分視為 finalKey
+                            if (finalKey.endsWith(']')) {
+                                const firstBracketInFinalKey = finalKey.indexOf('[');
+                                if (firstBracketInFinalKey !== -1) {
+                                    pathPrefix += finalKey.substring(0, firstBracketInFinalKey);
+                                    finalKey = finalKey.substring(firstBracketInFinalKey);
+                                }
+                            }
+
+                            html += `<div class="data-item"><strong>${pathPrefix}<span class="final-key">${finalKey}</span>:</strong> <span>${value.toString()}</span></div>`;
+                        }
+                    }
+                }
+            } else if (Array.isArray(item)) {
+                item.forEach((element, index) => {
+                    html += displayDataWithFullPath(element, `${currentPath}[${index}]`);
+                });
+            } else {
+                // 如果是直接的數組元素（例如 [0]、[1]）
+                // 這個情況通常不會出現，因為陣列會遞迴展開，直到遇到非物件非陣列的值才會到這裡
+                // 但為了完整性，仍然處理
+                const lastDotIndex = currentPath.lastIndexOf('.');
+                const lastBracketIndex = currentPath.lastIndexOf('[');
+                const lastSplitIndex = Math.max(lastDotIndex, lastBracketIndex);
+
+                let pathPrefix = '';
+                let finalKey = currentPath;
+
+                if (lastSplitIndex !== -1) {
+                    pathPrefix = currentPath.substring(0, lastSplitIndex + 1);
+                    finalKey = currentPath.substring(lastSplitIndex + 1);
+                }
+
+                // 針對陣列索引的特殊處理：如果最後是 ]，則將整個 [...] 部分視為 finalKey
+                if (finalKey.endsWith(']')) {
+                    const firstBracketInFinalKey = finalKey.indexOf('[');
+                    if (firstBracketInFinalKey !== -1) {
+                        pathPrefix += finalKey.substring(0, firstBracketInFinalKey);
+                        finalKey = finalKey.substring(firstBracketInFinalKey);
+                    }
+                }
+
+                html += `<div class="data-item"><strong>${pathPrefix}<span class="final-key">${finalKey}</span>:</strong> <span>${item.toString()}</span></div>`;
+            }
+            return html;
+        }
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+    <script>
+        // 初始化 Highlight.js
+        hljs.highlightAll();
+    </script>
+</body>
+</html>
