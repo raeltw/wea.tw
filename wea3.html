@@ -1,0 +1,862 @@
+﻿<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中央氣象署3天預報資料 - 自動執行 (專案二)</title>
+
+    <meta name="app-version" content="2.2.37"> <meta name="last-update" content="2025-06-20 18:30 CST"> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+
+
+    <style>
+        body {
+            margin: 0;
+            padding: 25px;
+            background-color: #000000; /* 純黑背景，專案二沒有彩虹漸層 */
+            color: #B0C4DE; /* 淺鋼藍色，作為主要文字顏色，更沉穩 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+            /* 嚴格移除 font-family */
+            position: relative;
+        }
+        .container {
+            max-width: 950px;
+            width: 100%;
+            padding: 40px;
+            background-color: #0A0A0A; /* 比純黑略淺的背景，增加層次 */
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.98); /* 更深沉的陰影 */
+            text-align: center;
+        }
+        /* 取代 H1 H2 H3 等標題的樣式，使用通用 class */
+        .main-title, .section-title {
+            color: #629755; /* 精準綠色，模擬程式碼中的字串綠 */
+            margin-bottom: 30px;
+            /* 嚴格移除 font-weight: bold; */
+            letter-spacing: 1px; /* 微調字距 */
+            text-transform: none;
+            line-height: 1.2;
+            text-shadow: none;
+        }
+        .main-title {
+            font-size: 3.2em;
+            margin-top: 0;
+        }
+        .section-title.large {
+            font-size: 2.5em;
+        }
+        /* 讓 section-title 變成可點擊的按鈕樣式 - 用於折疊區塊 (目前僅用於預報完整資料) */
+        .section-title.collapsible {
+            cursor: pointer;
+            border-bottom: 1px solid rgba(98, 151, 85, 0.4);
+            padding-bottom: 8px;
+            margin-top: 45px;
+            margin-bottom: 25px;
+            transition: color 0.3s ease, border-color 0.3s ease;
+            text-align: left; /* 預報完整資料標題向左對齊 */
+        }
+        .section-title.collapsible:hover {
+            color: #8CCF79; /* Hover 亮一點 */
+            border-color: rgba(98, 151, 85, 0.8);
+        }
+        .section-title.collapsible::after {
+            content: ' ▼'; /* 下箭頭 */
+            display: inline-block;
+            margin-left: 10px;
+            transition: transform 0.3s ease;
+        }
+        .section-title.collapsible.collapsed::after {
+            content: ' ▶'; /* 右箭頭 */
+            transform: rotate(0deg); /* 保持不旋轉 */
+        }
+
+        p, small {
+            line-height: 2.0;
+            color: #B0C4DE;
+            margin-bottom: 15px;
+        }
+
+        button {
+            background-color: #1A73E8; /* 深藍色，穩定而有科技感 */
+            color: white;
+            padding: 18px 35px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 20px;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            display: block;
+            margin: 40px auto 40px auto;
+            /* 嚴格移除 font-weight: bold; */
+            letter-spacing: 0.8px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.9);
+        }
+        button:hover {
+            background-color: #155FB2; /* hover 時更深的藍色 */
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0,0,0,1.0);
+        }
+        #weatherData {
+            margin-top: 35px;
+            padding: 30px;
+            background-color: #1A1A1A; /* 比容器略深，突出內容 */
+            border: 1px solid #3A3A3A; /* 柔和的深灰邊框 */
+            border-radius: 10px;
+            min-height: 80px;
+            color: #B0C4DE;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8); /* 內部陰影 */
+        }
+        .error-message {
+            color: #E0B53E; /* 偏暗的黃色，避免過於刺眼 */
+            font-size: 1.2em;
+        }
+        .loading-message {
+            color: #629755; /* 載入訊息使用新的綠色強調色 */
+            font-size: 1.1em;
+        }
+        /* Highlight.js 的 pre 和 code 標籤樣式 - 強制覆蓋背景色 */
+        pre code.hljs {
+            background-color: #000000 !important; /* 強制純黑背景 */
+            padding: 0;
+            margin: 0;
+            display: block;
+            text-align: left;
+            overflow-x: auto;
+            white-space: pre;
+            word-wrap: normal;
+        }
+        pre {
+            background-color: #000000; /* JSON 程式碼區塊外部背景也設為純黑 */
+            color: #D4D4D4; /* 程式碼文字用淺灰 */
+            padding: 25px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-top: 30px;
+            text-align: left;
+            border: 1px dashed #3A3A3A;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.7);
+            line-height: 1.6;
+        }
+        .data-section {
+            margin-bottom: 30px;
+            padding-bottom: 25px;
+        }
+        .data-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .data-item {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            border-left: 4px solid #629755; /* 綠色邊框 */
+            word-break: break-all;
+        }
+        /* 確保 strong 標籤不粗體，但保持顏色 (這主要影響 highlight-info 和頂部 general data-item) */
+        .data-item strong {
+            color: #629755; /* 路徑名稱的前綴部分使用精準綠色 */
+            margin-right: 5px;
+            font-size: inherit; /* 繼承父級字體大小 */
+        }
+        .data-item strong .final-key {
+            color: #D19A66; /* 暗橘色 */
+        }
+        .data-item span {
+            color: #B0C4DE;
+        }
+        .data-item.nested {
+            border-left: 4px solid #4C7741; /* 更深的綠色邊框 */
+            background-color: #151515; /* 巢狀背景略深 */
+            padding: 15px 20px;
+            margin-top: 15px;
+            border-radius: 8px;
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.6);
+        }
+        .hidden {
+            display: none !important;
+        }
+
+        #versionInfo {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            color: rgba(176, 196, 222, 0.7); /* 版本資訊文字顏色調整為淺鋼藍色半透明，低調清晰 */
+            font-size: 14px;
+            text-align: right;
+            line-height: 1.6;
+        }
+
+        .highlight-info {
+            background-color: #111111; /* 亮點資訊區塊背景 */
+            border: 1px solid #282828;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: left;
+            box-shadow: 0 0 10px rgba(0,0,0,0.6);
+        }
+        .highlight-info p {
+            margin: 8px 0;
+            color: #E0E0E0; /* 確保亮點資訊文字清晰，比 body 文字稍亮 */
+            font-size: 1.15em;
+        }
+        /* 亮點資訊區塊的 strong 標籤顏色修正 (預報地點, 共抓到...等標籤) */
+        .highlight-info p strong {
+            color: #629755; /* 亮點資訊標籤使用精準綠色 */
+            margin-right: 10px;
+            font-size: inherit; /* 繼承父級字體大小 */
+        }
+        /* 調整後的實際連結顯示樣式 */
+        .api-link-display {
+            font-size: 1.15em; /* 比照預報地點的字體大小 */
+            color: #E0E0E0; /* 比照預報地點的文字顏色 */
+            word-break: break-all; /* 防止長連結溢出 */
+            margin-top: 8px; /* 與上方內容間距 */
+        }
+        .api-link-display strong {
+            color: #629755; /* 標題文字用精準綠色 */
+            margin-right: 10px; /* 與連結內容間距 */
+            font-size: inherit; /* 繼承父級字體大小 */
+        }
+        .api-link-display a { /* Make the actual link clickable and styled */
+            color: #D19A66; /* Link color to match other code-like elements */
+            text-decoration: none; /* No underline by default */
+            transition: color 0.3s ease;
+        }
+        .api-link-display a:hover {
+            color: #FFB060; /* Lighter on hover */
+            text-decoration: underline; /* Underline on hover */
+        }
+
+        /* 新增的表格樣式 */
+        .forecast-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            text-align: left; /* 預設左對齊 */
+            font-size: 0.95em;
+        }
+        /* 為了兩層標題，th 的 padding 和 vertical-align 需要調整 */
+        .forecast-table th, .forecast-table td {
+            border: 1px solid #3A3A3A;
+            padding: 12px 15px;
+            vertical-align: middle; /* 標題文字置中 */
+            white-space: nowrap; /* 不折行，讓內容一行顯示 */
+        }
+        .forecast-table th {
+            background-color: #1A1A1A;
+            color: #629755;
+        }
+        .forecast-table td {
+            background-color: #0A0A0A;
+            color: #B0C4DE;
+        }
+        .forecast-table tr:nth-child(even) td {
+            background-color: #0F0F0F; /* 斑馬紋效果 */
+        }
+        /* 表格容器，允許水平捲動 */
+        .forecast-details-table-wrapper { /* 新增的 wrapper class，用於控制表格的顯示隱藏 */
+            overflow-x: auto; /* 允許表格內容水平捲動 */
+        }
+        .forecast-count {
+            text-align: left;
+            margin-bottom: 10px;
+            color: #B0C4DE;
+            font-size: 1.1em;
+        }
+
+        /* 站點基礎資料區塊樣式 - 不再有開合功能 */
+        #siteBaseDataSectionTitle { /* 這個是新的 div 標題 ID */
+            color: #629755; /* 精準綠色 */
+            margin-top: 45px;
+            margin-bottom: 25px;
+            font-size: 2.5em; /* large section title size */
+            letter-spacing: 1px;
+            text-transform: none;
+            line-height: 1.2;
+            text-shadow: none;
+            /* 沒有 border-bottom 和 cursor: pointer 因為沒有折疊功能 */
+            text-align: left; /* 站點基礎資料與主要要素路徑標題向左對齊 */
+        }
+        #siteBaseDataContent { /* 這個區塊將始終顯示 */
+            /* 移除可能導致隱藏的樣式 */
+        }
+        #siteBaseData {
+            margin-top: 0px; /* 移除前言文字後，調整上邊距 */
+            padding: 30px;
+            background-color: #1A1A1A;
+            border: 1px solid #3A3A3A;
+            border-radius: 10px;
+            text-align: left;
+            overflow-x: auto;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+        /* 站點基礎資料區塊內 data-item 的樣式 */
+        #siteBaseData .data-item {
+            margin-bottom: 8px;
+            padding-left: 15px;
+            border-left: 3px solid #D19A66; /* 橘色邊框 */
+        }
+        /* 站點基礎資料區塊的 strong 標籤顏色修正 (用於路徑前綴) */
+        #siteBaseData .data-item strong {
+            color: #D19A66; /* 橘色字體 */
+            margin-right: 8px;
+            font-size: inherit; /* 繼承父級字體大小 */
+        }
+        /* 新增用於精簡顯示時的標題顏色控制 */
+        #siteBaseData .data-item .chinese-label {
+            color: #B0C4DE; /* 中文標籤顏色與一般文字相同 */
+            margin-right: 5px; /* 與冒號隔開 */
+        }
+        #siteBaseData .data-item .path-code {
+            color: #B0C4DE; /* 路徑程式碼顏色 */
+        }
+        #siteBaseData .data-item .path-code .final-key {
+            color: #D19A66; /* 路徑中的最後一個關鍵字變橘色 */
+        }
+
+
+        .data-item span {
+            color: #B0C4DE;
+        }
+        /* 氣象要素路徑的特殊樣式 */
+        .data-item.element-path {
+            border-left: 3px solid #629755; /* 綠色邊框 */
+            background-color: #0F0F0F; /* 略深背景 */
+            padding: 10px 15px;
+            margin-top: 10px;
+            border-radius: 6px;
+            font-size: 0.9em;
+        }
+        /* 氣象要素路徑中 strong 標籤的顏色修正 */
+        .data-item.element-path strong {
+            color: #B0C4DE; /* 路徑前綴顏色 */
+            font-size: inherit;
+        }
+        .data-item.element-path strong .final-key {
+             color: #D19A66; /* 最終鍵名用橘色 */
+        }
+        .data-item.element-path code {
+            font-size: 0.95em; /* 路徑程式碼字體稍微大一點 */
+        }
+        /* 站點資料區塊內的路徑說明文字的 strong 標籤 (例如 "主要氣象要素路徑範例:") */
+        #siteBaseData .data-item.path-description strong {
+            color: #B0C4DE; /* 設定為淺鋼藍色，不加粗 */
+        }
+        #siteBaseData .data-item.path-description strong span {
+            color: #629755; /* 讓 "主要氣象要素路徑範例" 這段文字是綠色 */
+        }
+
+
+        /* 表格內數字靠右對齊的樣式 */
+        .forecast-table .num-align-right {
+            text-align: right;
+        }
+
+        /* 天氣圖示居中對齊的樣式 */
+        .forecast-table .weather-icon-cell {
+            text-align: center;
+        }
+
+        /* 新增的抬頭對齊樣式 */
+        .forecast-table th.align-bottom {
+            vertical-align: bottom;
+        }
+        .forecast-table th.text-center {
+            text-align: center;
+        }
+        .forecast-table th.text-right {
+            text-align: right;
+        }
+        .forecast-table th.text-left {
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div id="versionInfo">
+        <p>版本：<span id="appVersion"></span></p>
+        <p>更新時間：<span id="updateTime"></span></p>
+    </div>
+
+    <div class="container">
+        <div id="mainTitle" class="main-title">中央氣象署3天預報資料查詢</div>
+
+        <div id="resultTitle" class="section-title large">查詢結果</div>
+        <div id="weatherData">
+            <p class="loading-message">正在檢查 URL 參數...</p>
+        </div>
+
+        <div id="forecastDetailsContent" class="forecast-details">
+            </div>
+
+        <div id="siteBaseDataSectionTitle" class="section-title large">站點基礎資料與主要要素路徑</div>
+        <div id="siteBaseDataContent" class="site-base-data-section">
+            <div id="siteBaseData">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // 氣象局 3 天預報 API 的基本 URL
+        const BASE_API_URL = "https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-D0047-069";
+
+        // Helper function to clean parameter values
+        function cleanParam(paramValue) {
+            if (paramValue) {
+                // 移除尾部的分號並去除前後空白
+                return paramValue.replace(/;+$/, '').trim();
+            }
+            return paramValue;
+        }
+
+        /**
+         * 安全地從物件中獲取巢狀屬性值。
+         * 如果找不到路徑則返回預設值。
+         * @param {Object} obj 要從中取值的物件
+         * @param {string} path 屬性路徑，例如 "records.locations[0].location[0].weatherElement[0].time[0].elementValue[0].value"
+         * @param {any} defaultValue 找不到時的預設值，預設為 'N/A'
+         * @returns {any} 找到的值或預設值
+         */
+        function getSafeValue(obj, path, defaultValue = 'N/A') {
+            const parts = path.split('.');
+            let current = obj;
+
+            for (let i = 0; i < parts.length; i++) {
+                const part = parts[i];
+                // 處理陣列索引，例如 parts = "locations[0]"
+                const match = part.match(/^(.*)\[(\d+)\]$/);
+                if (match) {
+                    const arrayName = match[1];
+                    const index = parseInt(match[2], 10);
+
+                    if (current === null || typeof current !== 'object' || !current.hasOwnProperty(arrayName) || !Array.isArray(current[arrayName]) || index >= current[arrayName].length) {
+                        return defaultValue;
+                    }
+                    current = current[arrayName][index];
+                } else {
+                    // 處理物件屬性
+                    if (current === null || typeof current !== 'object' || !current.hasOwnProperty(part)) {
+                        return defaultValue;
+                    }
+                    current = current[part];
+                }
+            }
+            return (current === null || current === undefined) ? defaultValue : current;
+        }
+
+        // Helper function to get first time entry value for an element (adjusting for DataTime vs StartTime)
+        let globalWeatherData = null; // 用於儲存 API 回傳的完整資料，以便 getElementValueForExample 能夠訪問
+
+        const getElementValueForExample = (cwaElementName, valuePath) => {
+            if (!globalWeatherData || !globalWeatherData.records || !globalWeatherData.records.Locations || globalWeatherData.records.Locations.length === 0) {
+                return 'N/A';
+            }
+
+            const loc0 = globalWeatherData.records.Locations[0];
+            const location0 = loc0.Location && loc0.Location.length > 0 ? loc0.Location[0] : null;
+
+            if (!location0 || !location0.WeatherElement) return 'N/A';
+
+            const element = location0.WeatherElement.find(el => el.ElementName === cwaElementName);
+            if (!element || !element.Time || element.Time.length === 0) return 'N/A';
+
+            const firstTimeEntry = element.Time.find(t => t.DataTime || (t.StartTime && t.EndTime));
+            return firstTimeEntry ? getSafeValue(firstTimeEntry, valuePath) : 'N/A';
+        };
+
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            // 從 meta 標籤中讀取版本和更新時間
+            const appVersion = document.querySelector('meta[name="app-version"]').content;
+            const updateTime = document.querySelector('meta[name="last-update"]').content;
+
+            document.getElementById('appVersion').textContent = appVersion;
+            document.getElementById('updateTime').textContent = updateTime;
+
+            const mainTitle = document.getElementById('mainTitle');
+            const weatherDataDisplay = document.getElementById('weatherData');
+
+            const params = new URLSearchParams(window.location.search);
+
+            const authKeyFromUrl = cleanParam(params.get('key'));
+            // 讀取小寫的 'location1'
+            const locationNameFromUrl = cleanParam(params.get('location1'));
+
+            if (authKeyFromUrl && locationNameFromUrl) {
+                mainTitle.textContent = `中央氣象署 ${locationNameFromUrl} 3天預報資料`;
+                weatherDataDisplay.innerHTML = '<p class="loading-message">載入中，請稍候...</p>'; // 先顯示載入訊息
+                await fetchWeatherData(authKeyFromUrl, locationNameFromUrl);
+            } else {
+                mainTitle.textContent = "錯誤：缺少必要參數"; // 標題只顯示錯誤提示
+                weatherDataDisplay.innerHTML = `
+                    <p class="error-message">錯誤：無法自動取得氣象預報資料。</p>
+                    <p class="error-message">請確認您的 URL 中是否包含正確的 <code>key</code> (Authorization Key) 和 <code>location1</code> (查詢縣市/鄉鎮名稱) 參數。</p>
+                    <p class="error-message">範例 URL: <code>file:///你的路徑/wea_forecast.html?key=你的APIKey&location1=%E6%96%B0%E5%BA%97%E5%8D%80</code></p>
+                    <p class="error-message">注意：參數之間請使用 <code>&amp;</code> (and 符號) 分隔，參數值尾部不應有多餘的 <code>;</code> (分號)。</p>
+                    <p class="error-message"><code>location1</code> 參數請使用 URL 編碼 (例如「新店區」為 <code>%E6%96%B0%E5%BA%97%E5%8D%80</code>)。</p>
+                `;
+            }
+        });
+
+        async function fetchWeatherData(authorizationKeyParam, locationNameParam) {
+            const weatherDataDisplay = document.getElementById('weatherData');
+            const forecastDetailsContent = document.getElementById('forecastDetailsContent'); // 預報完整資料的內容容器
+            const siteBaseDataContentElem = document.getElementById('siteBaseData'); // 站點基礎資料的內容容器
+
+            const authorizationKey = authorizationKeyParam;
+            // 對 LocationName 進行 URL 編碼以確保正確傳輸
+            const encodedLocationName = encodeURIComponent(locationNameParam);
+            const requestUrl = `${BASE_API_URL}?Authorization=${authorizationKey}&LocationName=${encodedLocationName}`;
+
+            console.log("正在請求的 URL:", requestUrl);
+
+            try {
+                const response = await fetch(requestUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP 錯誤！狀態碼: ${response.status} - ${response.statusText}`);
+                }
+                const data = await response.json();
+                globalWeatherData = data; // 將獲取的資料儲存到全域變數，以便 getElementValueForExample 訪問
+
+                console.log("氣象局回傳的原始資料:", data);
+
+                if (data.records && data.records.Locations && data.records.Locations.length > 0) {
+                    const locations = data.records.Locations; // 注意這裡是大寫 'L'
+
+                    let cityName = getSafeValue(locations[0], 'LocationsName'); // 縣市名稱
+                    let districtName = ''; // 鄉鎮區名稱
+
+                    let targetLocationData = null;
+                    if (locations[0].Location && locations[0].Location.length > 0) {
+                         targetLocationData = locations[0].Location[0]; // 取得第一個鄉鎮區的資料
+                         districtName = targetLocationData.LocationName; // 取得API回應中的鄉鎮區名稱
+                    }
+
+                    // ==========================================================
+                    // 預報完整資料部分 - 凍結，不再變動其內容生成邏輯
+                    // ==========================================================
+                    if (targetLocationData) {
+                        const weatherElements = targetLocationData.WeatherElement;
+                        const allUniqueTimes = new Set();
+
+                        weatherElements.forEach(element => {
+                            element.Time.forEach(timeEntry => {
+                                const keyTime = timeEntry.DataTime || timeEntry.StartTime;
+                                if (keyTime) {
+                                    allUniqueTimes.add(keyTime);
+                                }
+                            });
+                        });
+
+                        const sortedTimes = Array.from(allUniqueTimes).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+
+                        let forecastEntries = [];
+                        let lastDisplayedDay = null;
+
+                        sortedTimes.forEach(currentTimeStr => {
+                            let entry = {};
+                            const currentTime = new Date(currentTimeStr);
+
+                            weatherElements.forEach(element => {
+                                const elementName = element.ElementName;
+                                const matchingTimeEntry = element.Time.find(t => {
+                                    if (t.DataTime) {
+                                        return t.DataTime === currentTimeStr;
+                                    } else if (t.StartTime && t.EndTime) {
+                                        const startTime = new Date(t.StartTime);
+                                        const endTime = new Date(t.EndTime);
+                                        return currentTime >= startTime && currentTime < endTime;
+                                    }
+                                    return false;
+                                });
+
+                                if (matchingTimeEntry) {
+                                    switch (elementName) {
+                                        case '溫度': entry.T = getSafeValue(matchingTimeEntry, 'ElementValue[0].Temperature'); break;
+                                        case '露點溫度': entry.Td = getSafeValue(matchingTimeEntry, 'ElementValue[0].DewPoint'); break;
+                                        case '體感溫度': entry.AT = getSafeValue(matchingTimeEntry, 'ElementValue[0].ApparentTemperature'); break;
+                                        case '舒適度指數': entry.CIDescription = getSafeValue(matchingTimeEntry, 'ElementValue[0].ComfortIndexDescription'); break;
+                                        case '天氣現象': entry.Wx = getSafeValue(matchingTimeEntry, 'ElementValue[0].Weather'); break;
+                                        case '3小時降雨機率': entry.PoP = getSafeValue(matchingTimeEntry, 'ElementValue[0].ProbabilityOfPrecipitation'); break;
+                                        case '相對濕度': entry.RH = getSafeValue(matchingTimeEntry, 'ElementValue[0].RelativeHumidity'); break;
+                                        case '天氣預報綜合描述': entry.WeatherDescription = getSafeValue(matchingTimeEntry, 'ElementValue[0].WeatherDescription'); break;
+                                    }
+                                }
+                            });
+
+                            const hour = new Date(currentTimeStr).getHours();
+                            const isDaytime = hour >= 6 && hour < 18;
+                            const dayNight = isDaytime ? 'day' : 'night';
+                            let weatherCodeNum = '01';
+
+                            if (entry.Wx) {
+                                switch (entry.Wx) {
+                                    case '晴': weatherCodeNum = '01'; break;
+                                    case '多雲': weatherCodeNum = '02'; break;
+                                    case '陰': weatherCodeNum = '07'; break;
+                                    case '陰天': weatherCodeNum = '07'; break;
+                                    case '短暫雨': weatherCodeNum = '04'; break;
+                                    case '雷雨': weatherCodeNum = '15'; break;
+                                    case '局部陣雨': weatherCodeNum = '08'; break;
+                                    case '雨': weatherCodeNum = '08'; break;
+                                    case '多雲短暫雨': weatherCodeNum = '08'; break;
+                                    case '多雲陣雨': weatherCodeNum = '08'; break;
+                                    case '多雲局部陣雨': weatherCodeNum = '08'; break;
+                                    default: weatherCodeNum = '01';
+                                }
+                            }
+                            weatherCodeNum = weatherCodeNum.padStart(2, '0');
+
+                            entry.WeatherIcon = `<img src="https://www.cwa.gov.tw/V8/assets/img/weather_icons/weathers/svg_icon/${dayNight}/${weatherCodeNum}.svg" alt="${entry.Wx || '無天氣描述'}" width="24" height="24">`;
+                            entry.OriginalTime = currentTimeStr;
+                            const currentDay = new Date(currentTimeStr).getDate();
+                            const displayDay = (currentDay !== lastDisplayedDay) ? currentDay : '';
+                            lastDisplayedDay = currentDay;
+                            const displayHour = currentTimeStr.split('T')[1].substring(0, 2);
+                            entry.FormattedTime = `${displayDay ? (displayDay + ' ') : ''}${displayHour}`;
+                            forecastEntries.push(entry);
+                        });
+
+                        let forecastHtml = '';
+                        if (forecastEntries.length === 0) {
+                            forecastHtml = `<tr><td colspan="9">沒有找到詳細預報資料。</td></tr>`;
+                        } else {
+                            forecastEntries.forEach(entry => {
+                                forecastHtml += `
+                                <tr title="${entry.WeatherDescription || ''}">
+                                    <td class="weather-icon-cell">${entry.WeatherIcon}</td>
+                                    <td class="num-align-right">${entry.FormattedTime}</td>
+                                    <td class="num-align-right">${entry.T || '-'}</td>
+                                    <td class="num-align-right">${entry.Td || '-'}</td>
+                                    <td class="num-align-right">${entry.AT || '-'}</td>
+                                    <td class="num-align-right">${entry.RH || '-'}</td>
+                                    <td class="num-align-right">${entry.PoP || '-'}</td>
+                                    <td>${entry.CIDescription || '-'}</td>
+                                    <td>${entry.Wx || '-'}</td>
+                                </tr>
+                                `;
+                            });
+                        }
+
+                        // 將 API URL 顯示為一個變數
+                        const apiLinkContent = `
+                            <div class="api-link-display">
+                                <strong><span>實際連結:</span></strong>
+                                <a href="${requestUrl}" target="_blank" title="點擊在新分頁中查看原始 JSON 資料">${requestUrl}</a>
+                            </div>
+                        `;
+
+                        // 動態生成包含可折疊標題的完整內容
+                        weatherDataDisplay.innerHTML = `
+                            <div class="highlight-info">
+                                <p><strong><span>預報地點:</span></strong> ${cityName} ${districtName}</p>
+                                <p><strong><span>共抓到預報時間點:</span></strong> ${forecastEntries.length} 筆</p>
+                                ${apiLinkContent}
+                            </div>
+                        `;
+
+                        // 確保只有一個可折疊的「預報完整資料」標題
+                        forecastDetailsContent.innerHTML = `
+                            <div id="toggleForecastTable" class="section-title collapsible">預報完整資料</div>
+                            <div class="forecast-details-table-wrapper">
+                                <table class="forecast-table">
+                                    <thead>
+                                        <tr>
+                                            <th rowspan="2" class="align-bottom text-center">天氣</th>
+                                            <th rowspan="2" class="align-bottom text-right">時間</th>
+                                            <th colspan="3" class="text-center">溫度</th>
+                                            <th rowspan="2" class="align-bottom text-right">相對濕度</th>
+                                            <th rowspan="2" class="align-bottom text-right">降雨機率</th>
+                                            <th rowspan="2" class="align-bottom text-left">舒適度</th>
+                                            <th rowspan="2" class="align-bottom text-left">天氣現象</th>
+                                        </tr>
+                                        <tr>
+                                            <th class="text-right">預測</th>
+                                            <th class="text-right">露點</th>
+                                            <th class="text-right">體感</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${forecastHtml}
+                                    </tbody>
+                                </table>
+                            </div>
+                        `;
+
+                        // 添加預報資料的折疊功能
+                        const toggleForecastTableButton = document.getElementById('toggleForecastTable');
+                        const forecastTableWrapper = forecastDetailsContent.querySelector('.forecast-details-table-wrapper'); // 選擇實際包含表格的 wrapper
+                        if (toggleForecastTableButton && forecastTableWrapper) {
+                            toggleForecastTableButton.addEventListener('click', function() {
+                                forecastTableWrapper.classList.toggle('hidden');
+                                this.classList.toggle('collapsed');
+                            });
+                             // 預設為開啟狀態，所以不添加 'hidden' 和 'collapsed' class
+                            forecastTableWrapper.classList.remove('hidden');
+                            toggleForecastTableButton.classList.remove('collapsed');
+                        }
+
+
+                    } else {
+                        weatherDataDisplay.innerHTML = `<p class="error-message">錯誤：在 API 回應中找不到指定地點的預報資料。</p>
+                            <br><p class="error-message">請檢查 URL 中的 <code>location1</code> 參數是否正確，或該地區目前無資料。</p>
+                            <br><p class="error-message">原始回應：${JSON.stringify(data, null, 2)}</p>`;
+                        console.error("API 回應有 Records 但無 Location 資料:", data);
+                    }
+
+
+                    // ==========================================================
+                    // 站點基礎資料與主要要素路徑部分 - 精簡顯示並控制關鍵字顏色
+                    // ==========================================================
+                    let siteBaseDataHtml = '';
+
+                    // Helper function to add a data item with a simplified label and colored key
+                    const addSimplifiedSiteDataItem = (obj, path, chineseLabel) => {
+                        const value = getSafeValue(obj, path);
+                        const pathParts = path.split('.');
+                        // Construct the path string with color for the last key
+                        let formattedPathCode = '';
+                        for (let i = 0; i < pathParts.length; i++) {
+                            const part = pathParts[i];
+                            const match = part.match(/^(.*)\[(\d+)\]$/);
+                            if (match) {
+                                formattedPathCode += match[1] + `[${match[2]}]`;
+                            } else {
+                                formattedPathCode += part;
+                            }
+                            if (i < pathParts.length - 1) {
+                                formattedPathCode += '.';
+                            }
+                        }
+
+                        // Apply color to the final key
+                        const lastDotIndex = formattedPathCode.lastIndexOf('.');
+                        let finalKeyColoredPath;
+                        if (lastDotIndex !== -1) {
+                            const prefix = formattedPathCode.substring(0, lastDotIndex + 1);
+                            const key = formattedPathCode.substring(lastDotIndex + 1);
+                            finalKeyColoredPath = `<span class="path-code">${prefix}<span class="final-key">${key}</span></span>`;
+                        } else {
+                            finalKeyColoredPath = `<span class="path-code"><span class="final-key">${formattedPathCode}</span></span>`;
+                        }
+
+                        siteBaseDataHtml += `
+                            <div class="data-item">
+                                <span class="chinese-label">${chineseLabel}:</span> ${finalKeyColoredPath}: <span>${value !== 'N/A' ? value : '(無資料)'}</span>
+                            </div>
+                        `;
+                    };
+
+
+                    // --- 站點基礎資料與主要要素路徑區塊的標題 ---
+                    siteBaseDataHtml += '<div class="data-item path-description" style="border-left: none; padding-left: 0; margin-top: 25px;"><strong><span>主要資料結構路徑範例:</span></strong></div>';
+
+                    // --- 顯示指定的 7 個欄位，並套用新的精簡格式與顏色 ---
+                    // 修正 DatasetDescription 的獲取方式，根據您的提示改為 records.Locations[0].DatasetDescription
+                    addSimplifiedSiteDataItem(data, 'records.Locations[0].DatasetDescription', '表單名稱');
+                    addSimplifiedSiteDataItem(data, 'records.Locations', '地點'); // 這裡會顯示為 [object Object]
+                    addSimplifiedSiteDataItem(data, 'records.Locations[0].LocationsName', '縣市名'); // LocationsName 關鍵字會變色
+                    addSimplifiedSiteDataItem(data, 'records.Locations[0].Location', '鄉鎮地點'); // 這裡會顯示為 [object Object]
+                    addSimplifiedSiteDataItem(data, 'records.Locations[0].Location[0].LocationName', '鄉鎮名稱'); // LocationName 關鍵字會變色
+                    addSimplifiedSiteDataItem(data, 'records.Locations[0].Location[0].Geocode', '鄉鎮區域代碼'); // Geocode 關鍵字會變色
+                    addSimplifiedSiteDataItem(data, 'records.Locations[0].Location[0].Latitude', '鄉鎮代表點位緯度'); // 修正為 Latitude 關鍵字並變色
+                    addSimplifiedSiteDataItem(data, 'records.Locations[0].Location[0].Longitude', '鄉鎮代表點位經度'); // 修正為 Longitude 關鍵字並變色
+
+
+                    // 主要氣象要素路徑範例
+                    siteBaseDataHtml += '<div class="data-item path-description" style="border-left: none; padding-left: 0; margin-top: 25px;"><strong><span>主要氣象要素路徑範例 (ElementValue 部分):</span></strong></div>';
+
+                    let elementPathCounter = 1; // 在這部分開始前重置計數器
+
+                    // Helper function for element path examples with the correct colors and structure
+                    const addElementPathItemWithExample = (displayTagName, examplePathSuffix, cwaElementName) => {
+                        // 完整路徑前綴
+                        const fullPathPrefix = 'records.Locations[0].Location[0].WeatherElement[X].Time[Y].';
+                        const fullPath = fullPathPrefix + examplePathSuffix;
+                        const exampleValue = getElementValueForExample(cwaElementName, examplePathSuffix);
+
+                        if (examplePathSuffix !== '') {
+                            const pathParts = fullPath.split('.');
+                            let codePathInnerHtml = '';
+                            for (let i = 0; i < pathParts.length; i++) {
+                                const part = pathParts[i];
+                                const match = part.match(/^(.*)\[(\d+)\]$/);
+                                if (match) {
+                                    codePathInnerHtml += `${match[1]}[${match[2]}]`;
+                                } else {
+                                    codePathInnerHtml += part;
+                                }
+                                if (i < pathParts.length - 1) {
+                                    codePathInnerHtml += '.';
+                                }
+                            }
+
+                            // Re-apply final-key coloring for display in <code>
+                            const lastDotIndex = codePathInnerHtml.lastIndexOf('.');
+                            let finalKeyColoredCodePath;
+                            if (lastDotIndex !== -1) {
+                                const pathPrefix = codePathInnerHtml.substring(0, lastDotIndex + 1);
+                                const lastKey = codePathInnerHtml.substring(lastDotIndex + 1);
+                                finalKeyColoredCodePath = `<span style="color:#B0C4DE;">${pathPrefix}</span><span style="color:#D19A66;">${lastKey}</span>`;
+                            } else {
+                                finalKeyColoredCodePath = `<span style="color:#D19A66;">${codePathInnerHtml}</span>`;
+                            }
+
+                            siteBaseDataHtml += `
+                                <div class="data-item element-path">
+                                    <strong><span style="color:#B0C4DE;">${elementPathCounter}. ${displayTagName}:</span></strong> <code>${finalKeyColoredCodePath}</code>: <span>${exampleValue !== 'N/A' ? exampleValue : '(無資料)'}</span>
+                                </div>
+                            `;
+                            elementPathCounter++;
+                        }
+                    };
+
+                    // --- 嚴格按照您提供的順序和中文名稱，且不帶英文縮寫 ---
+                    addElementPathItemWithExample('溫度', 'ElementValue[0].Temperature', '溫度');
+                    addElementPathItemWithExample('露點溫度', 'ElementValue[0].DewPoint', '露點溫度');
+                    addElementPathItemWithExample('體感溫度', 'ElementValue[0].ApparentTemperature', '體感溫度');
+                    addElementPathItemWithExample('舒適度指數', 'ElementValue[0].ComfortIndex', '舒適度指數');
+                    addElementPathItemWithExample('舒適度指數描述', 'ElementValue[0].ComfortIndexDescription', '舒適度指數');
+                    addElementPathItemWithExample('相對濕度', 'ElementValue[0].RelativeHumidity', '相對濕度');
+                    addElementPathItemWithExample('風向', 'ElementValue[0].WindDirection', '風向');
+                    addElementPathItemWithExample('風速', 'ElementValue[0].WindSpeed', '風速');
+                    addElementPathItemWithExample('蒲福風級', 'ElementValue[0].BeaufortScale', '風速');
+                    addElementPathItemWithExample('降雨機率', 'ElementValue[0].ProbabilityOfPrecipitation', '3小時降雨機率');
+                    addElementPathItemWithExample('天氣現象', 'ElementValue[0].Weather', '天氣現象');
+                    addElementPathItemWithExample('天氣現象代碼', 'ElementValue[0].WeatherCode', '天氣現象');
+                    addElementPathItemWithExample('天氣預報綜合描述', 'ElementValue[0].WeatherDescription', '天氣預報綜合描述');
+
+                    // 將站點基礎資料的內容填充到對應的 div 中
+                    siteBaseDataContentElem.innerHTML = siteBaseDataHtml;
+
+
+                } else {
+                    weatherDataDisplay.innerHTML = `<p class="error-message">錯誤：取得資料失敗或資料格式不正確。</p>
+                        <br><p class="error-message">請檢查 URL 中的 API Key 是否正確，或 API 回應的格式與預期不符。</p>
+                        <br><p class="error-message">原始回應訊息：${getSafeValue(data, 'records.Message', JSON.stringify(data))}</p>`;
+                    console.error("API 回應不成功或無 Records 資料:", data);
+                }
+
+            } catch (error) {
+                console.error('在獲取氣象預報資料時發生錯誤:', error);
+                weatherDataDisplay.innerHTML = `<p class="error-message">載入資料時發生錯誤：${error.message} <br>請檢查網路連線或 URL 中的參數。</p>`;
+            }
+        }
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        // 確保在頁面載入後，任何 <pre><code> 區塊都被 Highlight.js 處理
+        document.querySelectorAll('pre code').forEach((el) => {
+            hljs.highlightElement(el);
+        });
+    </script>
+</body>
+</html>
