@@ -1,0 +1,119 @@
+﻿<!DOCTYPE html>
+<html lang='zh-Hant'>
+<head>
+
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>天氣預報 '25 - 我一定要挑戰成功!!</title>
+
+<style>
+
+body 
+{
+    padding: 4px;
+    background-color: #000;
+    color: #aaa;
+    /* color: #ff0; */
+}
+
+.undeline
+{
+   border-bottom: 1px solid #444; 
+   margin-bottom: 8px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<p id='testarea' class='undeline'>TEST<br /></p>
+<p id='nowarea' class='undeline'>NOW<br /></p>
+<p id='3darea' class='undeline'>3 Days<br /></p>
+<p id='1wdarea' class='undeline'>1 Week<br /></p>
+
+<script>
+       
+       //sendmsg('testarea', '大家好');
+       //sendmsg('testarea', '我是王先生');
+       
+       //呼叫 現在觀測
+       nowwea1();
+
+
+
+//函數一定要寫在scrpt最前面 才能確保被執行到 >> 不一定 只要堅持一個HTML只有一組script就好
+
+function nowwea1 () 
+{
+       // 氣象局 現在天氣觀測 API 的基本 URL
+       // wea.html?key=CWA-422C592A-18E7-4C2E-BBD2-003CCC1F18D4;&station1=466881;
+       
+        let _base = 'https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001';
+
+        // 一定要 new 一定要先截斷到 ? 之後
+        let tmp1= new URLSearchParams(window.location.search);
+
+         // 取得 使用者傳遞進來的參數
+        let key1 = tmp1.get('key');
+        let station1 = removeTrailingSemicolon(tmp1.get('station1')); 
+
+       sendmsg('nowarea', _base);
+       sendmsg('nowarea', key1);
+       sendmsg('nowarea', station1);
+
+       tmp1=_base+'?Authorization='+key1+'&StationId='+station1;
+       sendmsg('nowarea', tmp1);
+}       
+
+// 氣象局 3日天預報 API 的基本 URL
+// 氣象局 1周預報 API 的基本 URL
+       // wea3.html?key=CWA-422C592A-18E7-4C2E-BBD2-003CCC1F18D4;&location1=新店區;
+
+
+//R
+function removeTrailingSemicolon(str) {
+  // 檢查字串是否為空或非字串類型
+  if (typeof str !== 'string' || str.length === 0) {
+    return str;
+  }
+
+  // 使用 replace() 方法和正則表達式
+  // /;+$/: 
+  //   ;   - 匹配一個分號
+  //   +   - 匹配一個或多個（連續的）分號
+  //   $   - 匹配字串的結尾
+  //   ''  - 替換成空字串 (即刪除匹配到的內容)
+  return str.replace(/;+$/, '');
+}
+
+
+//S
+function sendmsg(block1, msg1, br1= 1) 
+ {  // 傳送訊息到某個區塊
+ 
+   //是否換行 只能0 或1 預設是 1
+   br1 = (br1 === 1) ? 1 : 0;
+   
+   const outputElement = document.getElementById(block1);
+   if (outputElement) {
+      // *** 重要的安全性考量：將訊息內容作為純文字追加 ***
+      // 使用 textContent 可以防止 msg 中的 HTML 標籤被解析，有效避免 XSS 攻擊。
+      outputElement.innerHTML += msg1; 
+
+      if (br1=== 1) {
+         outputElement.innerHTML += '<br />';
+      }
+   }
+}
+
+
+
+</script>
+
+
+
+</body>
+
+</html>

@@ -1,0 +1,118 @@
+﻿<!DOCTYPE html>
+<html lang='zh-Hant'>
+<head>
+
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>天氣預報 '25 - 我一定要挑戰成功!!</title>
+
+<style>
+
+body 
+{
+    padding: 4px;
+    background-color: #000;
+    color: #aaa;
+    /* color: #ff0; */
+}
+
+.undeline
+{
+   border-bottom: 1px solid #444; 
+   margin-bottom: 8px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div id='testarea' class='undeline'>TEST<br /></div>
+
+<div id='api_data1'>API 資料顯示區:<br /></div>
+<div id='nowarea' class='undeline'>NOW<br /></div>
+
+<div id='3darea' class='undeline'>3 Days<br /></div>
+<div id='1wdarea' class='undeline'>1 Week<br /></div>
+
+<script>
+// 共用函數
+
+//M
+function makeA(_str, _url) 
+{ // 產生 a 連結 <a href="https://example.com" target="_blank">Website</a>
+  
+    _tmp1='<a href="'+_url+'" target="_blank">'+_str+'</a>';
+    //window.alert(_tmp1);
+
+    //這寫法比較長 但很容易懂 但傳回去的格式是不同的接收方式
+    //let _tmp1 = document.createElement('a');
+    //_tmp1.href = _url;
+    //_tmp1.textContent = _str;
+    //_tmp1.target = '_blank';
+    //window.alert(_tmp1);
+
+    return _tmp1;
+
+}
+
+
+//R
+function removeTrailingSemicolon(str) 
+{  // 檢查字串是否為空或非字串類型
+  if (typeof str !== 'string' || str.length === 0) {
+    return str;
+  }
+
+  // 使用 replace() 方法和正則表達式
+  // /;+$/: 
+  //   ;   - 匹配一個分號
+  //   +   - 匹配一個或多個（連續的）分號
+  //   $   - 匹配字串的結尾
+  //   ''  - 替換成空字串 (即刪除匹配到的內容)
+  return str.replace(/;+$/, '');
+}
+
+
+//S
+function sendmsg(block1, msg1, br1= 1) 
+ {  // 傳送訊息到某個區塊
+ 
+   //是否換行 只能0 或1 預設是 1
+   br1 = (br1 === 1) ? 1 : 0;
+   
+   const outputElement = document.getElementById(block1);
+   if (outputElement) {
+      // *** 重要的安全性考量：將訊息內容作為純文字追加 ***
+      // 使用 textContent 可以防止 msg 中的 HTML 標籤被解析，有效避免 XSS 攻擊。
+      outputElement.innerHTML += msg1; 
+
+      if (br1=== 1) {
+         outputElement.innerHTML += '<br />';
+      }
+   }
+}
+
+//測試區
+       sendmsg('testarea', '大家好');
+       sendmsg('testarea', '我是王先生');
+
+</script>
+
+ //呼叫 現在觀測
+<script src="now1.js"></script>
+<script>
+        // 呼叫 現在觀測
+    document.addEventListener('DOMContentLoaded', () => { nowwea1(); } );
+</script>
+
+
+// 氣象局 3日天預報 API 的基本 URL
+// 氣象局 1周預報 API 的基本 URL
+       // wea3.html?key=CWA-422C592A-18E7-4C2E-BBD2-003CCC1F18D4;&location1=新店區;
+
+
+</body>
+
+</html>
