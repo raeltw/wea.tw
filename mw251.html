@@ -30,10 +30,12 @@ body
 
 <div id='testarea' class='undeline'>TEST<br /></div>
 
-<div id='api_data1'>API 資料顯示區:<br /></div>
+<div id='api_data1'>現在天氣:<br /></div>
 <div id='nowarea' class='undeline'>NOW<br /></div>
 
+<div id='api_data2'>3日預報:<br /></div>
 <div id='3darea' class='undeline'>3 Days<br /></div>
+
 <div id='1wdarea' class='undeline'>1 Week<br /></div>
 
 <script>
@@ -95,23 +97,28 @@ function sendmsg(block1, msg1, br1= 1)
 }
 
 //測試區
-       sendmsg('testarea', '大家好');
-       sendmsg('testarea', '我是王先生');
+       //sendmsg('testarea', '大家好');
+       //sendmsg('testarea', '我是王先生');
 
 </script>
 
- //呼叫 現在觀測
+<!-- 
+ file:///D:/mw251.html?key=CWA-422C592A-18E7-4C2E-BBD2-003CCC1F18D4;&station1=466881;&city1=069;&town1=新店區;
+ https://raeltw.github.io/wea.tw/mw251.html?key=CWA-422C592A-18E7-4C2E-BBD2-003CCC1F18D4;&station1=466881;
+-->
+
+ <!--  呼叫 現在觀測 -->
 <script src="now1.js"></script>
-<script>
-        // 呼叫 現在觀測
-    document.addEventListener('DOMContentLoaded', () => { nowwea1(); } );
-</script>
+<!-- script> document.addEventListener('DOMContentLoaded', () => { nowwea1(); } ); </script -->
 
+ <!--  呼叫 3日預報 -->
+<script src="3d1.js"></script>
+<script> document.addEventListener('DOMContentLoaded', () => { d31(); } ); </script>
 
-// 氣象局 3日天預報 API 的基本 URL
-// 氣象局 1周預報 API 的基本 URL
+<!-- 
+氣象局 1周預報 API 的基本 URL
        // wea3.html?key=CWA-422C592A-18E7-4C2E-BBD2-003CCC1F18D4;&location1=新店區;
-
+-->
 
 </body>
 

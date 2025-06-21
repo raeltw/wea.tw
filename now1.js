@@ -60,7 +60,7 @@ function nowwea1() {
                     const staData = stationRecords[0]; // 總是取第一筆測站的資料 站點資料
                     const wadData = stationRecords[0].WeatherElement; // 氣象資料
 
-                    sendmsg('api_data1', '<br />現在天氣: ');
+                    sendmsg('api_data1', '  ');
                     sendmsg('api_data1', `觀測地點: ${staData.GeoInfo.CountyName} ${staData.GeoInfo.TownName}`);
                     sendmsg('api_data1', `時間: ${staData.ObsTime.DateTime.replace('T', ' ').substring(0, 19)}`);
                     sendmsg('api_data1', `天氣: ${wadData.Weather}`);
