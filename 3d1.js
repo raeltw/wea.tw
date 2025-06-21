@@ -25,7 +25,7 @@
     sendmsg('3darea', ' ' + _apiurl1);
 
     // 重點!!!
-    sendmsg('3darea', '正在從氣象局 API 載入資料...'); // 假設你有一個 id 為 'api_data2' 的元素來顯示數據
+    sendmsg('3darea', '正在從氣象局 API 載入資料...'); // 假設你有一個 id 為 'api_data3' 的元素來顯示數據
 
     fetch(_apiurl1) // 使用 fetch 呼叫 API
         .then(response => {
@@ -51,88 +51,158 @@
             //    forecastLocations = data.records.locations[0].location;
             //}
 
-            //報表名稱
             //window.alert();
-            sendmsg('api_data2', data.records.Locations[0].DatasetDescription);
-            sendmsg('api_data2', '預報地點: ', 0);
-            sendmsg('api_data2', data.records.Locations[0].LocationsName, 0);
-            sendmsg('api_data2', data.records.Locations[0].Location[0].LocationName);
+            //報表名稱
+            //sendmsg('api_data3', data.records.Locations[0].DatasetDescription);
+            sendmsg('api_data3', '預報地點: ', 0);
+            sendmsg('api_data3', data.records.Locations[0].LocationsName+' ', 0);
+            sendmsg('api_data3', data.records.Locations[0].Location[0].LocationName);
             
-            //這裡找到10筆欄位! 然後每個欄位下有每天的資料
+            //這裡可以找到10組欄位! 然後每個欄位下有每天的資料
             let forecastLocations=data.records.Locations[0].Location[0].WeatherElement;
-
-            sendmsg('api_data2', `共找到 ${forecastLocations.length} 組預報欄位資料。`);
-
-            var ii;
-            for (ii = 0; ii < forecastLocations.length; ii++) {
-                forecastLocations[0].ElementName;
-                //window.alert();
-                sendmsg('3darea', forecastLocations[ii].ElementName+"數據讀取中... ", 0);
-                sendmsg('3darea', "取得 "+forecastLocations[ii].Time.length+" 紀錄",);
-                var jj;
-                for (jj = 0; jj < forecastLocations[ii].Time.length; jj++) {
-                   if (forecastLocations[ii].Time[0].DataTime !== undefined) {
-                      sendmsg('3darea', forecastLocations[ii].Time[jj].DataTime+'  ', 0);
-                   }
-
-                   if (forecastLocations[ii].Time[0].StartTime !== undefined) {
-                      sendmsg('3darea', forecastLocations[ii].Time[jj].StartTime+' ', 0);
-                   }
-                   if (forecastLocations[ii].Time[0].EndTime !== undefined) {
-                      sendmsg('3darea', forecastLocations[ii].Time[jj].EndTime+'  ', 0);
-                   }
-                   
-                   if (forecastLocations[ii].ElementName == '溫度') {
-                      sendmsg('3darea', forecastLocations[ii].Time[jj].ElementValue[0].Temperature+' '+jj+' ');
-                   }
-                   if (forecastLocations[ii].ElementName == '露點溫度') {
-                      sendmsg('3darea', forecastLocations[ii].Time[jj].ElementValue[0].DewPoint+' '+jj+' ');
-                   }
-                   if (forecastLocations[ii].ElementName == '相對濕度') {
-                      sendmsg('3darea', forecastLocations[ii].Time[jj].ElementValue[0].RelativeHumidity+' '+jj+' ');
-                   }
-                   if (forecastLocations[ii].ElementName == '體感溫度') {
-                      sendmsg('3darea', forecastLocations[ii].Time[jj].ElementValue[0].ApparentTemperature+' '+jj+' ');
-                   }
-                   if (forecastLocations[ii].ElementName == '舒適度指數') {
-                      sendmsg('3darea', forecastLocations[ii].Time[jj].ElementValue[0].ComfortIndex+' ', 0);
-                      sendmsg('3darea', forecastLocations[ii].Time[jj].ElementValue[0].ComfortIndexDescription+' '+jj+' ');
-                   }
-                   if (forecastLocations[ii].ElementName == '風速') {
-                      sendmsg('3darea', forecastLocations[ii].Time[jj].ElementValue[0].WindSpeed+' ', 0);
-                      sendmsg('3darea', forecastLocations[ii].Time[jj].ElementValue[0].BeaufortScale+' '+jj+' ');
-                   }
-                   if (forecastLocations[ii].ElementName == '風向') {
-                      sendmsg('3darea', forecastLocations[ii].Time[jj].ElementValue[0].WindDirection+' '+jj+' ');
-                   }
-                   if (forecastLocations[ii].ElementName == '3小時降雨機率') {
-                      sendmsg('3darea', forecastLocations[ii].Time[jj].ElementValue[0].ProbabilityOfPrecipitation+' '+jj+' ');
-                   }
-                   if (forecastLocations[ii].ElementName == '天氣現象') {
-                      sendmsg('3darea', forecastLocations[ii].Time[jj].ElementValue[0].Weather+' ', 0);
-                      sendmsg('3darea', forecastLocations[ii].Time[jj].ElementValue[0].WeatherCode+' '+jj+' ');
-                   }
-                   if (forecastLocations[ii].ElementName == '天氣預報綜合描述') {
-                      sendmsg('3darea', forecastLocations[ii].Time[jj].ElementValue[0].WeatherDescription+' '+jj+' ');
-                   }
-                }
-            }
-
 
             if (forecastLocations && forecastLocations.length > 0) { // 確保 forecastLocations 是存在的並且有數據
                 //window.alert('hello?');
 
                 const numberOfRecords = forecastLocations.length; // 取得陣列的長度 
 
-                sendmsg('api_data2', `共找到 ${numberOfRecords} 組預報欄位資料。`);
+                sendmsg('api_data3', `共找到 ${numberOfRecords} 組預報欄位資料`);
                 //return '';
 
 /// move
+               var _first= 1;
+               
+               var ii;
+               for (ii = 0; ii < forecastLocations.length; ii++) {
+                   forecastLocations[0].ElementName;
+                   //window.alert();
+                   //sendmsg('3darea', '');
+                   //sendmsg('3darea', forecastLocations[ii].ElementName+"數據讀取中... ", 0);
+                   sendmsg('3darea', forecastLocations[ii].ElementName+"... ", 0);
+                   sendmsg('3darea', "取得 "+forecastLocations[ii].Time.length+" 紀錄");
+                   if (_first==1) {
+                      //window.alert('第一次');
+                      _first= 0;
+                      dt0=[]; _dt1=[]; _temp0=[]; _temp1=[]; _dew0=[]; _humi0=[]; _prec0=[];
+                      // 日期0(原始), 日期1(精簡), 溫度, 體感溫度, 露點溫度, 相對濕度, 降雨機率
+                   }
+                   var jj;
+                   for (jj = 0; jj < forecastLocations[ii].Time.length; jj++) {
+                      if (forecastLocations[ii].Time[0].DataTime !== undefined) {
+                        // sendmsg('3darea', forecastLocations[ii].Time[jj].DataTime+'  ', 0);
+                            if ( _dt0.length < (jj+1) ) {
+                               _dt0[jj]=forecastLocations[ii].Time[jj].DataTime.replace('T', '-').substring(0, 13);
+                               //window.alert();
+                               //sendmsg('api_data3', '新增陣列 '+jj+' '+_dt0[jj]);
+                           }
+                      }
+
+                      if (forecastLocations[ii].Time[0].StartTime !== undefined) {
+                         //sendmsg('3darea', forecastLocations[ii].Time[jj].StartTime+' ', 0);
+                      }
+                      if (forecastLocations[ii].Time[0].EndTime !== undefined) {
+                         //sendmsg('3darea', forecastLocations[ii].Time[jj].EndTime+'  ', 0);
+                      }
+                   
+                      if (forecastLocations[ii].ElementName == '溫度') {
+                         //sendmsg('3darea', forecastLocations[ii].Time[jj].ElementValue[0].Temperature+' '+jj+' ');
+                         _temp0[jj]=forecastLocations[ii].Time[jj].ElementValue[0].Temperature;
+                      }
+                      if (forecastLocations[ii].ElementName == '露點溫度') {
+                         //sendmsg('3darea', forecastLocations[ii].Time[jj].ElementValue[0].DewPoint+' '+jj+' ');
+                         _dew0[jj]=forecastLocations[ii].Time[jj].ElementValue[0].DewPoint;
+                      }
+                      if (forecastLocations[ii].ElementName == '相對濕度') {
+                         //sendmsg('3darea', forecastLocations[ii].Time[jj].ElementValue[0].RelativeHumidity+' '+jj+' ');
+                         _humi0[jj]=forecastLocations[ii].Time[jj].ElementValue[0].RelativeHumidity;
+                      }
+                      if (forecastLocations[ii].ElementName == '體感溫度') {
+                         //sendmsg('3darea', forecastLocations[ii].Time[jj].ElementValue[0].ApparentTemperature+' '+jj+' ');
+                         _temp1[jj]=forecastLocations[ii].Time[jj].ElementValue[0].ApparentTemperature;
+                      }
+                      if (forecastLocations[ii].ElementName == '舒適度指數') {
+                         //sendmsg('3darea', forecastLocations[ii].Time[jj].ElementValue[0].ComfortIndex+' ', 0);
+                         //sendmsg('3darea', forecastLocations[ii].Time[jj].ElementValue[0].ComfortIndexDescription+' '+jj+' ');
+                      }
+                      if (forecastLocations[ii].ElementName == '風速') {
+                         //sendmsg('3darea', forecastLocations[ii].Time[jj].ElementValue[0].WindSpeed+' ', 0);
+                         //sendmsg('3darea', forecastLocations[ii].Time[jj].ElementValue[0].BeaufortScale+' '+jj+' ');
+                      }
+                      if (forecastLocations[ii].ElementName == '風向') {
+                         //sendmsg('3darea', forecastLocations[ii].Time[jj].ElementValue[0].WindDirection+' '+jj+' ');
+                      }
+                      if (forecastLocations[ii].ElementName == '3小時降雨機率') {
+                         // 三小時!!
+                         //sendmsg('3darea', forecastLocations[ii].Time[jj].ElementValue[0].ProbabilityOfPrecipitation+' '+jj+' ');
+                         var _beg0=forecastLocations[ii].Time[jj].StartTime.replace('T', '-').substring(0, 13)
+                         var _end0=forecastLocations[ii].Time[jj].EndTime.replace('T', '-').substring(0, 13)
+
+                         //sendmsg('api_data3', '日期區間 '+_beg0+' '+_end0+' > ', 0);
+                         //把三小時的資料 分存回一小時
+                         while (_beg0 < _end0) {
+                            //sendmsg('api_data3', '降雨? '+_beg0+' ', 0);
+                            //sendmsg('api_data3', _dt0.indexOf(_beg0));
+                            var _found=_dt0.indexOf(_beg0);
+                            if ( _found> -1) {
+                               _prec0[_found]=forecastLocations[ii].Time[jj].ElementValue[0].ProbabilityOfPrecipitation;
+                            }
+
+                            _beg0=dtcalct(_beg0, +1);
+                         }
+                         //sendmsg('api_data3', '');
+  
+                         //_prec0[jj]=forecastLocations[ii].Time[jj].ElementValue[0].ProbabilityOfPrecipitation;
+                      }
+                      if (forecastLocations[ii].ElementName == '天氣現象') {
+                         // 三小時!!
+                         //sendmsg('3darea', forecastLocations[ii].Time[jj].ElementValue[0].Weather+' ', 0);
+                         //sendmsg('3darea', forecastLocations[ii].Time[jj].ElementValue[0].WeatherCode+' '+jj+' ');
+                      }
+                      if (forecastLocations[ii].ElementName == '天氣預報綜合描述') {
+                         // 三小時!!
+                         //sendmsg('3darea', forecastLocations[ii].Time[jj].ElementValue[0].WeatherDescription+' '+jj+' ');
+                      }
+                   }
+               }
 /// move
 
-                sendmsg('api_data2', ' '); // 留白
-                sendmsg('3darea', '(完整數據請按[F12]至Console頁面查看)<br />');
-                console.log(data); // 將完整數據物件輸出到瀏覽器控制台
+                //檢查陣列 同時產生 _dt1 所以不能整段mark掉!!
+                sendmsg('3darea', '欄位處理完畢！');
+                sendmsg('3darea', '長日期 [短日期] 溫度, 體感, 露點. 濕度: 降雨-');
+                sendmsg('3darea', '_dt0 [_dt1] _temp0, _temp01, _dew0. _humi0: _prec0-');
+                _tmp1="  ";
+                var _dd, _hh; 
+                for (jj = 0; jj < _dt0.length; jj++) {
+                   _dd=_dt0[jj].substring(8, 10);
+                   // 第8位開始取 第10位不算!!
+                   _hh=_dt0[jj].substring(11, 13);
+                   _dt1[jj]='';
+                   if ( _tmp1 !== _dd ) {
+                      _tmp1=_dd;
+                      _dt1[jj]=_dd;
+                   }
+                   _dt1[jj]=_dt1[jj]+' '+_hh;
+
+                   //sendmsg('3darea', ' D:'+_dd+' ', 0);
+                   //sendmsg('3darea', ' H:'+_hh+' ', 0);
+
+                   sendmsg('3darea', ' '+_dt0[jj]+' ', 0);
+                   sendmsg('3darea', '['+_dt1[jj]+'] ', 0);
+                   sendmsg('3darea', _temp0[jj]+', ', 0);
+                   sendmsg('3darea', _temp1[jj]+', ', 0);
+                   sendmsg('3darea', _dew0[jj]+'. ', 0);
+                   sendmsg('3darea', _humi0[jj]+': ', 0);
+                   sendmsg('3darea', _prec0[jj]+'- ', 0);
+
+                   sendmsg('3darea', jj);
+                }
+
+                ///在最後終於要畫圖
+                d31chart();
+     
+                //不要浪費記憶體
+                //sendmsg('3darea', '(完整數據請按[F12]至Console頁面查看)<br />');
+                //console.log(data); // 將完整數據物件輸出到瀏覽器控制台
             } else {
                 // 如果 forecastLocations 不存在或為空，表示 API 返回數據中沒有符合條件的預報地點列表
                 sendmsg('3darea', `<span style="color: red;">錯誤：API 返回的預報地點資料列表為空或結構不符。請檢查參數或 API 響應。</span>`);
@@ -141,7 +211,8 @@
         })
         .catch(error => {
             // 捕獲任何錯誤 (例如網路問題、API 返回錯誤、解析錯誤等)
-            sendmsg('api_data2', `載入氣象數據失敗: ${error.message}`);
+            sendmsg('api_data3', `載入氣象數據失敗: ${error.message}`);
             console.error('API 呼叫錯誤:', error);
         });
+
 }

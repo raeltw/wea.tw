@@ -102,8 +102,9 @@ function nowwea1() {
                     
                     // 不然就用 table 看似複雜 實則很單純
 
-                    sendmsg('nowarea', '(完整數據請按[F12]至Console頁面查看)<br />');
-                    console.log(data); // 將完整數據物件輸出到瀏覽器控制台
+                     //不要浪費記憶體
+                    //sendmsg('nowarea', '(完整數據請按[F12]至Console頁面查看)<br />');
+                    //console.log(data); // 將完整數據物件輸出到瀏覽器控制台
                 } else {
                     sendmsg('nowarea', 'API 返回的測站資料列表為空。');
                     console.log('API 返回的原始數據:', data);

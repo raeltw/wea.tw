@@ -1,4 +1,9 @@
-﻿<!DOCTYPE html>
+﻿<!-- 
+ file:///D:/mw251.html?key=CWA-422C592A-18E7-4C2E-BBD2-003CCC1F18D4;&station1=466881;&city1=069;&town1=新店區;
+ https://raeltw.github.io/wea.tw/mw251.html?key=CWA-422C592A-18E7-4C2E-BBD2-003CCC1F18D4;&station1=466881;&city1=069;&town1=新店區;
+ -->
+
+<!DOCTYPE html>
 <html lang='zh-Hant'>
 <head>
 
@@ -22,24 +27,78 @@ body
    margin-bottom: 8px;
 }
 
+.chart-container {
+   width: 1000px;
+}
+
 </style>
 
 </head>
 
 <body>
 
-<div id='testarea' class='undeline'>TEST<br /></div>
-
+    
 <div id='api_data1'>現在天氣:<br /></div>
-<div id='nowarea' class='undeline'>NOW<br /></div>
 
-<div id='api_data2'>3日預報:<br /></div>
-<div id='3darea' class='undeline'>3 Days<br /></div>
+<div id='api_data3'>3日預報:<br /></div>
+<div class="chart-container">
+    <canvas id="Chart3"></canvas>
+</div>
+<div id='3darea' class='undeline'>3 Days<br />
+</div>
 
 <div id='1wdarea' class='undeline'>1 Week<br /></div>
 
+<!-- 這些是工作區 或許等開發完 可以藏起來 -->
+<div id='testarea' class='undeline'>TEST<br /></div>
+<div id='nowarea' class='undeline'>NOW<br /></div>
+
+
+<!-- 繪圖工具 -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1"></script>
+
+
 <script>
 // 共用函數
+
+
+//C
+function dtcalct(_dt0, _n1) {
+    // 1. 解析輸入字串 '年-月-日-時' 為 Date 物件
+    // 將 "2025-06-25-15" 轉換為 Date 物件可解析的格式，例如 "2025-06-25T15:00:00"
+    const parts = _dt0.split('-'); // 分割成 ['2025', '06', '25', '15']
+
+    if (parts.length !== 4) {
+        console.error("dtcalct 錯誤：日期時間字串格式不正確，應為 'YYYY-MM-DD-HH'");
+        return null; // 返回 null 或拋出錯誤，表示無效輸入
+    }
+
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1; // 月份在 JavaScript Date 物件中是 0-11
+    const day = parseInt(parts[2], 10);
+    const hour = parseInt(parts[3], 10);
+
+    // 建立一個 Date 物件。注意：如果沒有指定分鐘和秒，它們會預設為 0
+    // 使用 UTC 時間可以避免時區問題，確保加減結果的準確性
+    const dateObj = new Date(Date.UTC(year, month, day, hour, 0, 0));
+
+    // 2. 對小時進行加減運算
+    dateObj.setUTCHours(dateObj.getUTCHours() + _n1);
+
+    // 3. 將結果格式化回 '年-月-日-時' 字串
+
+    // 獲取新的日期時間組件
+    const newYear = dateObj.getUTCFullYear();
+    // getUTCMonth() 返回 0-11，所以需要 +1
+    const newMonth = (dateObj.getUTCMonth() + 1).toString().padStart(2, '0');
+    const newDay = dateObj.getUTCDate().toString().padStart(2, '0');
+    const newHour = dateObj.getUTCHours().toString().padStart(2, '0');
+
+    // 拼接成目標格式
+    return `${newYear}-${newMonth}-${newDay}-${newHour}`;
+}
+
 
 //M
 function makeA(_str, _url) 
@@ -102,16 +161,19 @@ function sendmsg(block1, msg1, br1= 1)
 
 </script>
 
-<!-- 
- file:///D:/mw251.html?key=CWA-422C592A-18E7-4C2E-BBD2-003CCC1F18D4;&station1=466881;&city1=069;&town1=新店區;
- https://raeltw.github.io/wea.tw/mw251.html?key=CWA-422C592A-18E7-4C2E-BBD2-003CCC1F18D4;&station1=466881;
--->
 
  <!--  呼叫 現在觀測 -->
 <script src="now1.js"></script>
-<!-- script> document.addEventListener('DOMContentLoaded', () => { nowwea1(); } ); </script -->
+<script> document.addEventListener('DOMContentLoaded', () => { nowwea1(); } ); </script>
 
+<script>
+//陣列在此宣告 才能讓變數傳遞到所有子程序去
+var _dt0=[]; _dt1=[]; _temp0=[]; _temp1=[]; _dew0=[]; _humi0=[]; _prec0=[];
+// 日期0(原始), 日期1(精簡), 溫度, 體感溫度, 露點溫度, 相對濕度, 降雨機率
+</script>
  <!--  呼叫 3日預報 -->
+<! -- 帶入順序 要從最底層的開始寫 -->
+<script src="3d1chart.js"></script>
 <script src="3d1.js"></script>
 <script> document.addEventListener('DOMContentLoaded', () => { d31(); } ); </script>
 
