@@ -49,7 +49,7 @@
                    backgroundColor: 'rgba(0, 147, 193, 1)', 
                    //最後一碼 透明度 1是不透明 
                    borderColor: 'rgba(0, 147, 193, 1)', 
-                   borderWidth: 1,  
+                   borderWidth: 0,  
                    yAxisID: 'yRainfall', // <--- 給右側 Y 軸一個 ID 
                }, // <-- 修正：逗號是必須的，因為後面還有數據集 
     
@@ -64,7 +64,7 @@
                    tension: 0.4, // 平滑曲線 
                    fill: false,  // 不填充 
                    yAxisID: 'yTemperature', // <--- 綁定到左側溫度 Y 軸 
-                   pointRadius: 0, // 數據點半徑為 3 像素 
+                   pointRadius: 1, // 數據點半徑為 3 像素 
                }, // <-- 修正：逗號是必須的，因為後面還有數據集 
     
                // ****** 新增的體感溫度折線圖 (綁定到左側 Y 軸) ****** 
@@ -78,7 +78,7 @@
                    tension: 0.4, 
                    fill: false, 
                    yAxisID: 'yTemperature', // <--- 綁定到左側溫度 Y 軸 
-                   pointRadius: 0, // 數據點半徑為 3 像素 
+                   pointRadius: 1, // 數據點半徑為 3 像素 
                }, // <-- 修正：逗號是必須的，因為後面還有數據集 
     
                // ****** 新增的露點折線圖 (綁定到左側 Y 軸) ****** 
@@ -92,7 +92,7 @@
                    tension: 0.4, 
                    fill: false, 
                    yAxisID: 'yTemperature', // <--- 綁定到左側溫度 Y 軸 
-                   pointRadius: 0, // 數據點半徑為 3 像素 
+                   pointRadius: 1, // 數據點半徑為 3 像素 
                } // <-- 修正：這是最後一個數據集，後面沒有逗號 
                // ************************************************** 
            ] 
