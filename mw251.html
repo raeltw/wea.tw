@@ -1,6 +1,6 @@
 ﻿<!-- 
- file:///D:/mw251.html?key=CWA-422C592A-18E7-4C2E-BBD2-003CCC1F18D4;&station1=466881;&city1=069;&town1=新店區;
- https://raeltw.github.io/wea.tw/mw251.html?key=CWA-422C592A-18E7-4C2E-BBD2-003CCC1F18D4;&station1=466881;&city1=069;&town1=新店區;
+ file:///D:/mw251.html?key=CWB-A0E4FCC7-9BF5-4ABB-A778-3DB913641D8D;&station1=466881;&rep3=069;&rep7=071;&town1=新店區;
+ https://raeltw.github.io/wea.tw/mw251.html?key=CWA-422C592A-18E7-4C2E-BBD2-003CCC1F18D4;&station1=466881;&rep3=069;&rep7=071;&town1=新店區;
 Netlify rael.tw ss_aa_60412
  -->
 
@@ -41,24 +41,29 @@ body
 
     
 <div id='api_data1'>現在天氣:<br /></div>
-
-<div id='api_data3'>3日預報:<br /></div>
 <div class="chart-container">
+<div id='api_data3'>3日預報:<br /></div>
     <canvas id="Chart3"></canvas>
 </div>
-<div id='3darea' class='undeline'>3 Days<br />
+<div id='api_data7'>1周預報:<br /></div>
+<div class="chart-container">
+    <canvas id="Chart7"></canvas>
 </div>
 
-<div id='1wdarea' class='undeline'>1 Week<br /></div>
+
 
 <!-- 這些是工作區 或許等開發完 可以藏起來 -->
 <div id='testarea' class='undeline'>TEST<br /></div>
 <div id='nowarea' class='undeline'>NOW<br /></div>
+<div id='3darea' class='undeline'>3 Days<br /></div>
+<div id='1warea' class='undeline'>1 Week<br /></div>
 
 
 <!-- 繪圖工具 -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/@sgratzl/chartjs-chart-boxplot@4.0.0"></script>
+
 
 
 <script>
@@ -99,6 +104,29 @@ function dtcalct(_dt0, _n1) {
 
     // 拼接成目標格式
     return `${newYear}-${newMonth}-${newDay}-${newHour}`;
+}
+
+/**
+ * 根據給定的下限和上限數值，生成 Chart.js boxplot 數據格式的物件。
+ * 這個物件會使 boxplot 呈現為一個從 min 到 max 的實心方塊。
+ *
+ * @param {number} lowerBound - 方塊的下限 (對應 min 和 q1)。
+ * @param {number} upperBound - 方塊的上限 (對應 max 和 q3)。
+ * @returns {object} 符合 Chart.js boxplot 數據格式的單一數據物件。
+ */
+function createBoxplotData(lowerBound, upperBound) {
+    // 確保 lowerBound 不大於 upperBound
+    const minVal = Math.min(lowerBound, upperBound);
+    const maxVal = Math.max(lowerBound, upperBound);
+
+    return {
+        min: minVal,
+        max: maxVal,
+        q1: minVal,      // Q1 等於最小值，確保方塊從這裡開始
+        q3: maxVal,      // Q3 等於最大值，確保方塊到這裡結束
+        median: (minVal + maxVal) / 2, // 中位數在 min 和 max 的中間
+        outliers: []     // 盒鬚圖通常沒有離群值（如果沒有額外定義）
+    };
 }
 
 
@@ -171,23 +199,32 @@ function sendmsg(block1, msg1, br1= 1)
 <script src="now1.js"></script>
 <script> document.addEventListener('DOMContentLoaded', () => { nowwea1(); } ); </script>
 
+<!-- 3日預報 -->
 <script>
    //變數陣列在此宣告 才能讓變數傳遞到所有子程序去
    let currentDataIndex = -1; 
    var _hi0=[]; _dt0=[]; _dt1=[]; _temp0=[]; _temp1=[]; _dew0=[]; _humi0=[]; _prec0=[]; _descl=[]; _weat0=[]; _comf0=[];
    // 日期0(原始), 日期1(精簡), 溫度, 體感溫度, 露點溫度, 相對濕度, 降雨機率
-
 </script>
- <!--  呼叫 3日預報 -->
+ <!--  3日預報 -->
 <! -- 帶入順序 要從最底層的開始寫 -->
 <script src="3d1chart.js"></script>
 <script src="3d1.js"></script>
 <script> document.addEventListener('DOMContentLoaded', () => { d31(); } ); </script>
 
-<!-- 
-氣象局 1周預報 API 的基本 URL
-       // wea3.html?key=CWA-422C592A-18E7-4C2E-BBD2-003CCC1F18D4;&location1=新店區;
--->
+<!-- 1周預報 -->
+<script>
+   //變數陣列在此宣告 才能讓變數傳遞到所有子程序去
+   let currentDataIndex = -1; 
+   var _hi0=[]; _dt0=[]; _dt1=[]; _temph=[]; _templ=[]; _dew0=[]; _humi0=[]; _prec0=[]; _descl=[]; _weat0=[]; _comf0=[]; _plot0=[];
+   // 日期0(原始), 日期1(精簡), 高溫, 低溫, 露點溫度, 相對濕度, 降雨機率
+</script>
+<! -- 帶入順序 要從最底層的開始寫 -->
+<script src="1w1chart.js"></script>
+<script src="1w1.js"></script>
+
+<script> document.addEventListener('DOMContentLoaded', () => { w11(); } ); </script>
+
 
 </body>
 

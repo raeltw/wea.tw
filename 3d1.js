@@ -1,6 +1,6 @@
 ﻿function d31() {
     // 氣象局 3日預報
-    // wea3.html?key=CWA-422C592A-18E7-4C2E-BBD2-003CCC1F18D4;&city1=069;&town1=新店區;
+    // wea3.html?key=CWA-422C592A-18E7-4C2E-BBD2-003CCC1F18D4;&rep3=069;&town1=新店區;
 
     let _base = 'https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-D0047-';
 
@@ -9,15 +9,15 @@
 
     // 取得 使用者傳遞進來的參數
     let key1 = removeTrailingSemicolon(tmp1.get('key'));
-    let city1 = removeTrailingSemicolon(tmp1.get('city1'));
+    let rep3 = removeTrailingSemicolon(tmp1.get('rep3'));
     let town1 = removeTrailingSemicolon(tmp1.get('town1'));
 
     //sendmsg('3darea', _base);
     //sendmsg('3darea', key1);
-    //sendmsg('3darea', city1);
+    //sendmsg('3darea', rep3);
     //sendmsg('3darea', town1);
 
-    let _apiurl1 = _base + city1 + '?Authorization=' + key1 + '&LocationName=' + town1;
+    let _apiurl1 = _base + rep3 + '?Authorization=' + key1 + '&LocationName=' + town1;
 
     tmp2 = makeA('(原始連結)', _apiurl1);
     //window.alert(tmp2);
@@ -201,15 +201,15 @@
 
                 //檢查陣列 同時產生 _dt1 所以不能整段mark掉!!
                 sendmsg('3darea', '欄位處理完畢！');
-                sendmsg('3darea', '長日期 [短日期] 溫度, 體感, 露點. 濕度: 降雨-');
-                sendmsg('3darea', '_dt0 [_dt1] _temp0, _temp01, _dew0. _humi0: _prec0- _descl');
+                //sendmsg('3darea', '長日期 [短日期] 溫度, 體感, 露點. 濕度: 降雨-');
+                //sendmsg('3darea', '_dt0 [_dt1] _temp0, _temp01, _dew0. _humi0: _prec0- _descl');
                 _tmp1="  ";
                 var _dd, _hh; 
                 currentDataIndex = -1; 
                 const now = new Date(); 
                 const currentDD = String(now.getDate()).padStart(2, '0'); 
                 const currentHH = String(now.getHours()).padStart(2, '0'); 
-                sendmsg('3darea', 'current DD HH '+currentDD+' '+currentHH);
+                //sendmsg('3darea', 'current DD HH '+currentDD+' '+currentHH);
              
                 for (jj = 0; jj < _dt0.length; jj++) {
                    _dd=_dt0[jj].substring(8, 10);
@@ -219,7 +219,7 @@
                    if ( (currentDD == _dd) && (currentHH == _hh) ) {
                       currentDataIndex= jj
                       //sendmsg('3darea', 'currentDataIndex 1 '+currentDataIndex);
-                      sendmsg('3darea', '*** ', 0);
+                      //sendmsg('3darea', '*** ', 0);
                    }
 
                    _dt1[jj]='';
@@ -232,18 +232,18 @@
                    //sendmsg('3darea', ' D:'+_dd+' ', 0);
                    //sendmsg('3darea', ' H:'+_hh+' ', 0);
 
-                   sendmsg('3darea', ' '+_dt0[jj]+' ', 0);
-                   sendmsg('3darea', '['+_dt1[jj]+'] ', 0);
-                   sendmsg('3darea', _temp0[jj]+', ', 0);
-                   sendmsg('3darea', _temp1[jj]+', ', 0);
-                   sendmsg('3darea', _dew0[jj]+'. ', 0);
-                   sendmsg('3darea', _humi0[jj]+': ', 0);
-                   sendmsg('3darea', _prec0[jj]+'- ', 0);
-                   sendmsg('3darea', _weat0[jj]+'\\ ', 0);
-                   sendmsg('3darea', _comf0[jj]+'\\ ', 0);
-                   sendmsg('3darea', _descl[jj]+' ', 0);
+                   //sendmsg('3darea', ' '+_dt0[jj]+' ', 0);
+                   //sendmsg('3darea', '['+_dt1[jj]+'] ', 0);
+                   //sendmsg('3darea', _temp0[jj]+', ', 0);
+                   //sendmsg('3darea', _temp1[jj]+', ', 0);
+                   //sendmsg('3darea', _dew0[jj]+'. ', 0);
+                   //sendmsg('3darea', _humi0[jj]+': ', 0);
+                   //sendmsg('3darea', _prec0[jj]+'- ', 0);
+                   //sendmsg('3darea', _weat0[jj]+'\\ ', 0);
+                   //sendmsg('3darea', _comf0[jj]+'\\ ', 0);
+                   //sendmsg('3darea', _descl[jj]+' ', 0);
 
-                   sendmsg('3darea', jj);
+                   //sendmsg('3darea', jj);
                    //做最後組合 在圖表上使用
                    _weat0[jj]=_dt1[jj]+' : '+_weat0[jj]+' / '+_comf0[jj];
                 }
@@ -266,4 +266,7 @@
             console.error('API 呼叫錯誤:', error);
         });
 
+      data=null;
+      //這也不行
+      //_hi0=null; _dt0=null; _dt1=null; _temp0=null; _temp1=null; _dew0=null; _humi0=null; _prec0=null; _descl=null; _weat0=null; _comf0=null;
 }

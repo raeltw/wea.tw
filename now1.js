@@ -1,5 +1,7 @@
 ﻿
 function nowwea1() {
+    //window.alert('hello?');
+
     // 氣象局 現在天氣觀測 API 的基本 URL
     // wea.html?key=CWA-422C592A-18E7-4C2E-BBD2-003CCC1F18D4;&station1=466881;
 
@@ -121,4 +123,7 @@ function nowwea1() {
             console.error('API 呼叫錯誤:', error);
         });
     // 呼叫 API 的核心程式碼結束
+
+      data=null;
+
 }
