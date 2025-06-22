@@ -157,137 +157,6 @@ function sendmsg(block1, msg1, br1= 1)
    }
 }
 
-/// --- AI寫的 不錯的功能
-// START: 共用函數 - showtip (通用區域感應浮動提示)
-/**
- * 在指定容器的特定區域內，根據鼠標位置顯示對應的浮動提示。
- * 該提示框會自動適應內容，並嘗試維持高:寬 2:4 的視覺比例，其左下角對齊鼠標。
- *
- * @param {string} containerId - 要偵測的 HTML 元素 ID (例如 'myChartCanvas' 或 'box1')。
- * @param {number} detectionAreaTopPct - 偵測區域相對容器頂部的百分比 (0-100)。
- * @param {number} detectionAreaLeftPct - 偵測區域相對容器左側的百分比 (0-100)。
- * @param {number} detectionAreaBottomPct - 偵測區域相對容器底部的百分比 (0-100)。
- * @param {number} detectionAreaRightPct - 偵測區域相對容器右側的百分比 (0-100)。
- * @param {string} direction - 偵測方向：'LR' (Left-to-Right) 或 'UD' (Up-to-Down)。
- * @param {Array<string>} messagesArray - 包含要顯示的訊息字串陣列。
- * @param {Object} [options={}] - 可選的配置物件。
- * @param {number} [options.tooltipMaxWidth=160] - 浮動提示框的最大寬度。
- * @param {string} [options.tooltipPrefix=''] - 浮動提示框內容的字首 (例如 '天氣: ')。
- */
-function showtip(containerId, detectionAreaTopPct, detectionAreaLeftPct, detectionAreaBottomPct, detectionAreaRightPct, direction, messagesArray, options = {}) {
-
-    const containerElement = document.getElementById(containerId);
-    if (!containerElement) {
-        console.error(`showtip: 找不到 ID 為 '${containerId}' 的容器元素。`);
-        return;
-    }
-
-    const tooltipMaxWidth = options.tooltipMaxWidth || 160;
-    const tooltipPrefix = options.tooltipPrefix || '';
-
-    const customTooltipDiv = document.createElement('div');
-    customTooltipDiv.className = 'generic-custom-tooltip'; // 更通用的類名
-    
-    // 樣式設定：自動適應內容，保持 max-width，並嘗試 2:4 視覺比例
-    customTooltipDiv.style.position = 'absolute';
-    customTooltipDiv.style.background = 'rgba(0, 0, 0, 0.7)';
-    customTooltipDiv.style.color = '#fff';
-    customTooltipDiv.style.borderRadius = '5px';
-    customTooltipDiv.style.pointerEvents = 'none'; 
-    customTooltipDiv.style.opacity = '0'; 
-    customTooltipDiv.style.transition = 'opacity 0.2s ease-in-out';
-    customTooltipDiv.style.zIndex = '9999'; 
-    customTooltipDiv.style.maxWidth = `${tooltipMaxWidth}px`; 
-    customTooltipDiv.style.padding = '8px 12px'; 
-    customTooltipDiv.style.boxSizing = 'border-box'; 
-    customTooltipDiv.style.whiteSpace = 'normal'; 
-    customTooltipDiv.style.wordBreak = 'break-word'; 
-    customTooltipDiv.style.textAlign = 'left'; 
-
-    document.body.appendChild(customTooltipDiv);
-
-    // 監聽 containerElement 上的鼠標移動事件
-    containerElement.addEventListener('mousemove', function(event) {
-        const containerRect = containerElement.getBoundingClientRect(); // 容器在視窗中的位置
-        // 滑鼠相對於容器左上角的坐標
-        const mouseXInContainer = event.clientX - containerRect.left; 
-        const mouseYInContainer = event.clientY - containerRect.top;   
-
-        // 計算感應區的實際像素坐標
-        const actualDetectionLeft = (containerRect.width * detectionAreaLeftPct) / 100;
-        const actualDetectionTop = (containerRect.height * detectionAreaTopPct) / 100;
-        const actualDetectionRight = (containerRect.width * detectionAreaRightPct) / 100;
-        const actualDetectionBottom = (containerRect.height * detectionAreaBottomPct) / 100;
-
-        // 判斷鼠標是否在感應區內
-        const isMouseInDetectionArea = 
-            mouseXInContainer >= actualDetectionLeft &&
-            mouseXInContainer <= actualDetectionRight &&
-            mouseYInContainer >= actualDetectionTop &&
-            mouseYInContainer <= actualDetectionBottom;
-
-        let foundMessageIndex = -1;
-
-        if (isMouseInDetectionArea && messagesArray && messagesArray.length > 0) {
-            let primaryAxisLength; // 感應區在主軸上的實際長度
-            let mousePrimaryCoord; // 滑鼠在主軸上的相對坐標
-
-            if (direction === 'LR') {
-                primaryAxisLength = actualDetectionRight - actualDetectionLeft;
-                mousePrimaryCoord = mouseXInContainer - actualDetectionLeft;
-            } else if (direction === 'UD') {
-                primaryAxisLength = actualDetectionBottom - actualDetectionTop;
-                mousePrimaryCoord = mouseYInContainer - actualDetectionTop;
-            }
-
-            // 計算每個訊息對應的「步長」或「子區域寬度/高度」
-            // 為了避免死區，讓每個子區域有適當重疊。
-            // 這裡使用一個因子，讓每個子區域的判斷範圍比理論值大一點，確保覆蓋。
-            const segmentSize = primaryAxisLength / messagesArray.length;
-            const overlapFactor = 1.2; // 例如，每個感應段實際覆蓋 120% 的範圍
-            const effectiveSegmentSize = segmentSize * overlapFactor;
-
-            // 根據滑鼠在主軸上的位置計算對應的索引
-            // 遍歷所有可能的索引，找到最接近的
-            for (let i = 0; i < messagesArray.length; i++) {
-                const segmentStart = i * segmentSize;
-                const segmentEnd = segmentStart + effectiveSegmentSize; // 考慮重疊
-
-                if (mousePrimaryCoord >= segmentStart && mousePrimaryCoord < segmentEnd) {
-                    foundMessageIndex = i;
-                    break;
-                }
-            }
-            // 處理邊界情況：如果鼠標在最後一個段的末尾，確保能觸發最後一個
-            if (foundMessageIndex === -1 && mousePrimaryCoord >= primaryAxisLength - segmentSize) {
-                foundMessageIndex = messagesArray.length - 1;
-            }
-
-            if (foundMessageIndex !== -1 && messagesArray[foundMessageIndex]) {
-                customTooltipDiv.innerHTML = tooltipPrefix + messagesArray[foundMessageIndex];
-                
-                // *** 定位邏輯：左下角對齊鼠標 (考慮頁面滾動) ***
-                // event.clientX / event.clientY 是鼠標在視窗中的絕對坐標
-                // window.scrollX / window.scrollY 是頁面滾動的量
-                const tooltipLeft = event.clientX + window.scrollX; 
-                const tooltipTop = (event.clientY + window.scrollY) - customTooltipDiv.offsetHeight; 
-
-                customTooltipDiv.style.left = `${tooltipLeft}px`;
-                customTooltipDiv.style.top = `${tooltipTop}px`;
-                customTooltipDiv.style.opacity = '1';
-            } else {
-                customTooltipDiv.style.opacity = '0';
-            }
-        } else {
-            customTooltipDiv.style.opacity = '0';
-        }
-    });
-
-    containerElement.addEventListener('mouseleave', function() {
-        customTooltipDiv.style.opacity = '0';
-    });
-}
-// END: 共用函數 - showtip
 
 /// ---
 
@@ -305,7 +174,7 @@ function showtip(containerId, detectionAreaTopPct, detectionAreaLeftPct, detecti
 <script>
    //變數陣列在此宣告 才能讓變數傳遞到所有子程序去
    let currentDataIndex = -1; 
-   var _dt0=[]; _dt1=[]; _temp0=[]; _temp1=[]; _dew0=[]; _humi0=[]; _prec0=[]; _descl=[];
+   var _hi0=[]; _dt0=[]; _dt1=[]; _temp0=[]; _temp1=[]; _dew0=[]; _humi0=[]; _prec0=[]; _descl=[]; _weat0=[]; _comf0=[];
    // 日期0(原始), 日期1(精簡), 溫度, 體感溫度, 露點溫度, 相對濕度, 降雨機率
 
 </script>

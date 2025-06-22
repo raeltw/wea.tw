@@ -56,7 +56,8 @@
                    yAxisID: 'yRainfall', // <--- 給右側 Y 軸一個 ID 
                    z: 1,
                    order:50, // <-- 修正點：設定為 0，作為中層繪圖
-
+                    //maxBarThickness: 50, // <--- 設置最大寬度為 50 像素 (您可以根據需要調整這個值)
+                    stack: 'rainStack', // <--- 關鍵：為這組堆疊的長條圖設定一個共同的堆疊ID
                    barPercentage: 1.0, 
                    categoryPercentage: 0.9,
 // barPercentage
@@ -69,6 +70,41 @@
 //    解釋： 這個設定會影響每個 X 軸標籤下所有長條（包括多個數據集）的總寬度。
 
     
+               }, // <-- 修正：逗號是必須的，因為後面還有數據集 
+
+               { // 這是第0個數據集：我想偷藏一個
+                   label: '天氣', 
+                   data: _hi0,
+                   //讓每小時的背景變色 在這裡傳顏色的陣列
+                   //backgroundColor: _darkside, 
+                   backgroundColor: 'rgba(0,0,0,0)', 
+                   //最後一碼 透明度 1是不透明 
+                   borderColor: 'rgba(0,0,0,0)', 
+                   borderWidth: 0,  
+                   yAxisID: 'yRainfall', // <--- 給右側 Y 軸一個 ID 
+                   z: 1,
+                   order:55, // <-- 修正點：設定為 0，作為中層繪圖
+                   stack: 'rainStack', // <--- 關鍵：為這組堆疊的長條圖設定一個共同的堆疊ID
+                   barPercentage: 1.0, 
+                   categoryPercentage: 0.9,
+
+                   // *** 關鍵：自定義這個堆疊層的 Tooltip ***
+                  tooltip: {
+                      callbacks: {
+                          label: function(context) {
+                              // 將判斷條件從 '天氣描述' 改為 '天氣'
+                              if (context.dataset.label === '天氣') {
+                                  const dataIndex = context.dataIndex;
+                                  // 假設 _weat0 是一個天氣描述的陣列，與 _dt1 長度相同
+                                  // 您需要確保 _weat0 已經被定義和填充
+                                  const weatherDescription = _weat0[dataIndex] || '無天氣描述';
+                                  return `天氣狀況: ${weatherDescription}`; // 返回 _weat0 的內容
+                              }
+                              // 對於其他數據集，讓全局 Tooltip 處理（返回空字串，或返回 context.dataset.label + context.parsed.y）
+                              return '';
+                          }
+                      }
+                   }
                }, // <-- 修正：逗號是必須的，因為後面還有數據集 
     
                // ****** 新增的溫度折線圖 (綁定到左側 Y 軸) ****** 
@@ -171,7 +207,8 @@
                    ticks: { // 新增：增加刻度文字顏色 
                        color: 'rgba(255, 255, 255, 0.8)', 
                        stepSize: 20, // 設定步長為 20
-                   } 
+                   }, 
+                   stacked: true, // <--- 關鍵：啟用 Y 軸堆疊
                }, // end of yRainfall 
     
                // ****** 新增：左側的 Y 軸 (溫度) ****** 
@@ -347,40 +384,6 @@
    }); 
 
 
-   // 與 chart.js 無關!!
-   // 留著等手機用用看效果如何
-   // 游標移動到間標籤 就會有 詳細天氣說明 '250622
-   // START: 呼叫新的共用函數來啟用 X 軸 Tooltip
-   const myChartCanvas = ctx; // Canvas 元素就是您的容器
-   const myDescriptionsArray = _descl; // 您的 _descl 數據陣列
-
-   // 假設 Chart.js 的 X 軸標籤大約在 Canvas 總高度的 80% 到 100% 之間
-   // (您可以根據實際圖表調整這些百分比，使其精確匹配您紅框的視覺範圍)
-   const detectionTopPct = 90;    // 從容器頂部 80% 處開始偵測
-   const detectionLeftPct = 3
-   const detectionBottomPct = 100;  // 偵測到容器底部 100% 處
-   const detectionRightPct = 97;
-   const detectionDirection = 'LR'; // X 軸標籤是從左到右排列的
-
-   // 呼叫 showtip 函數
-   if (myChartCanvas && Array.isArray(myDescriptionsArray)) {
-       showtip(
-           myChartCanvas.id, // 使用 Canvas 的 ID 作為容器 ID
-           detectionTopPct, 
-           detectionLeftPct, 
-           detectionBottomPct, 
-           detectionRightPct, 
-           detectionDirection, 
-           myDescriptionsArray,
-           {
-               tooltipMaxWidth: 160, // 浮動提示框最大寬度
-               tooltipPrefix: '天氣: ' // 浮動提示框內容字首
-           }
-       );
-   } else {
-       console.warn("無法啟用 X 軸自定義 Tooltip：Canvas 元素或數據不存在。");
-   }
-   // END: 呼叫共用函數
 
     
 }
