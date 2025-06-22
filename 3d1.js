@@ -244,6 +244,8 @@
                    sendmsg('3darea', _descl[jj]+' ', 0);
 
                    sendmsg('3darea', jj);
+                   //做最後組合 在圖表上使用
+                   _weat0[jj]=_dt1[jj]+' : '+_weat0[jj]+' / '+_comf0[jj];
                 }
 
                 ///在最後終於要畫圖

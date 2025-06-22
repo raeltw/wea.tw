@@ -90,6 +90,10 @@
 
                    // *** 關鍵：自定義這個堆疊層的 Tooltip ***
                   tooltip: {
+                      font: {
+                         size: 15, 
+                         weight: 'normal',
+                      },
                       callbacks: {
                           label: function(context) {
                               // 將判斷條件從 '天氣描述' 改為 '天氣'
@@ -98,7 +102,7 @@
                                   // 假設 _weat0 是一個天氣描述的陣列，與 _dt1 長度相同
                                   // 您需要確保 _weat0 已經被定義和填充
                                   const weatherDescription = _weat0[dataIndex] || '無天氣描述';
-                                  return `天氣狀況: ${weatherDescription}`; // 返回 _weat0 的內容
+                                  return ` ${weatherDescription}`; // 返回 _weat0 的內容
                               }
                               // 對於其他數據集，讓全局 Tooltip 處理（返回空字串，或返回 context.dataset.label + context.parsed.y）
                               return '';
@@ -254,12 +258,22 @@
 
                 // === START: 修正後的通用 Tooltip 配置 (只顯示單一數據點) ===
                 tooltip: {
+                bodyFont: {
+                size: 15,
+                weight: 'normal',
+              },
                     // 修正核心：設置為 'nearest' 模式，只顯示最接近鼠標的數據點
                     mode: 'nearest',    
                     // 修正核心：設置為 true，Toolip 只在鼠標直接與數據點/元素相交時觸發
                     intersect: true,    
                     
                     displayColors: false, // 繼續禁用 Tooltip 中每個標籤旁邊的小色塊
+                    //yAlign: 'bottom', // <--- 將 Tooltip 對齊到觸發點的底部 這會讓 Tooltip 顯示在長條的下方，而不是上方
+
+///
+///
+
+
                     
                     callbacks: {
                         // 移除 Tooltip 頂部的標題行 (例如移除 '17')
@@ -277,13 +291,13 @@
                             
                             // 這裡的邏輯保持不變，因為它已經能正確組合單個數據點的資訊
                             if (context.dataset.label && context.parsed.y !== null) {
-                                labelContent = `${context.label} ${context.dataset.label}: ${context.parsed.y}`;
+                                labelContent = `${context.label} : ${context.dataset.label} ${context.parsed.y}`;
                                 
                                 if (context.dataset.label === '降雨機率') {
                                     labelContent += '%';
                                 }
                             } else if (context.parsed.y !== null) {
-                                labelContent = `${context.label}: ${context.parsed.y}`;
+                                labelContent = `${context.label}. ${context.parsed.y}`;
                             }
                             
                             return labelContent; // 返回組合後的單行內容
