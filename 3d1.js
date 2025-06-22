@@ -83,7 +83,7 @@
                    if (_first==1) {
                       //window.alert('第一次');
                       _first= 0;
-                      dt0=[]; _dt1=[]; _temp0=[]; _temp1=[]; _dew0=[]; _humi0=[]; _prec0=[];
+                      dt0=[]; _dt1=[]; _temp0=[]; _temp1=[]; _dew0=[]; _humi0=[]; _prec0=[]; _descl=[];
                       // 日期0(原始), 日期1(精簡), 溫度, 體感溫度, 露點溫度, 相對濕度, 降雨機率
                    }
                    var jj;
@@ -150,8 +150,6 @@
                             _beg0=dtcalct(_beg0, +1);
                          }
                          //sendmsg('api_data3', '');
-  
-                         //_prec0[jj]=forecastLocations[ii].Time[jj].ElementValue[0].ProbabilityOfPrecipitation;
                       }
                       if (forecastLocations[ii].ElementName == '天氣現象') {
                          // 三小時!!
@@ -161,6 +159,23 @@
                       if (forecastLocations[ii].ElementName == '天氣預報綜合描述') {
                          // 三小時!!
                          //sendmsg('3darea', forecastLocations[ii].Time[jj].ElementValue[0].WeatherDescription+' '+jj+' ');
+                         var _beg0=forecastLocations[ii].Time[jj].StartTime.replace('T', '-').substring(0, 13)
+                         var _end0=forecastLocations[ii].Time[jj].EndTime.replace('T', '-').substring(0, 13)
+
+                         //sendmsg('api_data3', '日期區間 '+_beg0+' '+_end0+' > ', 0);
+                         //把三小時的資料 分存回一小時
+                         while (_beg0 < _end0) {
+                            //sendmsg('api_data3', '降雨? '+_beg0+' ', 0);
+                            //sendmsg('api_data3', _dt0.indexOf(_beg0));
+                            var _found=_dt0.indexOf(_beg0);
+                            if ( _found> -1) {
+                               _descl[_found]=forecastLocations[ii].Time[jj].ElementValue[0].WeatherDescription;
+                            }
+
+                            _beg0=dtcalct(_beg0, +1);
+                         }
+                         //sendmsg('api_data3', '');
+
                       }
                    }
                }
@@ -169,13 +184,26 @@
                 //檢查陣列 同時產生 _dt1 所以不能整段mark掉!!
                 sendmsg('3darea', '欄位處理完畢！');
                 sendmsg('3darea', '長日期 [短日期] 溫度, 體感, 露點. 濕度: 降雨-');
-                sendmsg('3darea', '_dt0 [_dt1] _temp0, _temp01, _dew0. _humi0: _prec0-');
+                sendmsg('3darea', '_dt0 [_dt1] _temp0, _temp01, _dew0. _humi0: _prec0- _descl');
                 _tmp1="  ";
                 var _dd, _hh; 
+                currentDataIndex = -1; 
+                const now = new Date(); 
+                const currentDD = String(now.getDate()).padStart(2, '0'); 
+                const currentHH = String(now.getHours()).padStart(2, '0'); 
+                sendmsg('3darea', 'current DD HH '+currentDD+' '+currentHH);
+             
                 for (jj = 0; jj < _dt0.length; jj++) {
                    _dd=_dt0[jj].substring(8, 10);
                    // 第8位開始取 第10位不算!!
                    _hh=_dt0[jj].substring(11, 13);
+
+                   if ( (currentDD == _dd) && (currentHH == _hh) ) {
+                      currentDataIndex= jj
+                      //sendmsg('3darea', 'currentDataIndex 1 '+currentDataIndex);
+                      sendmsg('3darea', '*** ', 0);
+                   }
+
                    _dt1[jj]='';
                    if ( _tmp1 !== _dd ) {
                       _tmp1=_dd;
@@ -193,6 +221,7 @@
                    sendmsg('3darea', _dew0[jj]+'. ', 0);
                    sendmsg('3darea', _humi0[jj]+': ', 0);
                    sendmsg('3darea', _prec0[jj]+'- ', 0);
+                   sendmsg('3darea', _descl[jj]+' ', 0);
 
                    sendmsg('3darea', jj);
                 }

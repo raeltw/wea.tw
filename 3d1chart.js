@@ -4,24 +4,27 @@
    // 陣列如果不要全部用上 要自己切 
    // const labelsForChart = _dt1_full.slice(0, 30); // 從索引 0 開始，到索引 30 (不包含) 
     
-   // 獲取當前時間 
-   const now = new Date(); 
-   // 根據您 _dt0 的格式，生成一個匹配當前時間的完整字串 
-   // 例如：'2025-06-21-21' (年-月-日-時) 
-   const currentYear = now.getFullYear(); 
-   const currentMonth = String(now.getMonth() + 1).padStart(2, '0'); 
-   const currentDay = String(now.getDate()).padStart(2, '0'); 
-   const currentHour = String(now.getHours()).padStart(2, '0'); 
+   // 250622 我上層已經有了
+   //// 獲取當前時間 
+   //const now = new Date(); 
+   //// 根據您 _dt0 的格式，生成一個匹配當前時間的完整字串 
+   //// 例如：'2025-06-21-21' (年-月-日-時) 
+   //const currentYear = now.getFullYear(); 
+   //const currentMonth = String(now.getMonth() + 1).padStart(2, '0'); 
+   //const currentDay = String(now.getDate()).padStart(2, '0'); 
+   //const currentHour = String(now.getHours()).padStart(2, '0'); 
+    //
+   //// 生成與 _dt0 格式完全匹配的當前時間字串 
+   //const currentTimeString = `${currentYear}-${currentMonth}-${currentDay}-${currentHour}`; 
+    //
+   //// 在 _dt0 陣列中尋找這個時間字串的索引 
+   //let currentDataIndex = _dt0.indexOf(currentTimeString); 
+   //sendmsg('3darea', 'currentDataIndex 2  '+currentDataIndex);
     
-   // 生成與 _dt0 格式完全匹配的當前時間字串 
-   const currentTimeString = `${currentYear}-${currentMonth}-${currentDay}-${currentHour}`; 
-    
-   // 在 _dt0 陣列中尋找這個時間字串的索引 
-   let currentDataIndex = _dt0.indexOf(currentTimeString); 
-    
+    // 250622 這檢查就留著 
    // 檢查是否找到有效的索引 
    if (currentDataIndex === -1) { 
-       console.warn(`未能在 _dt0 中找到匹配當前時間 (${currentTimeString}) 的數據點。直線可能不會顯示。`); 
+       // console.warn(`未能在 _dt0 中找到匹配當前時間的數據點。直線可能不會顯示。`); 
        // 如果找不到精確匹配，您可以考慮以下策略： 
        // 1. 找最接近的時間點索引 
        // 2. 如果不需要精確到小時，可以只匹配到日，然後取該日的第一個或最後一個小時 
@@ -51,6 +54,21 @@
                    borderColor: 'rgba(0, 147, 193, 1)', 
                    borderWidth: 0,  
                    yAxisID: 'yRainfall', // <--- 給右側 Y 軸一個 ID 
+                   z: 1,
+                   order:50, // <-- 修正點：設定為 0，作為中層繪圖
+
+                   barPercentage: 1.0, 
+                   categoryPercentage: 0.9,
+// barPercentage
+//    作用： 決定單個長條佔用其可用空間（即「柱狀類別」的空間）的百分比。
+//    預設值： 0.9 (即 90%)
+//    解釋： 如果設定為 1.0，長條會佔滿整個類別空間，長條之間就沒有間距了。如果設定為 0.5，則長條只佔一半的空間，看起來會更細。
+// categoryPercentage
+//    作用： 決定長條類別（即一組長條）佔用其可用空間的百分比。
+//    預設值： 0.8 (即 80%)
+//    解釋： 這個設定會影響每個 X 軸標籤下所有長條（包括多個數據集）的總寬度。
+
+    
                }, // <-- 修正：逗號是必須的，因為後面還有數據集 
     
                // ****** 新增的溫度折線圖 (綁定到左側 Y 軸) ****** 
@@ -64,7 +82,27 @@
                    tension: 0.4, // 平滑曲線 
                    fill: false,  // 不填充 
                    yAxisID: 'yTemperature', // <--- 綁定到左側溫度 Y 軸 
-                   pointRadius: 1, // 數據點半徑為 3 像素 
+
+        // 參考
+        // === START: 這裡是要修改的點的樣式和感應區 ===
+        //pointRadius: 0, // 設置為 0，默認情況下節點不可見
+        //pointHoverRadius: 8, // 鼠標懸停時，節點會變大（可見）
+        //pointHitRadius: 15, // Tooltip 的感應半徑（非常重要，使其感應區變大）
+        //pointBorderWidth: 0, // 節點邊框寬度為 0
+        //pointBackgroundColor: 'rgba(0,0,0,0)', // 節點背景色完全透明
+        //pointHoverBackgroundColor: 'rgba(255, 99, 132, 0.5)', // 懸停時，顯示一個半透明的點
+        //pointHoverBorderColor: 'rgba(255, 99, 132, 1)', // 懸停時，顯示一個邊框
+        // === END: 點的樣式和感應區 ===
+
+                   //pointRadius: 1, // 數據點半徑為 3 像素 
+                   pointRadius: 2, // 點的半徑大小 空心
+                   pointHitRadius: 8, // 感應區保持大
+                   pointBorderWidth: 1, //邊框的厚度 實心
+                   pointBackgroundColor: 'rgba(0,0,0,0)', // 完全透明
+                   pointHoverRadius: 3, // 懸停時點的半徑 (可以比 normal 狀態大一點，提供視覺反饋)
+                   pointHoverBorderWidth: 4, // 懸停時邊框的厚度 (可以與 normal 狀態相同)
+                   z: 1,
+                   order: 11, // <-- 修正點：設定為 1，作為上層繪圖
                }, // <-- 修正：逗號是必須的，因為後面還有數據集 
     
                // ****** 新增的體感溫度折線圖 (綁定到左側 Y 軸) ****** 
@@ -78,7 +116,15 @@
                    tension: 0.4, 
                    fill: false, 
                    yAxisID: 'yTemperature', // <--- 綁定到左側溫度 Y 軸 
-                   pointRadius: 1, // 數據點半徑為 3 像素 
+                   //pointRadius: 1, // 數據點半徑為 3 像素 
+                   pointRadius: 2, // 點的半徑大小 空心
+                   pointHitRadius: 8, // 感應區保持大
+                   pointBorderWidth: 1, //邊框的厚度 實心
+                   pointBackgroundColor: 'rgba(0,0,0,0)', // 完全透明
+                   pointHoverRadius: 3, // 懸停時點的半徑 (可以比 normal 狀態大一點，提供視覺反饋)
+                   pointHoverBorderWidth: 4, // 懸停時邊框的厚度 (可以與 normal 狀態相同)
+                   z: 1,
+                   order: 12, // <-- 修正點：設定為 1，作為上層繪圖
                }, // <-- 修正：逗號是必須的，因為後面還有數據集 
     
                // ****** 新增的露點折線圖 (綁定到左側 Y 軸) ****** 
@@ -92,7 +138,15 @@
                    tension: 0.4, 
                    fill: false, 
                    yAxisID: 'yTemperature', // <--- 綁定到左側溫度 Y 軸 
-                   pointRadius: 1, // 數據點半徑為 3 像素 
+                   //pointRadius: 1, // 數據點半徑為 3 像素 
+                   pointRadius: 2, // 點的半徑大小 空心
+                   pointHitRadius: 8, // 感應區保持大
+                   pointBorderWidth: 1, //邊框的厚度 實心
+                   pointBackgroundColor: 'rgba(0,0,0,0)', // 完全透明
+                   pointHoverRadius: 3, // 懸停時點的半徑 (可以比 normal 狀態大一點，提供視覺反饋)
+                   pointHoverBorderWidth: 4, // 懸停時邊框的厚度 (可以與 normal 狀態相同)
+                   z: 1,
+                   order: 13, // <-- 修正點：設定為 1，作為上層繪圖
                } // <-- 修正：這是最後一個數據集，後面沒有逗號 
                // ************************************************** 
            ] 
@@ -115,7 +169,8 @@
                        //color: 'rgba(255, 255, 255, 0.1)'  
                    }, 
                    ticks: { // 新增：增加刻度文字顏色 
-                       color: 'rgba(255, 255, 255, 0.8)' 
+                       color: 'rgba(255, 255, 255, 0.8)', 
+                       stepSize: 20, // 設定步長為 20
                    } 
                }, // end of yRainfall 
     
@@ -133,7 +188,8 @@
                        //color: 'rgba(255, 255, 255, 0.1)' 
                    }, 
                    ticks: { // 新增：增加刻度文字顏色 
-                       color: 'rgba(255, 255, 255, 0.8)' 
+                       color: 'rgba(255, 255, 255, 0.8)',
+                       stepSize: 10, // 設定步長為 20 
                    } 
                }, // end of yTemperature 
     
@@ -156,7 +212,53 @@
            // ****** 修正點：將 responsive 和 plugins 移到這裡，與 scales 同層級 ****** 
            // 跟瀏覽器說 讓圖表「跟著容器一起變大變小」 
            responsive: true,  
+           maintainAspectRatio: false,
            plugins: { 
+
+                // === START: 修正後的通用 Tooltip 配置 (只顯示單一數據點) ===
+                tooltip: {
+                    // 修正核心：設置為 'nearest' 模式，只顯示最接近鼠標的數據點
+                    mode: 'nearest',    
+                    // 修正核心：設置為 true，Toolip 只在鼠標直接與數據點/元素相交時觸發
+                    intersect: true,    
+                    
+                    displayColors: false, // 繼續禁用 Tooltip 中每個標籤旁邊的小色塊
+                    
+                    callbacks: {
+                        // 移除 Tooltip 頂部的標題行 (例如移除 '17')
+                        title: function(context) {
+                            return []; // 返回一個空陣列，表示不顯示標題
+                        },
+                        
+                        // 自定義每個數據集的標籤內容
+                        label: function(context) {
+                            let labelContent = '';
+                            
+                            // context.label: 這是 X 軸的標籤 (例如 '17' 或 '2025-06-22 17:00')
+                            // context.dataset.label: 這是您數據集的 'label' 屬性定義的名稱 (例如 '降雨機率', '溫度')
+                            // context.parsed.y: 這是數據點的數值 (例如 50, 25)
+                            
+                            // 這裡的邏輯保持不變，因為它已經能正確組合單個數據點的資訊
+                            if (context.dataset.label && context.parsed.y !== null) {
+                                labelContent = `${context.label} ${context.dataset.label}: ${context.parsed.y}`;
+                                
+                                if (context.dataset.label === '降雨機率') {
+                                    labelContent += '%';
+                                }
+                            } else if (context.parsed.y !== null) {
+                                labelContent = `${context.label}: ${context.parsed.y}`;
+                            }
+                            
+                            return labelContent; // 返回組合後的單行內容
+                        },
+                        
+                        // 確保主標籤之後不會生成額外的行
+                        afterLabel: function() { return null; },
+                        footer: function() { return null; }
+                    }
+                },
+                // === END: 修正後的通用 Tooltip 配置 ===
+
                // ****** 修正：標題文字顏色 ****** 
                title: { 
                    display: false, 
@@ -197,86 +299,88 @@
                                } 
                            } 
                        }, 
-    
-                       // ****** 新增的水平虛線定義 (並修正 scaleID) ****** 
-                       threshold20: { // 獨特的 ID 
-                           type: 'line', 
-                           mode: 'horizontal', // 水平線 
-                           scaleID: 'yRainfall', // <-- 修正：綁定到右側降雨機率 Y 軸！ 
-                           value: 20,           // 數值是 Y 軸上的 20 
-                           borderColor: 'rgba(255, 255, 255, 0.3)', // 淺灰色、半透明 
-                           borderWidth: 1, 
-                           borderDash: [5, 5], // 虛線效果 
-                           label: { 
-                               content: '20%', // 線旁邊的文字 
-                               enabled: true,  // 顯示標籤 
-                               position: 'end', // 標籤位置 
-                               color: 'rgba(255, 255, 255, 0.6)', // 標籤顏色 
-                               font: { 
-                                   size: 10 
-                               } 
-                           } 
-                       }, 
-                       threshold40: { 
-                           type: 'line', 
-                           mode: 'horizontal', 
-                           scaleID: 'yRainfall', // <-- 修正：綁定到右側降雨機率 Y 軸！ 
-                           value: 40, 
-                           borderColor: 'rgba(255, 255, 255, 0.3)', 
-                           borderWidth: 1, 
-                           borderDash: [5, 5], 
-                           label: { 
-                               content: '40%', 
-                               enabled: true, 
-                               position: 'end', 
-                               color: 'rgba(255, 255, 255, 0.6)', 
-                               font: { 
-                                   size: 10 
-                               } 
-                           } 
-                       }, 
-                       threshold60: { 
-                           type: 'line', 
-                           mode: 'horizontal', 
-                           scaleID: 'yRainfall', // <-- 修正：綁定到右側降雨機率 Y 軸！ 
-                           value: 60, 
-                           borderColor: 'rgba(255, 255, 255, 0.3)', 
-                           borderWidth: 1, 
-                           borderDash: [5, 5], 
-                           label: { 
-                               content: '60%', 
-                               enabled: true, 
-                               position: 'end', 
-                               color: 'rgba(255, 255, 255, 0.6)', 
-                               font: { 
-                                   size: 10 
-                               } 
-                           } 
-                       }, 
-                       threshold80: { 
-                           type: 'line', 
-                           mode: 'horizontal', 
-                           scaleID: 'yRainfall', // <-- 修正：綁定到右側降雨機率 Y 軸！ 
-                           value: 80, 
-                           borderColor: 'rgba(255, 255, 255, 0.3)', 
-                           borderWidth: 1, 
-                           borderDash: [5, 5], 
-                           label: { 
-                               content: '80%', 
-                               enabled: true, 
-                               position: 'end', 
-                               color: 'rgba(255, 255, 255, 0.6)', 
-                               font: { 
-                                   size: 10 
-                               } 
-                           } 
-                       } 
-                       // **************************************** 
+
+                       // ****** 使用迴圈動態生成水平虛線 ******
+                      // 首先，定義您所有需要標示的百分比（數值）
+                      ...[20, 40, 60, 80].reduce((acc, value) => {
+                          const id = `threshold${value}`; // 動態生成一個唯一的 ID，例如 "threshold20"
+                          acc[id] = {
+                              type: 'line',
+                              mode: 'horizontal',
+                              scaleID: 'yRainfall', // 綁定到右側降雨機率 Y 軸
+                              value: value,         // 使用當前迭代的數值
+                              borderColor: 'rgba(255, 255, 255, 0.3)', // 淺灰色、半透明
+                              borderWidth: 1,
+                              borderDash: [5, 5],   // 虛線效果
+                              z: -1, // <-- 新增：設定 z 屬性為 -1，讓它繪製在數據集之下
+                             order: -50, 
+
+//想像 Chart.js 的繪圖區域像一層一層的玻璃板。
+//    你把 z: -1 的東西放在最底下的玻璃板上。
+//    然後你把 z: 0 (默認值) 的東西放在第二層玻璃板上。
+//    最後你把 z: 1 的東西放在最上面的玻璃板上。
+//從頂上往下看，你就會看到 z: 1 遮住 z: 0，z: 0 遮住 z: -1。
+//所以，數值越小，層次越低。數值越大，層次越高。
+//而order恰恰相反
+//(未測試) 說 z優先判斷 然後同一組z的再判斷order
+
+
+                              label: {
+                                  content: `${value}%`, // 顯示對應的百分比
+                                  enabled: true,
+                                  position: 'end',
+                                  color: 'rgba(255, 255, 255, 0.6)',
+                                  font: {
+                                      size: 10
+                                  }
+                              }
+                          };
+                          return acc;
+                      }, {})
+                      // ****************************************
+                
                    } 
                } 
            }  
            // ************************************************************************** 
        } 
    }); 
+
+
+   // 與 chart.js 無關!!
+   // 留著等手機用用看效果如何
+   // 游標移動到間標籤 就會有 詳細天氣說明 '250622
+   // START: 呼叫新的共用函數來啟用 X 軸 Tooltip
+   const myChartCanvas = ctx; // Canvas 元素就是您的容器
+   const myDescriptionsArray = _descl; // 您的 _descl 數據陣列
+
+   // 假設 Chart.js 的 X 軸標籤大約在 Canvas 總高度的 80% 到 100% 之間
+   // (您可以根據實際圖表調整這些百分比，使其精確匹配您紅框的視覺範圍)
+   const detectionTopPct = 90;    // 從容器頂部 80% 處開始偵測
+   const detectionLeftPct = 3
+   const detectionBottomPct = 100;  // 偵測到容器底部 100% 處
+   const detectionRightPct = 97;
+   const detectionDirection = 'LR'; // X 軸標籤是從左到右排列的
+
+   // 呼叫 showtip 函數
+   if (myChartCanvas && Array.isArray(myDescriptionsArray)) {
+       showtip(
+           myChartCanvas.id, // 使用 Canvas 的 ID 作為容器 ID
+           detectionTopPct, 
+           detectionLeftPct, 
+           detectionBottomPct, 
+           detectionRightPct, 
+           detectionDirection, 
+           myDescriptionsArray,
+           {
+               tooltipMaxWidth: 160, // 浮動提示框最大寬度
+               tooltipPrefix: '天氣: ' // 浮動提示框內容字首
+           }
+       );
+   } else {
+       console.warn("無法啟用 X 軸自定義 Tooltip：Canvas 元素或數據不存在。");
+   }
+   // END: 呼叫共用函數
+
     
 }
