@@ -83,7 +83,7 @@
                    if (_first==1) {
                       //window.alert('第一次');
                       _first= 0;
-                      _hi0=[]; dt0=[]; _dt1=[]; _temp0=[]; _temp1=[]; _dew0=[]; _humi0=[]; _prec0=[]; _descl=[]; _weat0=[]; _comf0=[];
+                      _hi0=[]; _dt0=[]; _dt1=[]; _temp0=[]; _temp1=[]; _dew0=[]; _humi0=[]; _prec0=[]; _descl=[]; _weat0=[]; _comf0=[];
                       // 日期0(原始), 日期1(精簡), 溫度, 體感溫度, 露點溫度, 相對濕度, 降雨機率
                    }
                    var jj;
@@ -246,6 +246,7 @@
                    //sendmsg('3darea', jj);
                    //做最後組合 在圖表上使用
                    _weat0[jj]=_dt1[jj]+' : '+_weat0[jj]+' / '+_comf0[jj];
+                   //sendmsg('3darea', _weat0[jj]+'\\ ');
                 }
 
                 ///在最後終於要畫圖

@@ -77,7 +77,7 @@
                
                var ii;
                for (ii = 0; ii < forecastLocations.length; ii++) {
-                   forecastLocations[0].ElementName;
+                   //forecastLocations[0].ElementName;
                    //window.alert();
                    //sendmsg('1warea', '');
                    //sendmsg('1warea', forecastLocations[ii].ElementName+"數據讀取中... ", 0);
@@ -158,7 +158,8 @@
                       }
                       if (forecastLocations[ii].ElementName == '12小時降雨機率') {
                          //sendmsg('1warea', forecastLocations[ii].Time[jj].ElementValue[0].ProbabilityOfPrecipitation+' '+jj+' ');
-                         _prec0[jj]=forecastLocations[ii].Time[jj].ElementValue[0].ProbabilityOfPrecipitation;
+                         //_prec0[jj]=forecastLocations[ii].Time[jj].ElementValue[0].ProbabilityOfPrecipitation;
+                         _prec0[jj] = forecastLocations?.[ii]?.Time?.[jj]?.ElementValue?.[0]?.ProbabilityOfPrecipitation ?? 0;
                          //有可能是 '-' 沒預測吧?
                       }
                       if (forecastLocations[ii].ElementName == '天氣現象') {
@@ -233,6 +234,7 @@
                    //sendmsg('1warea', jj);
                    //做最後組合 在圖表上使用
                    _weat0[jj]=_dt1[jj]+' : '+_weat0[jj]+' / '+_comf0[jj];
+                   //sendmsg('1warea', _weat0[jj]+' ');
                 }
 
                 ///在最後終於要畫圖

@@ -1,39 +1,7 @@
 ﻿function w11chart() { 
     //window.alert('...');   
     //return "";
-    
-   //備註 
-   // 陣列如果不要全部用上 要自己切 
-   // const labelsForChart = _dt1_full.slice(0, 30); // 從索引 0 開始，到索引 30 (不包含) 
-    
-   // 250622 我上層已經有了
-   //// 獲取當前時間 
-   //const now = new Date(); 
-   //// 根據您 _dt0 的格式，生成一個匹配當前時間的完整字串 
-   //// 例如：'2025-06-21-21' (年-月-日-時) 
-   //const currentYear = now.getFullYear(); 
-   //const currentMonth = String(now.getMonth() + 1).padStart(2, '0'); 
-   //const currentDay = String(now.getDate()).padStart(2, '0'); 
-   //const currentHour = String(now.getHours()).padStart(2, '0'); 
-    //
-   //// 生成與 _dt0 格式完全匹配的當前時間字串 
-   //const currentTimeString = `${currentYear}-${currentMonth}-${currentDay}-${currentHour}`; 
-    //
-   //// 在 _dt0 陣列中尋找這個時間字串的索引 
-   //let currentDataIndex = _dt0.indexOf(currentTimeString); 
-   //sendmsg('3darea', 'currentDataIndex 2  '+currentDataIndex);
-    
-    // 250622 這檢查就留著 
-   // 檢查是否找到有效的索引 
-   if (currentDataIndex === -1) { 
-       // console.warn(`未能在 _dt0 中找到匹配當前時間的數據點。直線可能不會顯示。`); 
-       // 如果找不到精確匹配，您可以考慮以下策略： 
-       // 1. 找最接近的時間點索引 
-       // 2. 如果不需要精確到小時，可以只匹配到日，然後取該日的第一個或最後一個小時 
-       // 3. 直接不畫線 
-       // 為了範例，我們這裡假設如果找不到就讓 currentLine 註釋不顯示。 
-   } 
-    
+   
    // 在這裡撰寫您的 Chart.js 繪圖程式碼 
    // 例如： 
    const ctx = document.getElementById('Chart7'); // 獲取 canvas 元素 
@@ -46,15 +14,36 @@
    new Chart(ctx, { 
        type: 'bar', // 圖表類型：柱狀圖 
        data: { 
+
+
            labels: _dt1, 
            datasets: [ 
+////
+                // *** 這裡新增了盒狀圖數據集 (參考 tt.html 的樣式) ***
+                {
+                    type: 'boxplot',
+                    label: '溫度區間',
+                    backgroundColor: 'rgba(255, 255, 0, 0.8)', // 黃色，半透明
+                    borderColor: 'transparent', // 無邊框
+                    borderWidth: 0,
+                    medianColor: 'rgba(255, 165, 0, 0.8)', // 中位數線可以設為橘黃色，方便區分
+                    data: _plot0, // <<--- 使用 _plot0 作為盒狀圖的數據源
+                    // borderRadius: 80, // 想要圓角 但無效 數字 '8' 改為您想要的圓角半徑，例如 4, 6, 10 等 
+                    yAxisID: 'yTemperature', // 綁定到溫度 Y 軸 (左側)
+                    barPercentage: 0.2, // 盒子的相對寬度 (可以調整)
+                    categoryPercentage: 0.8, // 類別間距 (可以調整)
+                    order: 0 // 將盒狀圖放在最下層 (背景，Order 值越小越在下)
+                },
+////
+
                { // 這是第一個數據集：降雨機率 
                    label: '降雨機率', 
                    data: _prec0, 
                    backgroundColor: 'rgba(0, 147, 193, 1)', 
                    //最後一碼 透明度 1是不透明 
-                   borderColor: 'rgba(0, 147, 193, 1)', 
+                   borderColor: 'rgba(199, 0, 0, 1)', 
                    borderWidth: 0,  
+                   borderRadius: 8, //沒用
                    yAxisID: 'yRainfall', // <--- 給右側 Y 軸一個 ID 
                    z: 1,
                    order:50, // <-- 修正點：設定為 0，作為中層繪圖
@@ -115,6 +104,7 @@
     
                // ****** 新增的低溫折線圖 (綁定到左側 Y 軸) ****** 
                { // 這是第二個數據集：低溫 
+                   hidden: true, // <-- 想隱藏就改這裡
                    label: '低溫', 
                    data: _templ, 
                    type: 'line', // <--- 設置為折線圖 
@@ -149,6 +139,7 @@
     
                // ****** 新增的高溫折線高溫(綁定到左側 Y 軸) ****** 
                { // 這是第三個數據集：高溫 
+                   hidden: true, // <-- 想隱藏就改這裡
                    label: '高溫', 
                    data: _temph, // 注意這裡使用的是 _temp1 
                    type: 'line', 
@@ -285,24 +276,45 @@
                         
                         // 自定義每個數據集的標籤內容
                         label: function(context) {
-                            let labelContent = '';
+
+//// 你叫我改這裡
+
+                            let labelContent = ''; // 初始化一個變數來儲存最終的 Tooltip 內容
                             
-                            // context.label: 這是 X 軸的標籤 (例如 '17' 或 '2025-06-22 17:00')
-                            // context.dataset.label: 這是您數據集的 'label' 屬性定義的名稱 (例如 '降雨機率', '溫度')
-                            // context.parsed.y: 這是數據點的數值 (例如 50, 25)
-                            
-                            // 這裡的邏輯保持不變，因為它已經能正確組合單個數據點的資訊
-                            if (context.dataset.label && context.parsed.y !== null) {
-                                labelContent = `${context.label} : ${context.dataset.label} ${context.parsed.y}`;
-                                
-                                if (context.dataset.label === '降雨機率') {
-                                    labelContent += '%';
+                            // *** 根據您的建議，特別判斷如果是 'boxplot' 類型 (即溫度區間)，才套用新的邏輯 ***
+                            if (context.dataset.type === 'boxplot') {
+                                // 如果是盒狀圖 (溫度區間)
+                                const dataPoint = context.raw; // 獲取 _plot0 中該數據點的原始物件
+                                const xLabel = context.label; // 獲取 X 軸的日期/時間標籤 (例如 "25 06")
+
+                                if (dataPoint) {
+                                    const lowTemp = (dataPoint.min !== null && dataPoint.min !== undefined) ? dataPoint.min : '無資料';
+                                    const highTemp = (dataPoint.max !== null && dataPoint.max !== undefined) ? dataPoint.max : '無資料';
+                                    
+                                    // 顯示日期/時間、高溫、低溫
+                                    labelContent = `${xLabel} : 高溫 ${highTemp}  低溫 ${lowTemp}`; 
+                                    
+                                } else {
+                                    labelContent = `${xLabel} : 無溫度資料`; // 如果無數據，顯示無資料
                                 }
-                            } else if (context.parsed.y !== null) {
-                                labelContent = `${context.label}. ${context.parsed.y}`;
+                            } else {
+                                // *** 對於所有其他類型的數據集 (包括您的 'bar' 類型)，完全保留您原有的邏輯 ***
+                                if (context.dataset.label && context.parsed.y !== null) {
+                                    labelContent = `${context.label} : ${context.dataset.label} ${context.parsed.y}`;
+                                    
+                                    if (context.dataset.label === '降雨機率') {
+                                        labelContent += '%';
+                                    }
+                                } else if (context.parsed.y !== null) {
+                                    labelContent = `${context.label}. ${context.parsed.y}`;
+                                }
                             }
-                            
-                            return labelContent; // 返回組合後的單行內容
+                            // 因為 title 回調函數已經設置為 return []，這裡不需要額外處理 X 軸標籤
+
+                            return labelContent; // 返回最終生成的 Tooltip 內容
+
+
+//// eof 你叫我改這裡
                         },
                         
                         // 確保主標籤之後不會生成額外的行
