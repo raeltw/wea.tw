@@ -23,10 +23,10 @@
                 {
                     type: 'boxplot',
                     label: '溫度區間',
-                    backgroundColor: 'rgba(255, 255, 0, 0.8)', // 黃色，半透明
+                    backgroundColor: '#FF9900', // 'rgba(255, 255, 0, 0.8)', // 黃色，半透明
                     borderColor: 'transparent', // 無邊框
                     borderWidth: 0,
-                    medianColor: 'rgba(255, 165, 0, 0.8)', // 中位數線可以設為橘黃色，方便區分
+                    medianColor: '#FF9900', // 'rgba(255, 165, 0, 0.8)', // 中位數線可以設為橘黃色，方便區分
                     data: _plot0, // <<--- 使用 _plot0 作為盒狀圖的數據源
                     // borderRadius: 80, // 想要圓角 但無效 數字 '8' 改為您想要的圓角半徑，例如 4, 6, 10 等 
                     yAxisID: 'yTemperature', // 綁定到溫度 Y 軸 (左側)
