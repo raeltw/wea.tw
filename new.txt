@@ -1,0 +1,74 @@
+/**
+ * 根據數值陣列和顏色映射表，計算每個數值的漸層 RGB 顏色（以 rgb() 字串格式），
+ * 並儲存到結果陣列中。
+ *
+ * @param {number[]} valuesToProcess 包含要處理的數值的陣列。
+ * @param {Array<number|number[]>} colorMap 顏色映射表，格式為 [數值1, [R,G,B]1, 數值2, [R,G,B]2, ...]。
+ * @param {string[]} resultArray 用於儲存計算結果（rgb() 顏色字串）的陣列。
+ */
+const mkrgb = (valuesToProcess, colorMap, resultArray) => {
+    // 輔助函數：根據單一數值計算漸層色 (返回 [R, G, B] 陣列)
+    const getGradientColorArray = (value, map) => {
+        if (value <= map[0]) return map[1];
+        if (value >= map[map.length - 2]) return map[map.length - 1];
+
+        // 使用 reduce 尋找區間並計算顏色
+        return map.slice(0, -2).reduce((acc, current, idx, arr) => {
+            if (idx % 2 === 0) { // 處理數值
+                const lowerBound = current;
+                const lowerColor = arr[idx + 1];
+                const upperBound = arr[idx + 2];
+                const upperColor = arr[idx + 3];
+
+                if (value > lowerBound && value <= upperBound) {
+                    const factor = (value - lowerBound) / (upperBound - lowerBound);
+                    return [
+                        Math.round(lowerColor[0] + (upperColor[0] - lowerColor[0]) * factor),
+                        Math.round(lowerColor[1] + (upperColor[1] - lowerColor[1]) * factor),
+                        Math.round(lowerColor[2] + (upperColor[2] - lowerColor[2]) * factor)
+                    ];
+                }
+            }
+            return acc; // 繼續遍歷
+        }, [0, 0, 0]); // 預設初始值，如果沒找到區間會用到 (理論上不會發生)
+    };
+
+    resultArray.length = 0; // 清空結果陣列
+
+    // 使用 map 遍歷數值陣列並轉換為顏色字串
+    valuesToProcess.forEach(value => {
+        const colorArray = getGradientColorArray(value, colorMap);
+        resultArray.push(`rgb(${colorArray[0]}, ${colorArray[1]}, ${colorArray[2]})`);
+    });
+};
+
+// --- 測試範例 ---
+
+let temp0 = [
+    0, [255, 255, 255],
+    10, [125, 125, 255],
+    20, [125, 255, 125],
+    30, [255, 125, 125],
+    40, [255, 25, 25],
+    50, [125, 125, 125]
+];
+
+let _temp0 = [15, 33, 24, 60, 25];
+let _tc0 = [];
+
+mkrgb(_temp0, temp0, _tc0);
+
+console.log("原始數值陣列 (_temp0):", _temp0);
+console.log("計算出的漸層色陣列 (_tc0 - rgb() 字串):", _tc0);
+
+/*
+預期輸出：
+原始數值陣列 (_temp0): [ 15, 33, 24, 60, 25 ]
+計算出的漸層色陣列 (_tc0 - rgb() 字串): [
+  'rgb(125, 190, 189)',
+  'rgb(255, 75, 75)',
+  'rgb(170, 204, 153)',
+  'rgb(125, 125, 125)',
+  'rgb(190, 169, 139)'
+]
+*/
