@@ -102,8 +102,7 @@
                    tension: 0.4, // 平滑曲線 
                    fill: false,  // 不填充 
                    yAxisID: 'yRainfall', // <--- 綁定到右側溫度 Y 軸 
-                   //pointRadius: 1, // 數據點半徑為 3 像素 
-                   pointRadius: 1, // 點的半徑大小 空心
+                   pointRadius: 0, // 點的半徑大小 空心
                    pointHitRadius: 8, // 感應區保持大
                    pointBorderWidth: 1, //邊框的厚度 實心
                    pointBackgroundColor: 'rgba(0,0,0,0)', // 完全透明
@@ -125,8 +124,7 @@
                    tension: 0.4, // 平滑曲線 
                    fill: false,  // 不填充 
                    yAxisID: 'yTemperature', // <--- 綁定到左側溫度 Y 軸 
-                   //pointRadius: 1, // 數據點半徑為 3 像素 
-                   pointRadius: 1, // 點的半徑大小 空心
+                   pointRadius: 0, // 點的半徑大小 空心
                    pointHitRadius: 8, // 感應區保持大
                    pointBorderWidth: 1, //邊框的厚度 實心
                    pointBackgroundColor: 'rgba(0,0,0,0)', // 完全透明
@@ -144,12 +142,11 @@
                    type: 'line', // <--- 設置為折線圖 
                    borderColor: '#FF9900', // 橙色 
                    backgroundColor: 'transparent', // 不填充區域 
-                   borderWidth: 2, 
+                   borderWidth: 1, 
                    tension: 0.4, // 平滑曲線 
                    fill: false,  // 不填充 
                    yAxisID: 'yTemperature', // <--- 綁定到左側溫度 Y 軸 
-                   //pointRadius: 1, // 數據點半徑為 3 像素 
-                   pointRadius: 1, // 點的半徑大小 空心
+                   pointRadius: 0, // 點的半徑大小 空心
                    pointHitRadius: 8, // 感應區保持大
                    pointBorderWidth: 1, //邊框的厚度 實心
                    pointBackgroundColor: 'rgba(0,0,0,0)', // 完全透明
@@ -167,12 +164,11 @@
                    type: 'line', 
                    borderColor: '#FF4D40', // 紅橙色 
                    backgroundColor: 'transparent', 
-                   borderWidth: 2, 
+                   borderWidth: 1, 
                    tension: 0.4, 
                    fill: false, 
                    yAxisID: 'yTemperature', // <--- 綁定到左側溫度 Y 軸 
-                   //pointRadius: 1, // 數據點半徑為 3 像素 
-                   pointRadius: 1, // 點的半徑大小 空心
+                   pointRadius: 0, // 點的半徑大小 空心
                    pointHitRadius: 8, // 感應區保持大
                    pointBorderWidth: 1, //邊框的厚度 實心
                    pointBackgroundColor: 'rgba(0,0,0,0)', // 完全透明
@@ -193,8 +189,7 @@
                    tension: 0.4, 
                    fill: false, 
                    yAxisID: 'yTemperature', // <--- 綁定到左側溫度 Y 軸 
-                   //pointRadius: 1, // 數據點半徑為 3 像素 
-                   pointRadius: 1, // 點的半徑大小 空心
+                   pointRadius: 0, // 點的半徑大小 空心
                    pointHitRadius: 8, // 感應區保持大
                    pointBorderWidth: 1, //邊框的厚度 實心
                    pointBackgroundColor: 'rgba(0,0,0,0)', // 完全透明
