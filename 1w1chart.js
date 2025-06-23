@@ -32,9 +32,8 @@
                     yAxisID: 'yTemperature', // 綁定到溫度 Y 軸 (左側)
                     barPercentage: 0.2, // 盒子的相對寬度 (可以調整)
                     categoryPercentage: 0.8, // 類別間距 (可以調整)
-                    order: 0 // 將盒狀圖放在最下層 (背景，Order 值越小越在下)
+                    order: 20, // 將盒狀圖放在最下層 (背景，Order 值越小越在下)
                 },
-////
 
                { // 這是第一個數據集：降雨機率 
                    label: '降雨機率', 
@@ -51,16 +50,6 @@
                     stack: 'rainStack', // <--- 關鍵：為這組堆疊的長條圖設定一個共同的堆疊ID
                    barPercentage: 1.0, 
                    categoryPercentage: 0.9,
-// barPercentage
-//    作用： 決定單個長條佔用其可用空間（即「柱狀類別」的空間）的百分比。
-//    預設值： 0.9 (即 90%)
-//    解釋： 如果設定為 1.0，長條會佔滿整個類別空間，長條之間就沒有間距了。如果設定為 0.5，則長條只佔一半的空間，看起來會更細。
-// categoryPercentage
-//    作用： 決定長條類別（即一組長條）佔用其可用空間的百分比。
-//    預設值： 0.8 (即 80%)
-//    解釋： 這個設定會影響每個 X 軸標籤下所有長條（包括多個數據集）的總寬度。
-
-    
                }, // <-- 修正：逗號是必須的，因為後面還有數據集 
 
                { // 這是第0個數據集：我想偷藏一個
@@ -102,6 +91,29 @@
                    }
                }, // <-- 修正：逗號是必須的，因為後面還有數據集 
     
+               // ****** 新增的均溫折線圖 (綁定到左側 Y 軸) ****** 
+               { // 這是第?個數據集：均溫 
+                   //hidden: true, // <-- 想隱藏就改這裡
+                   label: '均溫', 
+                   data: _tempa, 
+                   type: 'line', // <--- 設置為折線圖 
+                   borderColor: '#55B532', // 橙色 
+                   backgroundColor: 'transparent', // 不填充區域 
+                   borderWidth: 2, 
+                   tension: 0.4, // 平滑曲線 
+                   fill: false,  // 不填充 
+                   yAxisID: 'yTemperature', // <--- 綁定到左側溫度 Y 軸 
+                   //pointRadius: 1, // 數據點半徑為 3 像素 
+                   pointRadius: 2, // 點的半徑大小 空心
+                   pointHitRadius: 8, // 感應區保持大
+                   pointBorderWidth: 1, //邊框的厚度 實心
+                   pointBackgroundColor: 'rgba(0,0,0,0)', // 完全透明
+                   pointHoverRadius: 3, // 懸停時點的半徑 (可以比 normal 狀態大一點，提供視覺反饋)
+                   pointHoverBorderWidth: 4, // 懸停時邊框的厚度 (可以與 normal 狀態相同)
+                   z: 1,
+                   order: 10, // <-- 修正點：設定為 1，作為上層繪圖
+               }, // <-- 修正：逗號是必須的，因為後面還有數據集 
+
                // ****** 新增的低溫折線圖 (綁定到左側 Y 軸) ****** 
                { // 這是第二個數據集：低溫 
                    hidden: true, // <-- 想隱藏就改這裡
@@ -114,18 +126,6 @@
                    tension: 0.4, // 平滑曲線 
                    fill: false,  // 不填充 
                    yAxisID: 'yTemperature', // <--- 綁定到左側溫度 Y 軸 
-
-        // 參考
-        // === START: 這裡是要修改的點的樣式和感應區 ===
-        //pointRadius: 0, // 設置為 0，默認情況下節點不可見
-        //pointHoverRadius: 8, // 鼠標懸停時，節點會變大（可見）
-        //pointHitRadius: 15, // Tooltip 的感應半徑（非常重要，使其感應區變大）
-        //pointBorderWidth: 0, // 節點邊框寬度為 0
-        //pointBackgroundColor: 'rgba(0,0,0,0)', // 節點背景色完全透明
-        //pointHoverBackgroundColor: 'rgba(255, 99, 132, 0.5)', // 懸停時，顯示一個半透明的點
-        //pointHoverBorderColor: 'rgba(255, 99, 132, 1)', // 懸停時，顯示一個邊框
-        // === END: 點的樣式和感應區 ===
-
                    //pointRadius: 1, // 數據點半徑為 3 像素 
                    pointRadius: 2, // 點的半徑大小 空心
                    pointHitRadius: 8, // 感應區保持大
@@ -134,7 +134,7 @@
                    pointHoverRadius: 3, // 懸停時點的半徑 (可以比 normal 狀態大一點，提供視覺反饋)
                    pointHoverBorderWidth: 4, // 懸停時邊框的厚度 (可以與 normal 狀態相同)
                    z: 1,
-                   order: 11, // <-- 修正點：設定為 1，作為上層繪圖
+                   order: 12, // <-- 修正點：設定為 1，作為上層繪圖
                }, // <-- 修正：逗號是必須的，因為後面還有數據集 
     
                // ****** 新增的高溫折線高溫(綁定到左側 Y 軸) ****** 
@@ -157,7 +157,7 @@
                    pointHoverRadius: 3, // 懸停時點的半徑 (可以比 normal 狀態大一點，提供視覺反饋)
                    pointHoverBorderWidth: 4, // 懸停時邊框的厚度 (可以與 normal 狀態相同)
                    z: 1,
-                   order: 12, // <-- 修正點：設定為 1，作為上層繪圖
+                   order: 14, // <-- 修正點：設定為 1，作為上層繪圖
                }, // <-- 修正：逗號是必須的，因為後面還有數據集 
     
                // ****** 新增的露點折線圖 (綁定到左側 Y 軸) ****** 
@@ -179,7 +179,7 @@
                    pointHoverRadius: 3, // 懸停時點的半徑 (可以比 normal 狀態大一點，提供視覺反饋)
                    pointHoverBorderWidth: 4, // 懸停時邊框的厚度 (可以與 normal 狀態相同)
                    z: 1,
-                   order: 13, // <-- 修正點：設定為 1，作為上層繪圖
+                   order: 22, // <-- 修正點：設定為 1，作為上層繪圖
                } // <-- 修正：這是最後一個數據集，後面沒有逗號 
                // ************************************************** 
            ] 
@@ -262,12 +262,6 @@
                     
                     displayColors: false, // 繼續禁用 Tooltip 中每個標籤旁邊的小色塊
                     //yAlign: 'bottom', // <--- 將 Tooltip 對齊到觸發點的底部 這會讓 Tooltip 顯示在長條的下方，而不是上方
-
-///
-///
-
-
-                    
                     callbacks: {
                         // 移除 Tooltip 頂部的標題行 (例如移除 '17')
                         title: function(context) {
@@ -276,9 +270,7 @@
                         
                         // 自定義每個數據集的標籤內容
                         label: function(context) {
-
 //// 你叫我改這裡
-
                             let labelContent = ''; // 初始化一個變數來儲存最終的 Tooltip 內容
                             
                             // *** 根據您的建議，特別判斷如果是 'boxplot' 類型 (即溫度區間)，才套用新的邏輯 ***
@@ -312,8 +304,6 @@
                             // 因為 title 回調函數已經設置為 return []，這裡不需要額外處理 X 軸標籤
 
                             return labelContent; // 返回最終生成的 Tooltip 內容
-
-
 //// eof 你叫我改這裡
                         },
                         
@@ -379,17 +369,6 @@
                               borderDash: [5, 5],   // 虛線效果
                               z: -1, // <-- 新增：設定 z 屬性為 -1，讓它繪製在數據集之下
                              order: -50, 
-
-//想像 Chart.js 的繪圖區域像一層一層的玻璃板。
-//    你把 z: -1 的東西放在最底下的玻璃板上。
-//    然後你把 z: 0 (默認值) 的東西放在第二層玻璃板上。
-//    最後你把 z: 1 的東西放在最上面的玻璃板上。
-//從頂上往下看，你就會看到 z: 1 遮住 z: 0，z: 0 遮住 z: -1。
-//所以，數值越小，層次越低。數值越大，層次越高。
-//而order恰恰相反
-//(未測試) 說 z優先判斷 然後同一組z的再判斷order
-
-
                               label: {
                                   content: `${value}%`, // 顯示對應的百分比
                                   enabled: true,

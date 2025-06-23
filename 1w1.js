@@ -86,8 +86,8 @@
                    if (_first==1) {
                       //window.alert('第一次');
                       _first= 0;
-                      _hi0=[]; _dt0=[]; _dt1=[]; _temph=[]; _templ=[]; _dew0=[]; _humi0=[]; _prec0=[]; _descl=[]; _weat0=[]; _comf0=[]; _plot0=[];
-                      // 日期0(原始), 日期1(精簡), 高溫, 低溫, 露點溫度, 相對濕度, 降雨機率
+                      _hi0=[]; _dt0=[]; _dt1=[]; _temph=[]; _templ=[]; _tempa=[]; _dew0=[]; _humi0=[]; _prec0=[]; _descl=[]; _weat0=[]; _comf0=[]; _plot0=[];
+                      // 日期0(原始), 日期1(精簡), 高溫, 低溫, 均溫, 露點溫度, 相對濕度, 降雨機率
                    }
                    var jj;
                    for (jj = 0; jj < forecastLocations[ii].Time.length; jj++) {
@@ -110,7 +110,7 @@
                    
                       if (forecastLocations[ii].ElementName == '平均溫度') {
                          //sendmsg('1warea', forecastLocations[ii].Time[jj].ElementValue[0].Temperature+' '+jj+' ');
-                         //_temp0[jj]=forecastLocations[ii].Time[jj].ElementValue[0].Temperature;
+                         _tempa[jj]=forecastLocations[ii].Time[jj].ElementValue[0].Temperature;
                       }
                       if (forecastLocations[ii].ElementName == '最高溫度') {
                          //sendmsg('1warea', forecastLocations[ii].Time[jj].ElementValue[0].MaxTemperature+' '+jj+' ');
@@ -182,9 +182,9 @@
 
                 //檢查陣列 同時產生 _dt1 所以不能整段mark掉!!
                 sendmsg('1warea', '欄位處理完畢！');
-                //sendmsg('1warea', '長日期 [短日期] 高溫, 低溫, 露點. 濕度: 降雨-');
-                //sendmsg('1warea', '_dt0 [_dt1] _temph, _templ, _dew0. _humi0: _prec0- _descl');
-      // 日期0(原始), 日期1(精簡), 高溫, 低溫, 露點溫度, 相對濕度, 降雨機率
+                //sendmsg('1warea', '長日期 [短日期] 高溫, 低溫, 均溫, 露點. 濕度: 降雨-');
+                //sendmsg('1warea', '_dt0 [_dt1] _temph, _templ, _tempa,_dew0. _humi0: _prec0- _descl');
+      // 日期0(原始), 日期1(精簡), 高溫, 低溫, 均溫, 露點溫度, 相對濕度, 降雨機率
 
 
                 _tmp1="  ";
@@ -220,10 +220,10 @@
                    //sendmsg('1warea', '['+_dt1[jj]+'] ', 0);
                    //sendmsg('1warea', _temph[jj]+', ', 0);
                    //sendmsg('1warea', _templ[jj]+', ', 0);
+                   //sendmsg('1warea', _tempa[jj]+', ', 0);
 
                   _plot0[jj]=createBoxplotData(_templ[jj], _temph[jj]);
                   //sendmsg('1warea', _plot0[jj]+'! ', 0);
-
                    //sendmsg('1warea', _dew0[jj]+'.. ', 0);
                    //sendmsg('1warea', _humi0[jj]+': ', 0);
                    //sendmsg('1warea', _prec0[jj]+'- ', 0);
