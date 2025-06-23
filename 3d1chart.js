@@ -67,7 +67,7 @@
                    data: _hi0,
                    //讓每小時的背景變色 在這裡傳顏色的陣列
                    //backgroundColor: _darkside, 
-                   backgroundColor: 'rgba(0,0,0,0)', 
+                   backgroundColor: 'rgba(4,4,4,1)', 
                    //最後一碼 透明度 1是不透明 
                    borderColor: 'rgba(0,0,0,0)', 
                    borderWidth: 0,  
@@ -75,7 +75,7 @@
                    z: 1,
                    order:55, // <-- 修正點：設定為 0，作為中層繪圖
                    stack: 'rainStack', // <--- 關鍵：為這組堆疊的長條圖設定一個共同的堆疊ID
-                   barPercentage: 1.0, 
+                   barPercentage: 0.7, 
                    categoryPercentage: 0.9,
 
                    // *** 關鍵：自定義這個堆疊層的 Tooltip ***

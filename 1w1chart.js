@@ -57,7 +57,7 @@
                    data: _hi0,
                    //讓每小時的背景變色 在這裡傳顏色的陣列
                    //backgroundColor: _darkside, 
-                   backgroundColor: 'rgba(0,0,0,0)', 
+                   backgroundColor: 'rgba(4,4,4,1)', 
                    //最後一碼 透明度 1是不透明 
                    borderColor: 'rgba(0,0,0,0)', 
                    borderWidth: 0,  
@@ -65,7 +65,7 @@
                    z: 1,
                    order:55, // <-- 修正點：設定為 0，作為中層繪圖
                    stack: 'rainStack', // <--- 關鍵：為這組堆疊的長條圖設定一個共同的堆疊ID
-                   barPercentage: 1.0, 
+                   barPercentage: 0.7, 
                    categoryPercentage: 0.9,
 
                    // *** 關鍵：自定義這個堆疊層的 Tooltip ***
@@ -79,10 +79,10 @@
                               // 將判斷條件從 '天氣描述' 改為 '天氣'
                               if (context.dataset.label === '天氣') {
                                   const dataIndex = context.dataIndex;
-                                  // 假設 _weat0 是一個天氣描述的陣列，與 _dt1 長度相同
-                                  // 您需要確保 _weat0 已經被定義和填充
-                                  const weatherDescription = _weat0[dataIndex] || '無天氣描述';
-                                  return ` ${weatherDescription}`; // 返回 _weat0 的內容
+                                  // 假設 _weat1 是一個天氣描述的陣列，與 _dt1 長度相同
+                                  // 您需要確保 _weat1 已經被定義和填充
+                                  const weatherDescription = _weat1[dataIndex] || '無天氣描述';
+                                  return ` ${weatherDescription}`; // 返回 _weat1 的內容
                               }
                               // 對於其他數據集，讓全局 Tooltip 處理（返回空字串，或返回 context.dataset.label + context.parsed.y）
                               return '';
@@ -97,7 +97,7 @@
                    label: '均溫', 
                    data: _tempa, 
                    type: 'line', // <--- 設置為折線圖 
-                   borderColor: '#55B532', // 橙色 
+                   borderColor: '#4DE680', // 橙色 
                    backgroundColor: 'transparent', // 不填充區域 
                    borderWidth: 2, 
                    tension: 0.4, // 平滑曲線 

@@ -86,7 +86,7 @@
                    if (_first==1) {
                       //window.alert('第一次');
                       _first= 0;
-                      _hi0=[]; _dt0=[]; _dt1=[]; _temph=[]; _templ=[]; _tempa=[]; _dew0=[]; _humi0=[]; _prec0=[]; _descl=[]; _weat0=[]; _comf0=[]; _plot0=[];
+                      _hi0=[]; _dt0=[]; _dt1=[]; _temph=[]; _templ=[]; _tempa=[]; _dew0=[]; _humi0=[]; _prec0=[]; _descl=[]; _weat0=[]; _weat1=[]; _comf0=[]; _plot0=[];
                       // 日期0(原始), 日期1(精簡), 高溫, 低溫, 均溫, 露點溫度, 相對濕度, 降雨機率
                    }
                    var jj;
@@ -233,7 +233,7 @@
 
                    //sendmsg('1warea', jj);
                    //做最後組合 在圖表上使用
-                   _weat0[jj]=_dt1[jj]+' : '+_weat0[jj]+' / '+_comf0[jj];
+                   _weat1[jj]=_dt1[jj]+' : '+_weat0[jj]+' / '+_comf0[jj];
                    //sendmsg('1warea', _weat0[jj]+' ');
                 }
 
