@@ -101,6 +101,28 @@
                    }
                }, // <-- 修正：逗號是必須的，因為後面還有數據集 
     
+               // ****** 新增的濕度折線圖 (綁定到右側 Y 軸) ****** 
+               { // 這是第二個數據集：溫度 
+                   label: '濕度', 
+                   data: _humi0, 
+                   type: 'line', // <--- 設置為折線圖 
+                   borderColor: '#00559A', // 孔雀藍色
+                   backgroundColor: 'transparent', // 不填充區域 
+                   borderWidth: 2, 
+                   tension: 0.4, // 平滑曲線 
+                   fill: false,  // 不填充 
+                   yAxisID: 'yRainfall', // <--- 綁定到右側溫度 Y 軸 
+                   //pointRadius: 1, // 數據點半徑為 3 像素 
+                   pointRadius: 2, // 點的半徑大小 空心
+                   pointHitRadius: 8, // 感應區保持大
+                   pointBorderWidth: 1, //邊框的厚度 實心
+                   pointBackgroundColor: 'rgba(0,0,0,0)', // 完全透明
+                   pointHoverRadius: 3, // 懸停時點的半徑 (可以比 normal 狀態大一點，提供視覺反饋)
+                   pointHoverBorderWidth: 4, // 懸停時邊框的厚度 (可以與 normal 狀態相同)
+                   z: 1,
+                   order: 40, // <-- 修正點：設定為 1，作為上層繪圖
+               }, // <-- 修正：逗號是必須的，因為後面還有數據集 
+
                // ****** 新增的溫度折線圖 (綁定到左側 Y 軸) ****** 
                { // 這是第二個數據集：溫度 
                    label: '溫度', 
