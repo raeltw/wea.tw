@@ -57,7 +57,7 @@
             //window.alert('');
             //報表名稱
             //sendmsg('api_data7', data.records.Locations[0].DatasetDescription);
-            sendmsg('api_data7', '1預報地點: ', 0);
+            sendmsg('api_data7', '預報地點: ', 0);
             sendmsg('api_data7', data.records.Locations[0].LocationsName+' ', 0);
             sendmsg('api_data7', data.records.Locations[0].Location[0].LocationName);
             
