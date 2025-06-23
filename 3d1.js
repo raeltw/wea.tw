@@ -245,7 +245,7 @@
 
                    //sendmsg('3darea', jj);
                    //做最後組合 在圖表上使用
-                   _weat0[jj]=_dt1[jj]+' : '+_weat0[jj]+' / '+_comf0[jj];
+                   _weat0[jj]=_dt1[jj]+' : '+_weat0[jj]+' | '+_comf0[jj];
                    //sendmsg('3darea', _weat0[jj]+'\\ ');
                 }
 

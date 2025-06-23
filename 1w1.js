@@ -233,7 +233,7 @@
 
                    //sendmsg('1warea', jj);
                    //做最後組合 在圖表上使用
-                   _weat1[jj]=_dt1[jj]+' : '+_weat0[jj]+' / '+_comf0[jj];
+                   _weat1[jj]=_dt1[jj]+' : '+_weat0[jj]+' | '+_comf0[jj];
                    //sendmsg('1warea', _weat0[jj]+' ');
                 }
 

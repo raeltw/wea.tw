@@ -106,7 +106,7 @@
                    label: '濕度', 
                    data: _humi0, 
                    type: 'line', // <--- 設置為折線圖 
-                   borderColor: '#02344B', // 孔雀藍色
+                   borderColor: '#034081', 
                    backgroundColor: 'transparent', // 不填充區域 
                    borderWidth: 1, 
                    tension: 0.4, // 平滑曲線 
