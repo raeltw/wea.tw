@@ -172,7 +172,7 @@
                    label: '露點', 
                    data: _dew0, 
                    type: 'line', 
-                   borderColor: '#3a240f',  //#75542B
+                   borderColor: '#75542B',
                    backgroundColor: 'transparent', 
                    borderWidth: 1, 
                    tension: 0.4, 
