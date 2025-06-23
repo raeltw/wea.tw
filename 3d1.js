@@ -83,7 +83,7 @@
                    if (_first==1) {
                       //window.alert('第一次');
                       _first= 0;
-                      _hi0=[]; _dt0=[]; _dt1=[]; _temp0=[]; _temp1=[]; _dew0=[]; _humi0=[]; _prec0=[]; _descl=[]; _weat0=[]; _comf0=[];
+                      _hi0=[]; _dt0=[]; _dt1=[]; _temp0=[]; _temp1=[]; _dew0=[]; _humi0=[]; _prec0=[]; _descl=[]; _weat3=[]; _comf0=[];
                       // 日期0(原始), 日期1(精簡), 溫度, 體感溫度, 露點溫度, 相對濕度, 降雨機率
                    }
                    var jj;
@@ -167,7 +167,7 @@
                             //sendmsg('api_data3', _dt0.indexOf(_beg0));
                             var _found=_dt0.indexOf(_beg0);
                             if ( _found> -1) {
-                               _weat0[_found]=forecastLocations[ii].Time[jj].ElementValue[0].Weather
+                               _weat3[_found]=forecastLocations[ii].Time[jj].ElementValue[0].Weather
                             }
 
                             _beg0=dtcalct(_beg0, +1);
@@ -239,14 +239,14 @@
                    //sendmsg('3darea', _dew0[jj]+'. ', 0);
                    //sendmsg('3darea', _humi0[jj]+': ', 0);
                    //sendmsg('3darea', _prec0[jj]+'- ', 0);
-                   //sendmsg('3darea', _weat0[jj]+'\\ ', 0);
+                   //sendmsg('3darea', _weat3[jj]+'\\ ', 0);
                    //sendmsg('3darea', _comf0[jj]+'\\ ', 0);
                    //sendmsg('3darea', _descl[jj]+' ', 0);
 
                    //sendmsg('3darea', jj);
                    //做最後組合 在圖表上使用
-                   _weat0[jj]=_dt1[jj]+' : '+_weat0[jj]+' | '+_comf0[jj];
-                   //sendmsg('3darea', _weat0[jj]+'\\ ');
+                   _weat3[jj]=_dt1[jj]+' : '+_weat3[jj]+' | '+_comf0[jj];
+                   //sendmsg('3darea', _weat3[jj]+'\\ ');
                 }
 
                 ///在最後終於要畫圖
@@ -268,6 +268,4 @@
         });
 
       data=null;
-      //這也不行
-      //_hi0=null; _dt0=null; _dt1=null; _temp0=null; _temp1=null; _dew0=null; _humi0=null; _prec0=null; _descl=null; _weat0=null; _comf0=null;
 }

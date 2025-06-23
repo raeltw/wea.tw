@@ -89,10 +89,10 @@
                               // 將判斷條件從 '天氣描述' 改為 '天氣'
                               if (context.dataset.label === '天氣') {
                                   const dataIndex = context.dataIndex;
-                                  // 假設 _weat0 是一個天氣描述的陣列，與 _dt1 長度相同
-                                  // 您需要確保 _weat0 已經被定義和填充
-                                  const weatherDescription = _weat0[dataIndex] || '無天氣描述';
-                                  return ` ${weatherDescription}`; // 返回 _weat0 的內容
+                                  // 假設 _weat3 是一個天氣描述的陣列，與 _dt1 長度相同
+                                  // 您需要確保 _weat3 已經被定義和填充
+                                  const weatherDescription = _weat3[dataIndex] || '無天氣描述';
+                                  return ` ${weatherDescription}`; // 返回 _weat3 的內容
                               }
                               // 對於其他數據集，讓全局 Tooltip 處理（返回空字串，或返回 context.dataset.label + context.parsed.y）
                               return '';
