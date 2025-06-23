@@ -102,18 +102,18 @@
                }, // <-- 修正：逗號是必須的，因為後面還有數據集 
     
                // ****** 新增的濕度折線圖 (綁定到右側 Y 軸) ****** 
-               { // 這是第二個數據集：溫度 
+               { // 這是第?個數據集：濕度 
                    label: '濕度', 
                    data: _humi0, 
                    type: 'line', // <--- 設置為折線圖 
-                   borderColor: '#00559A', // 孔雀藍色
+                   borderColor: '#02344B', // 孔雀藍色
                    backgroundColor: 'transparent', // 不填充區域 
-                   borderWidth: 2, 
+                   borderWidth: 1, 
                    tension: 0.4, // 平滑曲線 
                    fill: false,  // 不填充 
                    yAxisID: 'yRainfall', // <--- 綁定到右側溫度 Y 軸 
                    //pointRadius: 1, // 數據點半徑為 3 像素 
-                   pointRadius: 2, // 點的半徑大小 空心
+                   pointRadius: 1, // 點的半徑大小 空心
                    pointHitRadius: 8, // 感應區保持大
                    pointBorderWidth: 1, //邊框的厚度 實心
                    pointBackgroundColor: 'rgba(0,0,0,0)', // 完全透明
@@ -172,14 +172,14 @@
                    label: '露點', 
                    data: _dew0, 
                    type: 'line', 
-                   borderColor: '#D2B48C', // 淺褐色 
+                   borderColor: '#3a240f',  //#75542B
                    backgroundColor: 'transparent', 
-                   borderWidth: 2, 
+                   borderWidth: 1, 
                    tension: 0.4, 
                    fill: false, 
                    yAxisID: 'yTemperature', // <--- 綁定到左側溫度 Y 軸 
                    //pointRadius: 1, // 數據點半徑為 3 像素 
-                   pointRadius: 2, // 點的半徑大小 空心
+                   pointRadius: 1, // 點的半徑大小 空心
                    pointHitRadius: 8, // 感應區保持大
                    pointBorderWidth: 1, //邊框的厚度 實心
                    pointBackgroundColor: 'rgba(0,0,0,0)', // 完全透明
