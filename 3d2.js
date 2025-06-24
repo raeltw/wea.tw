@@ -253,14 +253,13 @@
 //   var _col0p=[]; _col1p=[]; _colrp=[];   // 點
 //   var _col0; _col1; _colh; // 線
 
-
                  // 產生對應的顏色
                  _col0p=[];
                  _col0=mkrgba(_temp0, _colort0, _col0p, 1);
                  _col1p=[];
                  _col1=mkrgba(_temp1, _colort0, _col1p, 0.6);
 
-                 _colh=mkrgba(_humi0, _colorh0, null, 0.2);
+                 _colh=mkrgba(_humi0, _colorh0, null, 0.4); //不要低於 40% 手機上會看不見
 
                  _colrp=[]; 
                  mkrgba(_prec0, _colorr0, _colrp, 0.8);

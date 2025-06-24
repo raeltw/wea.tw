@@ -400,10 +400,17 @@ let _colorr0 = [
    var _hi0=[]; _dt0=[]; _dt1=[]; _temph=[]; _templ=[]; _tempa=[]; _dew0=[]; _humi0=[]; _prec0=[]; _descl=[]; _weat7=[]; _comf0=[]; _plot0=[];
    // _weat7 '250624 我猜是chart需要動態讀取這個值(顯示給user看) 所以還是要保留讓它用 (至少改這樣就正常了)
    // 日期0(原始), 日期1(精簡), 高溫, 低溫, 均溫, 露點溫度, 相對濕度, 降雨機率
+
+//均溫 點(當做箱形圖的方塊) '線'
+//濕度h '線'
+//降雨r 點 //是點沒錯 因為是長條圖
+   var _colap=[]; _colrp=[]; 
+   var _cola; _colh;
+
 </script>
 <! -- 帶入順序 要從最底層的開始寫 -->
-<script src="1w1chart.js"></script>
-<script src="1w1.js"></script>
+<script src="1w2chart.js"></script>
+<script src="1w2.js"></script>
 
 <script> document.addEventListener('DOMContentLoaded', () => { w11(); } ); </script>
 
