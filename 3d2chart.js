@@ -129,11 +129,11 @@
                    type: 'line', // <--- 設置為折線圖 
                    borderColor: _col0, // 線的顏色
                    backgroundColor: 'transparent', // 不填充區域 
-                   borderWidth: .5, // 0 等於沒畫線
+                   borderWidth: 0.3, // 0 等於沒畫線
                    tension: 0.4, // 平滑曲線 0.4
                    fill: false,  // 不填充 
                    yAxisID: 'yTemperature', // <--- 綁定到左側溫度 Y 軸 
-                   pointStyle: 'circle',  //'rect', //
+                   pointStyle: 'rect', //'circle',  //
                    pointRadius: 0.5, //2, // 點的半徑大小 空心
                    pointHitRadius: 8, // 感應區保持大
                    pointBorderColor: _col0p, // 點的顏色
@@ -152,7 +152,7 @@
                    type: 'line', 
                    borderColor: _col1, // 線的顏色
                    backgroundColor: 'transparent', 
-                   borderWidth: .5, // 0 等於沒畫線
+                   borderWidth: 0.3, // 0 等於沒畫線
                    tension: 0.4, 
                    fill: false, 
                    yAxisID: 'yTemperature', // <--- 綁定到左側溫度 Y 軸 

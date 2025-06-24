@@ -86,8 +86,8 @@
                    if (_first==1) {
                       //window.alert('第一次');
                       _first= 0;
-                      _hi0=[]; _dt0=[]; _dt1=[]; _temph=[]; _templ=[]; _tempa=[]; _dew0=[]; _humi0=[]; _prec0=[]; _descl=[]; _weat7=[]; _comf0=[]; _plot0=[];
-                      // 日期0(原始), 日期1(精簡), 高溫, 低溫, 均溫, 露點溫度, 相對濕度, 降雨機率
+                      _hi0=[]; _dt0=[]; _dt1=[]; _temph=[]; _templ=[]; _tempah=[]; _tempal=[]; _tempa=[]; _dew0=[]; _humi0=[]; _prec0=[]; _descl=[]; _weat7=[]; _comf0=[]; _plot0=[];
+                      // 日期0(原始), 日期1(精簡), 高溫, 低溫, 體感高溫, 體感低溫, 均溫, 露點溫度, 相對濕度, 降雨機率
                    }
                    var jj;
                    for (jj = 0; jj < forecastLocations[ii].Time.length; jj++) {
@@ -131,11 +131,11 @@
                       }
                       if (forecastLocations[ii].ElementName == '最高體感溫度') {
                          //sendmsg('1warea', forecastLocations[ii].Time[jj].ElementValue[0].MaxApparentTemperature+' '+jj+' ');
-                         //_temp1[jj]=forecastLocations[ii].Time[jj].ElementValue[0].MaxApparentTemperature;
+                         _tempah[jj]=forecastLocations[ii].Time[jj].ElementValue[0].MaxApparentTemperature;
                       }
                       if (forecastLocations[ii].ElementName == '最低體感溫度') {
                          //sendmsg('1warea', forecastLocations[ii].Time[jj].ElementValue[0].MinApparentTemperature+' '+jj+' ');
-                         //_temp1[jj]=forecastLocations[ii].Time[jj].ElementValue[0].MinApparentTemperature;
+                        _tempal[jj]=forecastLocations[ii].Time[jj].ElementValue[0].MinApparentTemperature;
                       }
                       if (forecastLocations[ii].ElementName == '最大舒適度指數') {
                          //sendmsg('1warea', forecastLocations[ii].Time[jj].ElementValue[0].MaxComfortIndex+' ', 0);
@@ -238,10 +238,17 @@
                 }
 
                  // 產生對應的顏色
-                 //均溫 準備方塊 看有沒有效
+
+                 //體感
+                 _colahp=[];
+                 _colah=mkrgba(_tempah, _colort0, _colahp, 0.6); 
+                 _colalp=[];
+                 _colal=mkrgba(_tempal, _colort0, _colalp, 0.6); 
+
+                 //均溫 每日可變色
                  _cola=mkrgba(_tempa, _colort0, null, 0.5); // 先準備一個透明的畫線
                  _colap=[];
-                 mkrgba(_tempa, _colort0, _colap, 0.9); // 再準備一組給方塊
+                 mkrgba(_tempa, _colort0, _colap, 1); // 再準備一組給方塊
 
                  _colh=mkrgba(_humi0, _colorh0, null, 0.4); //不要低於 40% 手機上會看不見
                  

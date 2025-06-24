@@ -30,7 +30,7 @@
                     data: _plot0, // <<--- 使用 _plot0 作為盒狀圖的數據源
                     // borderRadius: 80, // 想要圓角 但無效 數字 '8' 改為您想要的圓角半徑，例如 4, 6, 10 等 
                     yAxisID: 'yTemperature', // 綁定到溫度 Y 軸 (左側)
-                    barPercentage: 0.2, // 盒子的相對寬度 (可以調整)
+                    barPercentage: 0.3, // 盒子的相對寬度 (可以調整)
                     categoryPercentage: 0.8, // 類別間距 (可以調整)
                     order: 20, // 將盒狀圖放在最下層 (背景，Order 值越小越在下)
                 },
@@ -114,7 +114,7 @@
 
                // ****** 新增的均溫折線圖 (綁定到左側 Y 軸) ****** 
                { // 這是第?個數據集：均溫 
-                   //hidden: true, // <-- 想隱藏就改這裡
+                   hidden: true, // <-- 想隱藏就改這裡 先藏起來 太多東西 干擾
                    label: '均溫', 
                    data: _tempa, 
                    type: 'line', // <--- 設置為折線圖 
@@ -134,46 +134,54 @@
                    order: 40, // <-- 修正點：設定為 1，作為上層繪圖
                }, // <-- 修正：逗號是必須的，因為後面還有數據集 
 
-               // ****** 新增的低溫折線圖 (綁定到左側 Y 軸) ****** 
-               { // 這是第二個數據集：低溫 
-                   hidden: true, // <-- 想隱藏就改這裡
-                   label: '低溫', 
-                   data: _templ, 
+               // ****** 新增的體感低溫折線圖 (綁定到左側 Y 軸) ****** 
+               { // 這是第二個數據集：體感低溫 
+                   //hidden: true, // <-- 想隱藏就改這裡
+                   label: '體感低溫', 
+                   data: _tempal, 
                    type: 'line', // <--- 設置為折線圖 
-                   borderColor: '#FF9900', // 橙色 
+                   borderColor: _colal, 
                    backgroundColor: 'transparent', // 不填充區域 
-                   borderWidth: 1, 
+                   borderWidth: 0.2, 
                    tension: 0.4, // 平滑曲線 
                    fill: false,  // 不填充 
                    yAxisID: 'yTemperature', // <--- 綁定到左側溫度 Y 軸 
-                   pointRadius: 0, // 點的半徑大小 空心
+                   pointStyle: 'circle',  //'rect', //
                    pointHitRadius: 8, // 感應區保持大
-                   pointBorderWidth: 1, //邊框的厚度 實心
-                   pointBackgroundColor: 'rgba(0,0,0,0)', // 完全透明
-                   pointHoverRadius: 3, // 懸停時點的半徑 (可以比 normal 狀態大一點，提供視覺反饋)
-                   pointHoverBorderWidth: 4, // 懸停時邊框的厚度 (可以與 normal 狀態相同)
+                   pointRadius: 6, // 點的大小
+                   pointBorderColor: '#888', // 點的邊框顏色
+                   pointBorderWidth: 0.5, // 點的邊框的厚度
+                   pointBackgroundColor: _colalp, // 填充點的顏色(背景色)
+                   pointHoverRadius: 8, // 懸停時點的大小
+                   pointHoverBorderColor: '#000', // 懸停時點的邊框顏色
+                   pointHoverBorderWidth: 0.8, // 懸停時點的邊框的厚度
+                   pointHoverBackgroundColor: _colalp, // 懸停時點的點的顏色(背景色)
                    z: 1,
                    order: 12, // <-- 修正點：設定為 1，作為上層繪圖
                }, // <-- 修正：逗號是必須的，因為後面還有數據集 
     
-               // ****** 新增的高溫折線高溫(綁定到左側 Y 軸) ****** 
-               { // 這是第三個數據集：高溫 
-                   hidden: true, // <-- 想隱藏就改這裡
-                   label: '高溫', 
-                   data: _temph, // 注意這裡使用的是 _temp1 
+               // ****** 新增的體感高溫折線高溫(綁定到左側 Y 軸) ****** 
+               { // 這是第三個數據集：體感高溫 
+                   //hidden: true, // <-- 想隱藏就改這裡
+                   label: '體感高溫', 
+                   data: _tempah, // 注意這裡使用的是 _temp1 
                    type: 'line', 
-                   borderColor: '#FF4D40', // 紅橙色 
-                   backgroundColor: 'transparent', 
-                   borderWidth: 1, 
-                   tension: 0.4, 
-                   fill: false, 
+                   borderColor: _colah, 
+                   backgroundColor: 'transparent', // 不填充區域 
+                   borderWidth: 0.2, 
+                   tension: 0.4, // 平滑曲線 
+                   fill: false,  // 不填充 
                    yAxisID: 'yTemperature', // <--- 綁定到左側溫度 Y 軸 
-                   pointRadius: 0, // 點的半徑大小 空心
+                   pointStyle: 'circle',  //'rect', //
                    pointHitRadius: 8, // 感應區保持大
-                   pointBorderWidth: 1, //邊框的厚度 實心
-                   pointBackgroundColor: 'rgba(0,0,0,0)', // 完全透明
-                   pointHoverRadius: 3, // 懸停時點的半徑 (可以比 normal 狀態大一點，提供視覺反饋)
-                   pointHoverBorderWidth: 4, // 懸停時邊框的厚度 (可以與 normal 狀態相同)
+                   pointRadius: 6, // 點的大小
+                   pointBorderColor: '#888', // 點的邊框顏色
+                   pointBorderWidth: 0.5, // 點的邊框的厚度
+                   pointBackgroundColor: _colahp, // 填充點的顏色(背景色)
+                   pointHoverRadius: 8, // 懸停時點的大小
+                   pointHoverBorderColor: '#000', // 懸停時點的邊框顏色
+                   pointHoverBorderWidth: 0.8, // 懸停時點的邊框的厚度
+                   pointHoverBackgroundColor: _colahp, // 懸停時點的點的顏色(背景色)
                    z: 1,
                    order: 14, // <-- 修正點：設定為 1，作為上層繪圖
                }, // <-- 修正：逗號是必須的，因為後面還有數據集 
@@ -301,7 +309,7 @@
                                     const highTemp = (dataPoint.max !== null && dataPoint.max !== undefined) ? dataPoint.max : '無資料';
                                     
                                     // 顯示日期/時間、高溫、低溫
-                                    labelContent = `${xLabel} : 高溫 ${highTemp}  低溫 ${lowTemp}`; 
+                                    labelContent = `${xLabel} : 預測高溫 ${highTemp}  低溫 ${lowTemp}`; 
                                     
                                 } else {
                                     labelContent = `${xLabel} : 無溫度資料`; // 如果無數據，顯示無資料
