@@ -146,7 +146,8 @@
                             //sendmsg('api_data3', _dt0.indexOf(_beg0));
                             var _found=_dt0.indexOf(_beg0);
                             if ( _found> -1) {
-                               _prec0[_found]=forecastLocations[ii].Time[jj].ElementValue[0].ProbabilityOfPrecipitation;
+                               //_prec0[_found]=forecastLocations[ii].Time[jj].ElementValue[0].ProbabilityOfPrecipitation;
+                               _prec0[_found] = forecastLocations?.[ii]?.Time?.[jj]?.ElementValue?.[0]?.ProbabilityOfPrecipitation ?? 0;
                             }
 
                             _beg0=dtcalct(_beg0, +1);
@@ -268,4 +269,6 @@
         });
 
       data=null;
+      //這也不行
+      //_hi0=null; _dt0=null; _dt1=null; _temp0=null; _temp1=null; _dew0=null; _humi0=null; _prec0=null; _descl=null; _weat0=null; _comf0=null;
 }
