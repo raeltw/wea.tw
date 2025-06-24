@@ -114,7 +114,7 @@
 
                // ****** 新增的均溫折線圖 (綁定到左側 Y 軸) ****** 
                { // 這是第?個數據集：均溫 
-                   hidden: true, // <-- 想隱藏就改這裡 先藏起來 太多東西 干擾
+                   //hidden: true, // <-- 想隱藏就改這裡 先藏起來 太多東西 干擾
                    label: '均溫', 
                    data: _tempa, 
                    type: 'line', // <--- 設置為折線圖 
@@ -152,9 +152,9 @@
                    pointBorderColor: '#888', // 點的邊框顏色
                    pointBorderWidth: 0.5, // 點的邊框的厚度
                    pointBackgroundColor: _colalp, // 填充點的顏色(背景色)
-                   pointHoverRadius: 8, // 懸停時點的大小
+                   pointHoverRadius: 10, // 懸停時點的大小
                    pointHoverBorderColor: '#000', // 懸停時點的邊框顏色
-                   pointHoverBorderWidth: 0.8, // 懸停時點的邊框的厚度
+                   pointHoverBorderWidth: 0, // 懸停時點的邊框的厚度
                    pointHoverBackgroundColor: _colalp, // 懸停時點的點的顏色(背景色)
                    z: 1,
                    order: 12, // <-- 修正點：設定為 1，作為上層繪圖
@@ -178,9 +178,9 @@
                    pointBorderColor: '#888', // 點的邊框顏色
                    pointBorderWidth: 0.5, // 點的邊框的厚度
                    pointBackgroundColor: _colahp, // 填充點的顏色(背景色)
-                   pointHoverRadius: 8, // 懸停時點的大小
+                   pointHoverRadius: 10, // 懸停時點的大小
                    pointHoverBorderColor: '#000', // 懸停時點的邊框顏色
-                   pointHoverBorderWidth: 0.8, // 懸停時點的邊框的厚度
+                   pointHoverBorderWidth: 0, // 懸停時點的邊框的厚度
                    pointHoverBackgroundColor: _colahp, // 懸停時點的點的顏色(背景色)
                    z: 1,
                    order: 14, // <-- 修正點：設定為 1，作為上層繪圖
