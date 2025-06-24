@@ -4,34 +4,6 @@
    // 陣列如果不要全部用上 要自己切 
    // const labelsForChart = _dt1_full.slice(0, 30); // 從索引 0 開始，到索引 30 (不包含) 
     
-   // 250622 我上層已經有了
-   //// 獲取當前時間 
-   //const now = new Date(); 
-   //// 根據您 _dt0 的格式，生成一個匹配當前時間的完整字串 
-   //// 例如：'2025-06-21-21' (年-月-日-時) 
-   //const currentYear = now.getFullYear(); 
-   //const currentMonth = String(now.getMonth() + 1).padStart(2, '0'); 
-   //const currentDay = String(now.getDate()).padStart(2, '0'); 
-   //const currentHour = String(now.getHours()).padStart(2, '0'); 
-    //
-   //// 生成與 _dt0 格式完全匹配的當前時間字串 
-   //const currentTimeString = `${currentYear}-${currentMonth}-${currentDay}-${currentHour}`; 
-    //
-   //// 在 _dt0 陣列中尋找這個時間字串的索引 
-   //let currentDataIndex = _dt0.indexOf(currentTimeString); 
-   //sendmsg('3darea', 'currentDataIndex 2  '+currentDataIndex);
-    
-    // 250622 這檢查就留著 
-   // 檢查是否找到有效的索引 
-   if (currentDataIndex === -1) { 
-       // console.warn(`未能在 _dt0 中找到匹配當前時間的數據點。直線可能不會顯示。`); 
-       // 如果找不到精確匹配，您可以考慮以下策略： 
-       // 1. 找最接近的時間點索引 
-       // 2. 如果不需要精確到小時，可以只匹配到日，然後取該日的第一個或最後一個小時 
-       // 3. 直接不畫線 
-       // 為了範例，我們這裡假設如果找不到就讓 currentLine 註釋不顯示。 
-   } 
-    
    // 在這裡撰寫您的 Chart.js 繪圖程式碼 
    // 例如： 
    const ctx = document.getElementById('Chart3'); // 獲取 canvas 元素 
@@ -66,8 +38,7 @@
                    label: '天氣', 
                    data: _hi0,
                    //讓每小時的背景變色 在這裡傳顏色的陣列
-                   //backgroundColor: _darkside, 
-                   backgroundColor: 'rgba(4,4,4,1)', 
+                   backgroundColor: _colrd3, //'rgba(4,4,4,1)', 
                    //最後一碼 透明度 1是不透明 
                    borderColor: 'rgba(0,0,0,0)', 
                    borderWidth: 0,  
@@ -336,16 +307,16 @@
                            scaleID: 'x', 
                            // ****** 關鍵修正：直接傳遞索引值給 value ****** 
                            // 線畫在降雨機率方框的中間 
-                           //value: currentDataIndex, // 使用找到的索引 
+                           //value: currentDataIndex3, // 使用找到的索引 
                            // 線畫在降雨機率方框的左側 
-                           value: currentDataIndex - 0.5, 
+                           value: currentDataIndex3 - 0.5, 
                            // ******************************************** 
                            borderColor: 'rgba(255, 255, 255, 0.2)', // 白色，透明度 40% (您可以調整 0 到 1 的值) 
                            borderWidth: 1, 
                            //borderDash: [5, 5], 
                            label: { 
                                //content: '當前時間', 
-                               display: (currentDataIndex !== -1), // 只有找到索引時才顯示標籤 
+                               display: (currentDataIndex3 !== -1), // 只有找到索引時才顯示標籤 
                                position: 'start',  
                                color: 'red', 
                                font: { 

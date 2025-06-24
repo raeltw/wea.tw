@@ -360,9 +360,25 @@ let _colorh0 = [
 // 您的顏色映射表，適用於 0 到 100 的雨量
 let _colorr0 = [
     0, [0, 147, 193],  
-    100,  [255, 255, 255] // aqua
+    100,  [255, 255, 255] 
 ];
-// 看雨量圖示有反應 但折線圖沒感覺
+
+// 您的顏色映射表，適用於 黑夜白天
+let _colord0 = [
+    0, [0, 0, 0],  
+    5, [0, 0, 0],  
+    6, [20, 20, 20],  
+    12, [100, 100, 100],  
+    18, [20, 20, 20],  
+    19, [0, 0, 0],  
+    24,  [0, 0, 0] 
+];
+
+// 必須用不同組 因為是白天/黑夜
+let _colord1 = [
+    6, [100, 100, 100],  
+    18, [0, 0, 0]
+];
 
 
 </script>
@@ -375,14 +391,15 @@ let _colorr0 = [
 <!-- 3日預報 -->
 <script>
    //變數陣列在此宣告 才能讓變數傳遞到所有子程序去
-   var currentDataIndex = -1; 
+   var currentDataIndex3 = -1; 
    var _hi0=[]; _dt0=[]; _dt1=[]; _temp0=[]; _temp1=[]; _dew0=[]; _humi0=[]; _prec0=[]; _descl=[]; _weat3=[]; _comf0=[];
    // 日期0(原始), 日期1(精簡), 溫度, 體感溫度, 露點溫度, 相對濕度, 降雨機率
 
 //溫度0 1  點 '線'
 //濕度h '線'
 //降雨r 點 //是點沒錯 因為是長條圖
-   var _col0p=[]; _col1p=[]; _colrp=[];   // 點
+//背景d 點 //是點沒錯 因為是長條圖
+   var _col0p=[]; _col1p=[]; _colrp=[];  _colrd3=[];   // 點
    var _col0; _col1; _colh; // 線
    
 </script>
@@ -396,7 +413,7 @@ let _colorr0 = [
 <!-- 1周預報 -->
 <script>
    //變數陣列在此宣告 才能讓變數傳遞到所有子程序去
-   var currentDataIndex = -1; 
+   var currentDataIndex7 = -1; 
    var _hi0=[]; _dt0=[]; _dt1=[]; _temph=[]; _templ=[]; _tempah=[]; _tempal=[]; _tempa=[]; _dew0=[]; _humi0=[]; _prec0=[]; _descl=[]; _weat7=[]; _comf0=[]; _plot0=[];
    // _weat7 '250624 我猜是chart需要動態讀取這個值(顯示給user看) 所以還是要保留讓它用 (至少改這樣就正常了)
    // 日期0(原始), 日期1(精簡), 高溫, 低溫, 體感高溫, 體感低溫, 均溫, 露點溫度, 相對濕度, 降雨機率
@@ -405,7 +422,8 @@ let _colorr0 = [
 //均溫a 點(當做箱形圖的方塊) '線'
 //濕度h '線'
 //降雨r 點 //是點沒錯 因為是長條圖
-   var _colahp=[]; _colalp=[]; _colap=[]; _colrp=[]; 
+//背景d 點 //是點沒錯 因為是長條圖
+   var _colahp=[]; _colalp=[]; _colap=[]; _colrp=[]; _colrd7=[];
    var _colah; _colal; _cola; _colh;
 
 </script>

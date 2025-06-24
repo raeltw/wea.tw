@@ -56,8 +56,7 @@
                    label: '天氣', 
                    data: _hi0,
                    //讓每小時的背景變色 在這裡傳顏色的陣列
-                   //backgroundColor: _darkside, 
-                   backgroundColor: 'rgba(4,4,4,1)', 
+                   backgroundColor: _colrd7, 
                    //最後一碼 透明度 1是不透明 
                    borderColor: 'rgba(0,0,0,0)', 
                    borderWidth: 0,  
@@ -361,16 +360,16 @@
                            scaleID: 'x', 
                            // ****** 關鍵修正：直接傳遞索引值給 value ****** 
                            // 線畫在降雨機率方框的中間 
-                           //value: currentDataIndex, // 使用找到的索引 
+                           //value: currentDataIndex7, // 使用找到的索引 
                            // 線畫在降雨機率方框的左側 
-                           value: currentDataIndex - 0.5, 
+                           value: currentDataIndex7 - 0.5, 
                            // ******************************************** 
                            borderColor: 'rgba(255, 255, 255, 0.2)', // 白色，透明度 40% (您可以調整 0 到 1 的值) 
                            borderWidth: 1, 
                            //borderDash: [5, 5], 
                            label: { 
                                //content: '當前時間', 
-                               display: (currentDataIndex !== -1), // 只有找到索引時才顯示標籤 
+                               display: (currentDataIndex7 !== -1), // 只有找到索引時才顯示標籤 
                                position: 'start',  
                                color: 'red', 
                                font: { 

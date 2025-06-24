@@ -205,8 +205,8 @@
                 //sendmsg('3darea', '長日期 [短日期] 溫度, 體感, 露點. 濕度: 降雨-');
                 //sendmsg('3darea', '_dt0 [_dt1] _temp0, _temp01, _dew0. _humi0: _prec0- _descl');
                 _tmp1="  ";
-                var _dd, _hh; 
-                currentDataIndex = -1; 
+                var _dd, _hh; _dh0=[]; // 小時 只會在這裡用
+               currentDataIndex3 = -1; 
                 const now = new Date(); 
                 const currentDD = String(now.getDate()).padStart(2, '0'); 
                 const currentHH = String(now.getHours()).padStart(2, '0'); 
@@ -216,10 +216,11 @@
                    _dd=_dt0[jj].substring(8, 10);
                    // 第8位開始取 第10位不算!!
                    _hh=_dt0[jj].substring(11, 13);
+                   _dh0[jj]=_hh;
 
                    if ( (currentDD == _dd) && (currentHH == _hh) ) {
-                      currentDataIndex= jj
-                      //sendmsg('3darea', 'currentDataIndex 1 '+currentDataIndex);
+                      currentDataIndex3= jj
+                      //sendmsg('3darea', 'currentDataIndex3 1 '+currentDataIndex3);
                       //sendmsg('3darea', '*** ', 0);
                    }
 
@@ -251,6 +252,8 @@
                 }
 
                  // 產生對應的顏色
+                 mkrgba(_dh0, _colord0, _colrd3, 0.33);
+                 
                  _col0p=[];
                  _col0=mkrgba(_temp0, _colort0, _col0p, 1);
                  _col1p=[];

@@ -188,8 +188,8 @@
 
 
                 _tmp1="  ";
-                var _dd, _hh; 
-                currentDataIndex = -1; 
+                var _dd, _hh; _dh0=[]; // 小時 只會在這裡用
+                currentDataIndex7 = -1; 
                 const now = new Date(); 
                 const currentDD = String(now.getDate()).padStart(2, '0'); 
                 const currentHH = String(now.getHours()).padStart(2, '0'); 
@@ -199,10 +199,11 @@
                    _dd=_dt0[jj].substring(8, 10);
                    // 第8位開始取 第10位不算!!
                    _hh=_dt0[jj].substring(11, 13);
+                   _dh0[jj]=_hh;
 
-                   if ( (currentDD >= _dd) && (currentHH >= _hh) ) {
-                      currentDataIndex= jj
-                      //sendmsg('1warea', 'currentDataIndex 1 '+currentDataIndex);
+                   if ( (currentDD == _dd) && (currentHH >= _hh) ) {
+                      currentDataIndex7= jj
+                      //sendmsg('1warea', 'currentDataIndex7 1 '+currentDataIndex7);
                       //sendmsg('1warea', '*** ', 0);
                    }
 
@@ -238,6 +239,9 @@
                 }
 
                  // 產生對應的顏色
+                 // 背景
+                 mkrgba(_dh0, _colord1, _colrd7, 0.33);
+
                  //體感
                  _colahp=[];
                  _colah=mkrgba(_tempah, _colort0, _colahp, 0.6); 
