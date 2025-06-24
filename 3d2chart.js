@@ -129,7 +129,7 @@
                    type: 'line', // <--- 設置為折線圖 
                    borderColor: _col0, // 線的顏色
                    backgroundColor: 'transparent', // 不填充區域 
-                   borderWidth: 3, // 0 等於沒畫線
+                   borderWidth: .5, // 0 等於沒畫線
                    tension: 0.4, // 平滑曲線 0.4
                    fill: false,  // 不填充 
                    yAxisID: 'yTemperature', // <--- 綁定到左側溫度 Y 軸 
@@ -152,7 +152,7 @@
                    type: 'line', 
                    borderColor: _col1, // 線的顏色
                    backgroundColor: 'transparent', 
-                   borderWidth: 3, // 0 等於沒畫線
+                   borderWidth: .5, // 0 等於沒畫線
                    tension: 0.4, 
                    fill: false, 
                    yAxisID: 'yTemperature', // <--- 綁定到左側溫度 Y 軸 
