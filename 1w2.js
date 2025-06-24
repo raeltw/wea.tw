@@ -238,7 +238,6 @@
                 }
 
                  // 產生對應的顏色
-
                  //體感
                  _colahp=[];
                  _colah=mkrgba(_tempah, _colort0, _colahp, 0.6); 

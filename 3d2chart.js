@@ -134,13 +134,15 @@
                    fill: false,  // 不填充 
                    yAxisID: 'yTemperature', // <--- 綁定到左側溫度 Y 軸 
                    pointStyle: 'rect', //'circle',  //
-                   pointRadius: 0.5, //2, // 點的半徑大小 空心
                    pointHitRadius: 8, // 感應區保持大
-                   pointBorderColor: _col0p, // 點的顏色
-                   pointBorderWidth: 8, //邊框的厚度 實心 0.1
-                   pointBackgroundColor: 'rgba(0,0,0,0)', // 完全透明
-                   pointHoverRadius: 3, // 懸停時點的半徑 (可以比 normal 狀態大一點，提供視覺反饋)
-                   pointHoverBorderWidth: 4, // 懸停時邊框的厚度 (可以與 normal 狀態相同)
+                   pointRadius: 6, // 點的大小
+                   //pointBorderColor: '#888', // 點的邊框顏色
+                   //pointBorderWidth: 0.5, // 點的邊框的厚度
+                   pointBackgroundColor: _col0p, // 填充點的顏色(背景色)
+                   pointHoverRadius: 7, // 懸停時點的大小
+                   //pointHoverBorderColor: '#000', // 懸停時點的邊框顏色
+                   //pointHoverBorderWidth: 0.8, // 懸停時點的邊框的厚度
+                   pointHoverBackgroundColor: _col0p, // 懸停時點的點的顏色(背景色)
                    z: 1,
                    order: 11, // <-- 修正點：設定為 1，作為上層繪圖
                }, // <-- 修正：逗號是必須的，因為後面還有數據集 
@@ -156,15 +158,16 @@
                    tension: 0.4, 
                    fill: false, 
                    yAxisID: 'yTemperature', // <--- 綁定到左側溫度 Y 軸 
-                   pointStyle: 'circle', 
-                   pointRadius: 0.5, //2, // 點的半徑大小 空心
+                   pointStyle: 'circle',  //'rect', //
                    pointHitRadius: 8, // 感應區保持大
-                   pointBorderColor: _col1p, // 點的顏色
-                   pointBorderWidth: 8, //邊框的厚度 實心 0.1
-                   pointBackgroundColor: 'rgba(0,0,0,0)', // 完全透明
-                   pointHoverRadius: 3, // 懸停時點的半徑 (可以比 normal 狀態大一點，提供視覺反饋)
-                   pointHoverBorderWidth: 4, // 懸停時邊框的厚度 (可以與 normal 狀態相同)
-
+                   pointRadius: 5, // 點的大小
+                   //pointBorderColor: '#888', // 點的邊框顏色
+                   //pointBorderWidth: 0.5, // 點的邊框的厚度
+                   pointBackgroundColor: _col1p, // 填充點的顏色(背景色)
+                   pointHoverRadius: 6, // 懸停時點的大小
+                   //pointHoverBorderColor: '#000', // 懸停時點的邊框顏色
+                   //pointHoverBorderWidth: 0.8, // 懸停時點的邊框的厚度
+                   pointHoverBackgroundColor: _col1p, // 懸停時點的點的顏色(背景色)
                    z: 1,
                    order: 12, // <-- 修正點：設定為 1，作為上層繪圖
                }, // <-- 修正：逗號是必須的，因為後面還有數據集 

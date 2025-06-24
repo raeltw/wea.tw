@@ -250,9 +250,6 @@
                    //sendmsg('3darea', _weat3[jj]+'\\ ');
                 }
 
-//   var _col0p=[]; _col1p=[]; _colrp=[];   // 點
-//   var _col0; _col1; _colh; // 線
-
                  // 產生對應的顏色
                  _col0p=[];
                  _col0=mkrgba(_temp0, _colort0, _col0p, 1);
