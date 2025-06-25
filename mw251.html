@@ -39,7 +39,9 @@ body
 
 <body>
 
-    
+<div id='api_data1'style='float:left; width:45%;'>現在天氣:<br /></div>    
+<div id='api_data30'style='float:right; width:45%;'><br />最新預報:<br /></div>
+<div style='clear: both;'></div>
 <div class="chart-container">
 <div id='api_data3'>3日預報:<br /></div>
     <canvas id="Chart3"></canvas>
@@ -47,8 +49,8 @@ body
 <div id='api_data7'>1周預報:<br /></div>
 <div class="chart-container">
     <canvas id="Chart7"></canvas>
-</div><br /><!-- br /><br /><br / -->
-<div id='api_data1'>現在天氣:<br /></div>
+</div><br /><br /><br /><br />
+
 
 
 
@@ -400,7 +402,7 @@ let _colord1 = [
 //降雨r 點 //是點沒錯 因為是長條圖
 //背景d 點 //是點沒錯 因為是長條圖
    var _col0p=[]; _col1p=[]; _colrp=[];  _colrd3=[];   // 點
-   var _col0; _col1; _colh; // 線
+   var _col0, _col1, _colh; // 線
    
 </script>
  <!--  3日預報 -->
@@ -424,7 +426,7 @@ let _colord1 = [
 //降雨r 點 //是點沒錯 因為是長條圖
 //背景d 點 //是點沒錯 因為是長條圖
    var _colahp=[]; _colalp=[]; _colap=[]; _colrp=[]; _colrd7=[];
-   var _colah; _colal; _cola; _colh;
+   var _colah, _colal, _cola, _colh;
 
 </script>
 <! -- 帶入順序 要從最底層的開始寫 -->

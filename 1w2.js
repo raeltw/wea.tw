@@ -22,7 +22,7 @@
 
     let _apiurl1 = _base + rep7 + '?Authorization=' + key1 + '&LocationName=' + town1;
 
-    tmp2 = makeA('(原始連結)', _apiurl1);
+    var tmp2 = makeA('(原始連結)', _apiurl1);
     //window.alert(tmp2);
     sendmsg('1warea', tmp2, 0);
     sendmsg('1warea', ' ' + _apiurl1);
@@ -69,7 +69,7 @@
 
                 const numberOfRecords = forecastLocations.length; // 取得陣列的長度 
 
-                sendmsg('api_data7', `共找到 ${numberOfRecords} 組預報欄位資料`);
+                sendmsg('1warea', `共找到 ${numberOfRecords} 組預報欄位資料`);
                 //return '';
 
 /// move

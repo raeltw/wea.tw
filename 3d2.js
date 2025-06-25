@@ -1,4 +1,6 @@
 ﻿function d31() {
+   //window.alert('hello');
+
     // 氣象局 3日預報
     // wea3.html?key=CWA-422C592A-18E7-4C2E-BBD2-003CCC1F18D4;&rep3=069;&town1=新店區;
 
@@ -66,7 +68,7 @@
 
                 const numberOfRecords = forecastLocations.length; // 取得陣列的長度 
 
-                sendmsg('api_data3', `共找到 ${numberOfRecords} 組預報欄位資料`);
+                sendmsg('3darea', `共找到 ${numberOfRecords} 組預報欄位資料`);
                 //return '';
 
 /// move
@@ -85,6 +87,10 @@
                       _first= 0;
                       _hi0=[]; _dt0=[]; _dt1=[]; _temp0=[]; _temp1=[]; _dew0=[]; _humi0=[]; _prec0=[]; _descl=[]; _weat3=[]; _comf0=[];
                       // 日期0(原始), 日期1(精簡), 溫度, 體感溫度, 露點溫度, 相對濕度, 降雨機率
+                      var _ws0=[]; _wd0=[]; _wc0=[]; 
+                      // 風速 風向 天氣現象代碼
+                      //只有這裡用到
+                      
                    }
                    var jj;
                    for (jj = 0; jj < forecastLocations[ii].Time.length; jj++) {
@@ -127,11 +133,47 @@
                          _comf0[jj]=forecastLocations[ii].Time[jj].ElementValue[0].ComfortIndexDescription;
                       }
                       if (forecastLocations[ii].ElementName == '風速') {
+                         // 自己延長到三小時??
                          //sendmsg('3darea', forecastLocations[ii].Time[jj].ElementValue[0].WindSpeed+' ', 0);
+                         var _beg0=forecastLocations[ii].Time[jj].DataTime.replace('T', '-').substring(0, 13)
+                         var _end0=dtcalct(_beg0, +3);
+                         //sendmsg('api_data3', _beg0+' '+_end0);
+
+                         //sendmsg('api_data3', '日期區間 '+_beg0+' '+_end0+' > ', 0);
+                         //把三小時的資料 分存回一小時
+                         while (_beg0 < _end0) {
+                            var _found=_dt0.indexOf(_beg0);
+                            if ( _found> -1) {
+                            //sendmsg('api_data3', '風速? '+_beg0+' ', 0);
+                            //sendmsg('api_data3', _beg0);
+
+                               _ws0[_found]=forecastLocations[ii].Time[jj].ElementValue[0].WindSpeed;
+                            }
+                            _beg0=dtcalct(_beg0, +1);
+                         }
+                         //sendmsg('api_data3', '');
+
                          //sendmsg('3darea', forecastLocations[ii].Time[jj].ElementValue[0].BeaufortScale+' '+jj+' ');
                       }
                       if (forecastLocations[ii].ElementName == '風向') {
-                         //sendmsg('3darea', forecastLocations[ii].Time[jj].ElementValue[0].WindDirection+' '+jj+' ');
+                         // 自己延長到三小時??
+                         //sendmsg('3darea', forecastLocations[ii].Time[jj].ElementValue[0].WindDirection;+' '+jj+' ');
+                         var _beg0=forecastLocations[ii].Time[jj].DataTime.replace('T', '-').substring(0, 13)
+                         var _end0=dtcalct(_beg0, +3);
+
+                         //sendmsg('api_data3', '日期區間 '+_beg0+' '+_end0+' > ', 0);
+                         //把三小時的資料 分存回一小時
+                         while (_beg0 < _end0) {
+                            //sendmsg('api_data3', '風向? '+_beg0+' ', 0);
+                            //sendmsg('api_data3', _dt0.indexOf(_beg0));
+                            var _found=_dt0.indexOf(_beg0);
+                            if ( _found> -1) {
+                               _wd0[_found]=forecastLocations[ii].Time[jj].ElementValue[0].WindDirection;
+                               //sendmsg('3darea', _wd0[_found]+' '+jj+' ');
+                            }
+                            _beg0=dtcalct(_beg0, +1);
+                         }
+                         //sendmsg('api_data3', '');
                       }
                       if (forecastLocations[ii].ElementName == '3小時降雨機率') {
                          // 三小時!!
@@ -149,7 +191,6 @@
                                //_prec0[_found]=forecastLocations[ii].Time[jj].ElementValue[0].ProbabilityOfPrecipitation;
                                _prec0[_found] = forecastLocations?.[ii]?.Time?.[jj]?.ElementValue?.[0]?.ProbabilityOfPrecipitation ?? 0;
                             }
-
                             _beg0=dtcalct(_beg0, +1);
                          }
                          //sendmsg('api_data3', '');
@@ -168,9 +209,9 @@
                             //sendmsg('api_data3', _dt0.indexOf(_beg0));
                             var _found=_dt0.indexOf(_beg0);
                             if ( _found> -1) {
-                               _weat3[_found]=forecastLocations[ii].Time[jj].ElementValue[0].Weather
+                               _weat3[_found]=forecastLocations[ii].Time[jj].ElementValue[0].Weather;
+                               _wc0[_found]=forecastLocations[ii].Time[jj].ElementValue[0].WeatherCode;
                             }
-
                             _beg0=dtcalct(_beg0, +1);
                          }
                          //sendmsg('api_data3', '');
@@ -190,7 +231,6 @@
                             if ( _found> -1) {
                                _descl[_found]=forecastLocations[ii].Time[jj].ElementValue[0].WeatherDescription;
                             }
-
                             _beg0=dtcalct(_beg0, +1);
                          }
                          //sendmsg('api_data3', '');
@@ -222,6 +262,21 @@
                       currentDataIndex3= jj
                       //sendmsg('3darea', 'currentDataIndex3 1 '+currentDataIndex3);
                       //sendmsg('3darea', '*** ', 0);
+
+                      //把預報資料 顯示在右上
+                      tmp2 = (_hh >= '06' && _hh < '18') ? 'day' : 'night';
+                      sendmsg('api_data30', "<img style='float:right; margin-right:64px;' src='https://www.cwa.gov.tw/V8/assets/img/weather_icons/weathers/svg_icon/"+tmp2+"/"+_wc0[jj]+".svg'>", 0);
+                      sendmsg('api_data30', '溫度: '+_temp0[jj]+' 度');
+                      sendmsg('api_data30', '體感溫度: '+_temp1[jj]+' 度');
+                      sendmsg('api_data30', '露點溫度: '+_dew0[jj]+' 度');
+                      sendmsg('api_data30', '相對濕度: '+_humi0[jj]+'%');
+                      sendmsg('api_data30', '降雨機率: '+_prec0[jj]+'%');
+                      sendmsg('api_data30', '風速: '+_wd0[jj]+' '+(_ws0[jj]*3.6)+ ' km/h');
+                      sendmsg('api_data30', '概況: '+_weat3[jj]+' | '+_comf0[jj]);
+                          
+
+
+ 
                    }
 
                    _dt1[jj]='';

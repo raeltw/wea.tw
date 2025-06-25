@@ -6,6 +6,11 @@ function nowwea1() {
     // wea.html?key=CWA-422C592A-18E7-4C2E-BBD2-003CCC1F18D4;&station1=466881;
 
     let _base = 'https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001';
+    //A0001-001 自動氣象站-氣象觀測資料 這個有降雨機率
+    //但可帶3日預報的過來 還有最高溫 最低溫 天氣描述....
+    //https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0001-001?Authorization=CWA-422C592A-18E7-4C2E-BBD2-003CCC1F18D4&StationId=C0AI10
+    //A0003-001 現在天氣觀測報告-現在天氣觀測報告 目前用這個 有濕度
+    //https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=CWA-422C592A-18E7-4C2E-BBD2-003CCC1F18D4&StationId=466881
 
     // 一定要 new 一定要先截斷到 ? 之後
     let tmp1 = new URLSearchParams(window.location.search);
@@ -49,7 +54,7 @@ function nowwea1() {
                 const stationRecords = data.records.Station; // 這是一個包含測站資料的陣列
                 const numberOfRecords = stationRecords.length; // 取得陣列的長度
 
-                sendmsg('api_data1', `共找到 ${numberOfRecords} 筆測站資料`);
+                sendmsg('nowarea', `共找到 ${numberOfRecords} 筆測站資料`);
 
                 // --- 新增的警告訊息邏輯 ---
                 if (numberOfRecords > 1) {
@@ -62,15 +67,15 @@ function nowwea1() {
                     const staData = stationRecords[0]; // 總是取第一筆測站的資料 站點資料
                     const wadData = stationRecords[0].WeatherElement; // 氣象資料
 
-                    sendmsg('api_data1', '  ');
+                    //sendmsg('api_data1', '  ');
                     sendmsg('api_data1', `觀測地點: ${staData.GeoInfo.CountyName} ${staData.GeoInfo.TownName}`);
                     sendmsg('api_data1', `時間: ${staData.ObsTime.DateTime.replace('T', ' ').substring(0, 19)}`);
                     sendmsg('api_data1', `天氣: ${wadData.Weather}`);
                     sendmsg('api_data1', `溫度: ${wadData.AirTemperature} 度`);
                     sendmsg('api_data1', `相對濕度: ${wadData.RelativeHumidity}%`);
                     sendmsg('api_data1', `當日降雨量: ${wadData.Now.Precipitation} 毫米`);
-                    sendmsg('api_data1', `當日最高溫: ${wadData.DailyExtreme.DailyHigh.TemperatureInfo.AirTemperature} 度 (發生時間: ${wadData.DailyExtreme.DailyHigh.TemperatureInfo.Occurred_at.DateTime.replace('T', ' ').substring(0, 19)})`);
-                    sendmsg('api_data1', `當日最低溫: ${wadData.DailyExtreme.DailyLow.TemperatureInfo.AirTemperature} 度 (發生時間: ${wadData.DailyExtreme.DailyLow.TemperatureInfo.Occurred_at.DateTime.replace('T', ' ').substring(0, 19)})`);
+                    sendmsg('api_data1', `當日最高溫: ${wadData.DailyExtreme.DailyHigh.TemperatureInfo.AirTemperature} 度 (發生時間: ${wadData.DailyExtreme.DailyHigh.TemperatureInfo.Occurred_at.DateTime.replace('T', ' ').substring(11, 19)})`);
+                    sendmsg('api_data1', `當日最低溫: ${wadData.DailyExtreme.DailyLow.TemperatureInfo.AirTemperature} 度 (發生時間: ${wadData.DailyExtreme.DailyLow.TemperatureInfo.Occurred_at.DateTime.replace('T', ' ').substring(11, 19)})`);
                     sendmsg('api_data1', `日照時數: ${wadData.SunshineDuration} 小時`);
                     sendmsg('api_data1', ' ');
 
