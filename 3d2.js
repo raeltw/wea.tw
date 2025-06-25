@@ -264,6 +264,7 @@
                       //sendmsg('3darea', '*** ', 0);
 
                       //把預報資料 顯示在右上
+                      sendmsg('api_data30', _hh+'時預報: ');
                       tmp2 = (_hh >= '06' && _hh < '18') ? 'day' : 'night';
                       sendmsg('api_data30', "<img style='float:right; margin-right:64px;' src='https://www.cwa.gov.tw/V8/assets/img/weather_icons/weathers/svg_icon/"+tmp2+"/"+_wc0[jj]+".svg'>", 0);
                       sendmsg('api_data30', '溫度: '+_temp0[jj]+' 度');
@@ -273,10 +274,6 @@
                       sendmsg('api_data30', '降雨機率: '+_prec0[jj]+'%');
                       sendmsg('api_data30', '風速: '+_wd0[jj]+' '+(_ws0[jj]*3.6)+ ' km/h');
                       sendmsg('api_data30', '概況: '+_weat3[jj]+' | '+_comf0[jj]);
-                          
-
-
- 
                    }
 
                    _dt1[jj]='';
