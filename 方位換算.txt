@@ -1,0 +1,62 @@
+/* 
+https://schema.gov.tw/lists/149
+日出時太陽的方位，單位為角度值(0~360，0為正北、90為正東、180為正南、270為正西)。
+
+風向是指風吹過來的方向。 若是北風，即是指空氣分子由北方吹過來；
+
+*/ 
+/**
+ * 將角度值轉換為 16 個方位的描述。
+ * @param {number} degrees 角度值 (0-360，0 為正北，順時針增加)。
+ * @returns {string} 對應的 16 方位描述。
+ */
+function getDetailedDirectionFromDegrees(degrees) {
+  // 確保角度值在 0 到 360 之間
+  degrees = (degrees % 360 + 360) % 360;
+
+  if (degrees >= 348.75 || degrees < 11.25) {
+    return "正北";
+  } else if (degrees >= 11.25 && degrees < 33.75) {
+    return "北北東";
+  } else if (degrees >= 33.75 && degrees < 56.25) {
+    return "東北";
+  } else if (degrees >= 56.25 && degrees < 78.75) {
+    return "東北偏東";
+  } else if (degrees >= 78.75 && degrees < 101.25) {
+    return "正東";
+  } else if (degrees >= 101.25 && degrees < 123.75) {
+    return "東南偏東";
+  } else if (degrees >= 123.75 && degrees < 146.25) {
+    return "東南";
+  } else if (degrees >= 146.25 && degrees < 168.75) {
+    return "南南東";
+  } else if (degrees >= 168.75 && degrees < 191.25) {
+    return "正南";
+  } else if (degrees >= 191.25 && degrees < 213.75) {
+    return "南南西";
+  } else if (degrees >= 213.75 && degrees < 236.25) {
+    return "西南";
+  } else if (degrees >= 236.25 && degrees < 258.75) {
+    return "西南偏西";
+  } else if (degrees >= 258.75 && degrees < 281.25) {
+    return "正西";
+  } else if (degrees >= 281.25 && degrees < 303.75) {
+    return "西北偏西";
+  } else if (degrees >= 303.75 && degrees < 326.25) {
+    return "西北";
+  } else if (degrees >= 326.25 && degrees < 348.75) {
+    return "北北西";
+  } else {
+    return "無效角度"; // 錯誤處理
+  }
+}
+
+// 測試你原本的數字 115
+const myDegree = 115;
+const detailedDirection = getDetailedDirectionFromDegrees(myDegree);
+console.log(`角度 ${myDegree} 的精確方位是：${detailedDirection}`); // 輸出：角度 115 的精確方位是：東南偏東
+
+// 測試其他例子，例如 東南偏南 (約 157.5 度)
+const anotherDegree = 157;
+const anotherDetailedDirection = getDetailedDirectionFromDegrees(anotherDegree);
+console.log(`角度 ${anotherDegree} 的精確方位是：${anotherDetailedDirection}`); // 輸出：角度 157 的精確方位是：南南東 (接近你說的東南偏南)
