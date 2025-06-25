@@ -252,7 +252,7 @@
                 }
 
                  // 產生對應的顏色
-                 mkrgba(_dh0, _colord0, _colrd3, 0.33);
+                 mkrgba(_dh0, _colord0, _colrd3, 0.4);
                  
                  _col0p=[];
                  _col0=mkrgba(_temp0, _colort0, _col0p, 1);
