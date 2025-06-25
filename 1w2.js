@@ -240,7 +240,7 @@
 
                  // 產生對應的顏色
                  // 背景
-                 mkrgba(_dh0, _colord1, _colrd7, 0.4);
+                 mkrgba(_dh0, _colord1, _colrd7, 0.6);
 
                  //體感
                  _colahp=[];
