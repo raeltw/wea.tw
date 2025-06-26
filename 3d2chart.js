@@ -184,7 +184,7 @@
                        //color: 'rgba(255, 255, 255, 0.1)'  
                    }, 
                    ticks: { // 新增：增加刻度文字顏色 
-                       color: 'rgba(255, 255, 255, 0.8)', 
+                       color: 'rgba(255, 255, 255, 0.6)', 
                        stepSize: 20, // 設定步長為 20
                    }, 
                    stacked: true, // <--- 關鍵：啟用 Y 軸堆疊
@@ -204,7 +204,7 @@
                        //color: 'rgba(255, 255, 255, 0.1)' 
                    }, 
                    ticks: { // 新增：增加刻度文字顏色 
-                       color: 'rgba(255, 255, 255, 0.8)',
+                       color: 'rgba(255, 255, 255, 0.6)',
                        stepSize: 10, // 設定步長為 20 
                    } 
                }, // end of yTemperature 
@@ -220,7 +220,7 @@
                        //color: 'rgba(255, 255, 255, 0.1)' 
                    }, 
                    ticks: { // 新增：增加 X 軸刻度文字顏色 
-                       color: 'rgba(255, 255, 255, 0.8)' 
+                       color: 'rgba(255, 255, 255, 0.9)' 
                    } 
                } // end of x 
            }, // end of scales 
