@@ -266,7 +266,7 @@
                       //把預報資料 顯示在右上
                       sendmsg('api_data30', _hh+'時預報: ');
                       tmp2 = (_hh >= '06' && _hh < '18') ? 'day' : 'night';
-                      sendmsg('api_data30', "<img style='float:right; margin-right:64px;' src='https://www.cwa.gov.tw/V8/assets/img/weather_icons/weathers/svg_icon/"+tmp2+"/"+_wc0[jj]+".svg'>", 0);
+                      sendmsg('api_data30', "<img title='"+_weat3[jj]+"' style='float:right; margin-right:64px;' src='https://www.cwa.gov.tw/V8/assets/img/weather_icons/weathers/svg_icon/"+tmp2+"/"+_wc0[jj]+".svg'>", 0);
                       sendmsg('api_data30', '溫度: '+_temp0[jj]+' 度');
                       sendmsg('api_data30', '體感溫度: '+_temp1[jj]+' 度');
                       sendmsg('api_data30', '露點溫度: '+_dew0[jj]+' 度');
