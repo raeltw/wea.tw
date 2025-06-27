@@ -39,14 +39,12 @@ function getSunMoon(_date, _time, _lati, _long) {
   const sunTimes = SunCalc.getTimes(targetDateTime, _lati, _long);
   // 取得太陽位置 (這是針對 `targetDateTime` 精確時間點的位置)
   const sunPosition = SunCalc.getPosition(targetDateTime, _lati, _long);
-
   // 取得月亮相關時間 (一整天的事件)
   const moonTimes = SunCalc.getMoonTimes(targetDateTime, _lati, _long);
   // 取得月亮位置 (針對 `targetDateTime` 精確時間點的位置)
   const moonPosition = SunCalc.getMoonPosition(targetDateTime, _lati, _long);
   // 取得月相資訊 (針對 `targetDateTime` 當天)
   const moonIllumination = SunCalc.getMoonIllumination(targetDateTime);
-
 
   // 輔助函數：格式化 Date 物件為 HH:MM 字串
   const formatTime = (dateObj) => {
@@ -76,35 +74,34 @@ function getSunMoon(_date, _time, _lati, _long) {
     return `${String(diffHours).padStart(2, '0')}:${String(diffMinutes).padStart(2, '0')}`;
   };
 
-  // 輔助函數：判斷月相名稱和編號
+  // 輔助函數：判斷月相名稱 (8 種) 和編號 (00-16 共 17 種)
   const getMoonPhaseInfo = (phase) => {
     let name = "未知";
     let code = "00";
 
+    // --- 計算月相編號 (00-16，基於 Math.round(phase * 16)) ---
+    const phaseIndex = Math.round(phase * 16);
+    // 確保 phaseIndex 不會超過 16 (理論上 Math.round(1*16) = 16，但以防萬一)
+    const clampedPhaseIndex = Math.min(phaseIndex, 16);
+    code = String(clampedPhaseIndex).padStart(2, '0'); // 格式化為兩位數字串
+
+    // --- 判斷月相名稱 (維持最初的 8 種區間定義) ---
     if (phase < 0.03 || phase >= 0.97) {
       name = "新月";
-      code = "01";
     } else if (phase >= 0.03 && phase < 0.22) {
       name = "眉月";
-      code = "02";
     } else if (phase >= 0.22 && phase < 0.28) {
       name = "上弦月";
-      code = "03";
     } else if (phase >= 0.28 && phase < 0.47) {
       name = "盈凸月";
-      code = "04";
     } else if (phase >= 0.47 && phase < 0.53) {
       name = "滿月";
-      code = "05";
     } else if (phase >= 0.53 && phase < 0.72) {
       name = "虧凸月";
-      code = "06";
     } else if (phase >= 0.72 && phase < 0.78) {
       name = "下弦月";
-      code = "07";
     } else if (phase >= 0.78 && phase < 0.97) {
       name = "殘月";
-      code = "08";
     }
 
     return {
@@ -115,7 +112,6 @@ function getSunMoon(_date, _time, _lati, _long) {
 
   // 判斷南北半球
   const hemisphere = _lati >= 0 ? "Nor" : "Sou";
-
 
   // 計算日長
   const dayLength = calculateDuration(sunTimes.sunrise, sunTimes.sunset);
@@ -172,10 +168,12 @@ function getSunMoon(_date, _time, _lati, _long) {
       "方位角": toDegrees(moonPosition.azimuth)
     }
   };
-
   // 將物件轉換為 JSON 字串並回傳
   return JSON.stringify(resultData, null, 2);
 }
+
+
+
 
 // --- 呼叫範例 ---
 // 查詢今天 (2025-06-27) 下午 1:21:56 的臺北市萬華區資訊
@@ -237,3 +235,7 @@ function getSunMoon(_date, _time, _lati, _long) {
 '2025-06-27', '11:50:00'
 
 2 月相進程數值 請維持原來的數值型態
+free full moon phase picture for  Northern Hemisphere
+
+月相圖有16階
+https://raeltw.github.io/wea.tw/moon/00.png
