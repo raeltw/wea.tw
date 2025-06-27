@@ -150,18 +150,22 @@
                    label: '露點', 
                    data: _dew0, 
                    type: 'line', 
-                   borderColor: '#75542B',
+                   borderColor: _cold,
                    backgroundColor: 'transparent', 
                    borderWidth: 1, 
                    tension: 0.4, 
                    fill: false, 
                    yAxisID: 'yTemperature', // <--- 綁定到左側溫度 Y 軸 
-                   pointRadius: 0, // 點的半徑大小 空心
+                   pointStyle: 'circle',  //'rect', //
+                   pointRadius: 0, // 點的大小
                    pointHitRadius: 8, // 感應區保持大
-                   pointBorderWidth: 1, //邊框的厚度 實心
-                   pointBackgroundColor: 'rgba(0,0,0,0)', // 完全透明
-                   pointHoverRadius: 3, // 懸停時點的半徑 (可以比 normal 狀態大一點，提供視覺反饋)
-                   pointHoverBorderWidth: 4, // 懸停時邊框的厚度 (可以與 normal 狀態相同)
+                   //pointBorderColor: '#888', // 點的邊框顏色
+                   pointBorderWidth: 0, // 0.5, // 點的邊框的厚度
+                   pointBackgroundColor: _coldp, // 'rgba(0,0,0,0)', // 完全透明
+                   pointHoverRadius: 5, // 懸停時點的大小
+                   //pointHoverBorderColor: '#000', // 懸停時點的邊框顏色
+                   pointHoverBorderWidth: 0, //.8, // 懸停時點的邊框的厚度
+                   pointHoverBackgroundColor: _coldp, // 懸停時點的點的顏色(背景色)
                    z: 1,
                    order: 13, // <-- 修正點：設定為 1，作為上層繪圖
                } // <-- 修正：這是最後一個數據集，後面沒有逗號 

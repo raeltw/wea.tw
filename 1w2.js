@@ -236,11 +236,12 @@
                    //做最後組合 在圖表上使用
                    _weat7[jj]=_dt1[jj]+' : '+_weat7[jj]+' | '+_comf0[jj];
                    //sendmsg('1warea', _weat7[jj]+' ');
+                   
                 }
 
                  // 產生對應的顏色
                  // 背景
-                 mkrgba(_dh0, _colord1, _colrd7, 0.2);
+                 mkrgba(_dh0, _colorb1, _colrd7, 0.2);
 
                  //體感
                  _colahp=[];
@@ -252,6 +253,9 @@
                  _cola=mkrgba(_tempa, _colort0, null, 0.5); // 先準備一個透明的畫線
                  _colap=[];
                  mkrgba(_tempa, _colort0, _colap, 1); // 再準備一組給方塊
+
+                 _coldp=[];
+                 _cold=mkrgba(_dew0, _colord0, _coldp, 0.7); 
 
                  _colh=mkrgba(_humi0, _colorh0, null, 0.4); //不要低於 40% 手機上會看不見
                  

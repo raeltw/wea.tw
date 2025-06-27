@@ -301,15 +301,19 @@
                    //做最後組合 在圖表上使用
                    _weat3[jj]=_dt1[jj]+' : '+_weat3[jj]+' | '+_comf0[jj];
                    //sendmsg('3darea', _weat3[jj]+'\\ ');
+
+                   //_dew0[jj]=Number(_dew0[jj])-5;
                 }
 
                  // 產生對應的顏色
-                 mkrgba(_dh0, _colord0, _colrd3, 0.2);
+                 mkrgba(_dh0, _colorb0, _colrd3, 0.2);
                  
                  _col0p=[];
                  _col0=mkrgba(_temp0, _colort0, _col0p, 1);
                  _col1p=[];
                  _col1=mkrgba(_temp1, _colort0, _col1p, 0.6);
+                 _coldp=[];
+                 _cold=mkrgba(_dew0, _colord0, _coldp, 0.7); 
 
                  _colh=mkrgba(_humi0, _colorh0, null, 0.4); //不要低於 40% 手機上會看不見
 
