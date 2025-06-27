@@ -302,7 +302,7 @@
                    _weat3[jj]=_dt1[jj]+' : '+_weat3[jj]+' | '+_comf0[jj];
                    //sendmsg('3darea', _weat3[jj]+'\\ ');
 
-                   //_dew0[jj]=Number(_dew0[jj])-5;
+                   //_dew0[jj]=Number(_dew0[jj])-10;
                 }
 
                  // 產生對應的顏色
