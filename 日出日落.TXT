@@ -1,0 +1,239 @@
+﻿// 請確保您的專案中已引入 SunCalc 函式庫
+// 例如在 Node.js 環境：
+// const SunCalc = require('suncalc');
+// 在瀏覽器環境，SunCalc 會直接在 window 物件下
+
+/**
+ * 取得指定日期、時間與地點的太陽及月亮相關天文資訊。
+ *
+ * @param {string} _date 要查詢的日期字串，格式為 'YYYY-MM-DD'。
+ * @param {string} _time 要查詢的時間字串，格式為 'HH:MM:SS'。
+ * @param {number} _lati 查詢地點的緯度。
+ * @param {number} _long 查詢地點的經度。
+ * @returns {string} 包含太陽與月亮資訊的 JSON 字串。
+ */
+function getSunMoon(_date, _time, _lati, _long) {
+  // 組合日期和時間字串，並建立 Date 物件
+  const dateTimeString = `${_date}T${_time}`;
+  const targetDateTime = new Date(dateTimeString);
+
+  // 檢查日期物件是否有效
+  if (isNaN(targetDateTime.getTime())) {
+    console.error("錯誤：日期或時間格式無效。");
+    return JSON.stringify({
+      status: "error",
+      message: "無效的日期或時間參數。"
+    });
+  }
+
+  // 檢查經緯度是否為有效數字
+  if (typeof _lati !== 'number' || typeof _long !== 'number' || isNaN(_lati) || isNaN(_long)) {
+    console.error("錯誤：緯度或經度無效。");
+    return JSON.stringify({
+      status: "error",
+      message: "無效的緯度或經度參數。"
+    });
+  }
+
+  // 取得太陽相關時間 (這些是針對一整天的事件，不受精確時間點影響)
+  const sunTimes = SunCalc.getTimes(targetDateTime, _lati, _long);
+  // 取得太陽位置 (這是針對 `targetDateTime` 精確時間點的位置)
+  const sunPosition = SunCalc.getPosition(targetDateTime, _lati, _long);
+
+  // 取得月亮相關時間 (一整天的事件)
+  const moonTimes = SunCalc.getMoonTimes(targetDateTime, _lati, _long);
+  // 取得月亮位置 (針對 `targetDateTime` 精確時間點的位置)
+  const moonPosition = SunCalc.getMoonPosition(targetDateTime, _lati, _long);
+  // 取得月相資訊 (針對 `targetDateTime` 當天)
+  const moonIllumination = SunCalc.getMoonIllumination(targetDateTime);
+
+
+  // 輔助函數：格式化 Date 物件為 HH:MM 字串
+  const formatTime = (dateObj) => {
+    if (!dateObj || isNaN(dateObj.getTime())) {
+      return null;
+    }
+    return dateObj.toLocaleTimeString('zh-TW', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+  };
+
+  // 輔助函數：將弧度轉換為度數 (回傳數字型態)
+  const toDegrees = (radians) => {
+    return (radians * 180 / Math.PI); // 不使用 toFixed()
+  };
+
+  // 輔助函數：計算時間長度 (HH:MM)
+  const calculateDuration = (startTime, endTime) => {
+    if (!startTime || !endTime || isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
+      return null;
+    }
+    const diffMs = endTime.getTime() - startTime.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    return `${String(diffHours).padStart(2, '0')}:${String(diffMinutes).padStart(2, '0')}`;
+  };
+
+  // 輔助函數：判斷月相名稱和編號
+  const getMoonPhaseInfo = (phase) => {
+    let name = "未知";
+    let code = "00";
+
+    if (phase < 0.03 || phase >= 0.97) {
+      name = "新月";
+      code = "01";
+    } else if (phase >= 0.03 && phase < 0.22) {
+      name = "眉月";
+      code = "02";
+    } else if (phase >= 0.22 && phase < 0.28) {
+      name = "上弦月";
+      code = "03";
+    } else if (phase >= 0.28 && phase < 0.47) {
+      name = "盈凸月";
+      code = "04";
+    } else if (phase >= 0.47 && phase < 0.53) {
+      name = "滿月";
+      code = "05";
+    } else if (phase >= 0.53 && phase < 0.72) {
+      name = "虧凸月";
+      code = "06";
+    } else if (phase >= 0.72 && phase < 0.78) {
+      name = "下弦月";
+      code = "07";
+    } else if (phase >= 0.78 && phase < 0.97) {
+      name = "殘月";
+      code = "08";
+    }
+
+    return {
+      name: name,
+      code: code
+    };
+  };
+
+  // 判斷南北半球
+  const hemisphere = _lati >= 0 ? "Nor" : "Sou";
+
+
+  // 計算日長
+  const dayLength = calculateDuration(sunTimes.sunrise, sunTimes.sunset);
+
+  // 計算月長和月亮可見性狀態
+  let moonLengthCalculated = null;
+  let moonVisibilityStatus = "正常";
+
+  if (moonTimes.alwaysUp) {
+    moonVisibilityStatus = "整日可見";
+    moonLengthCalculated = null; // 或者您可以設定為 '24:00' 如果需要
+  } else if (moonTimes.alwaysDown) {
+    moonVisibilityStatus = "整日不可見";
+    moonLengthCalculated = null; // 或者您可以設定為 '00:00' 如果需要
+  } else {
+    moonLengthCalculated = calculateDuration(moonTimes.rise, moonTimes.set);
+  }
+
+  // 獲取月相名稱和編號
+  const moonPhaseInfo = getMoonPhaseInfo(moonIllumination.phase);
+
+
+  // 建構結果物件
+  const resultData = {
+    "日期": _date,
+    "時間": _time,
+    "日期時間": targetDateTime.toISOString(),
+    "緯度": _lati,
+    "經度": _long,
+    "半球": hemisphere,
+    "sun": {
+      "日出": formatTime(sunTimes.sunrise),
+      "日落": formatTime(sunTimes.sunset),
+      "日長": dayLength,
+      "正午": formatTime(sunTimes.solarNoon),
+      "曙光": formatTime(sunTimes.dawn),
+      "黃昏": formatTime(sunTimes.dusk),
+      "黃金時段結束": formatTime(sunTimes.goldenHourEnd),
+      "黃金時段開始": formatTime(sunTimes.goldenHour),
+      "夜晚": formatTime(sunTimes.night),
+      "高度角": toDegrees(sunPosition.altitude),
+      "方位角": toDegrees(sunPosition.azimuth)
+    },
+    "moon": {
+      "月出": formatTime(moonTimes.rise),
+      "月落": formatTime(moonTimes.set),
+      "狀態": moonVisibilityStatus, // 新增：月長狀態 (正常, 整日可見, 整日不可見)
+      "月長": moonLengthCalculated, // 新增：HH:MM 格式的月長，非正常情況為 null
+      "被照亮比例": moonIllumination.fraction.toFixed(2),
+      "月相進程": moonIllumination.phase,
+      "月相": moonPhaseInfo.name,
+      "月相編號": moonPhaseInfo.code,
+      "高度角": toDegrees(moonPosition.altitude),
+      "方位角": toDegrees(moonPosition.azimuth)
+    }
+  };
+
+  // 將物件轉換為 JSON 字串並回傳
+  return JSON.stringify(resultData, null, 2);
+}
+
+// --- 呼叫範例 ---
+// 查詢今天 (2025-06-27) 下午 1:21:56 的臺北市萬華區資訊
+const dateStr = '2025-06-27';
+const timeStr = '13:21:56';
+const latiTaipei = 25.0449; // 臺北市萬華區緯度 (北半球)
+const longTaipei = 121.4930; // 臺北市萬華區經度
+
+const _sunmoonTaipei = getSunMoon(dateStr, timeStr, latiTaipei, longTaipei);
+console.log(`查詢 ${dateStr} ${timeStr} 臺北市萬華區的日出月落與月相資訊：`);
+console.log(_sunmoonTaipei);
+
+// --- 查詢北極圈內某日，月亮可能整日可見或不可見 ---
+// 您可以嘗試不同的日期和極地緯度來觀察月長_狀態
+const dateArcticSummer = '2025-07-15'; // 北極夏季，月亮可能整日可見
+const dateArcticWinter = '2025-01-15'; // 北極冬季，月亮可能整日不可見
+const latiArctic = 80; // 高緯度
+const longArctic = 0;
+
+console.log(`\n查詢 ${dateArcticSummer} (北極夏季) ${timeStr} 北極的日出月落與月相資訊：`);
+console.log(getSunMoon(dateArcticSummer, timeStr, latiArctic, longArctic));
+
+console.log(`\n查詢 ${dateArcticWinter} (北極冬季) ${timeStr} 北極的日出月落與月相資訊：`);
+console.log(getSunMoon(dateArcticWinter, timeStr, latiArctic, longArctic));
+
+
+
+
+
+
+
+我確認一下 使用你這個函數
+要顯示日出 就是 _sunmoon1.太陽資訊.日出 
+月落 就是 _sunmoon1.月亮資訊.月落  對嗎?
+
+
+
+月相照維基百科 
+https://zh.wikipedia.org/zh-tw/%E6%9C%88%E7%9B%B8
+有這幾種
+新月、眉月、上弦月、盈凸月、滿月、虧凸月、下弦月、殘月
+ 我想同時產生兩組數據
+一組是文字的 新月、眉月、上弦月、盈凸月、滿月、虧凸月、下弦月、殘月
+一組是文字的 '01、'02'.... '08'
+再新增一組數據 
+傳入的經緯度 是南半球還是北半球 Nor
+南半球 就傳回 "Sou", 北半球 "Nor"
+
+1那請補上 民用曙光 (Civil Dawn) / 民用黃昏 (Civil Dusk)
+2我傳給你的_day 應該是 文字型態的 '2025-06-27'
+3請確認你要回傳的 hh:mm 也是文字型態的
+4請問我如果接收到 整日可見 的月出時間 月落時間 會是甚麼 '00:00' '23:59' 嗎?
+5請問我如果接收到 整日不可見 的月出時間 月落時間 會是甚麼 '00:00' '00:00' 嗎?
+6月相週期數值 是文字還是數字? 我要文字的 "01" "02"....
+
+1那請修改成
+function getSunMoon(_date, _time, _lati, _long) {
+我傳的是文字型態的
+'2025-06-27', '11:50:00'
+
+2 月相進程數值 請維持原來的數值型態
