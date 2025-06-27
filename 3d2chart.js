@@ -26,6 +26,8 @@
                    //borderColor: 'rgba(0, 147, 193, 1)', 
                    borderWidth: 0,  
                    yAxisID: 'yRainfall', // <--- 給右側 Y 軸一個 ID 
+                   hoverBackgroundColor: _colrp,
+                   hoverBorderWidth: 0, // 這樣滑鼠移過去 就不會變色
                    z: 1,
                    order:50, // <-- 修正點：設定為 0，作為中層繪圖
                     //maxBarThickness: 50, // <--- 設置最大寬度為 50 像素 (您可以根據需要調整這個值)

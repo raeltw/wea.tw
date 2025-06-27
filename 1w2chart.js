@@ -14,8 +14,6 @@
    new Chart(ctx, { 
        type: 'bar', // 圖表類型：柱狀圖 
        data: { 
-
-
            labels: _dt1, 
            datasets: [ 
 ////
@@ -44,6 +42,8 @@
                    borderWidth: 0,  
                    borderRadius: 8, //沒用
                    yAxisID: 'yRainfall', // <--- 給右側 Y 軸一個 ID 
+                   hoverBackgroundColor: _colrp,
+                   hoverBorderWidth: 0, // 這樣滑鼠移過去 就不會變色
                    z: 1,
                    order:50, // <-- 修正點：設定為 0，作為中層繪圖
                     //maxBarThickness: 50, // <--- 設置最大寬度為 50 像素 (您可以根據需要調整這個值)
