@@ -69,14 +69,14 @@ function nowwea1() {
 
                     //sendmsg('api_data1', '  ');
                     sendmsg('api_data1', `觀測地點: ${staData.GeoInfo.CountyName} ${staData.GeoInfo.TownName}`);
-                    sendmsg('api_data1', `時間: ${staData.ObsTime.DateTime.replace('T', ' ').substring(0, 19)}`);
                     sendmsg('api_data1', `天氣: ${wadData.Weather}`);
                     sendmsg('api_data1', `溫度: ${wadData.AirTemperature} 度`);
                     sendmsg('api_data1', `相對濕度: ${wadData.RelativeHumidity}%`);
                     sendmsg('api_data1', `當日降雨量: ${wadData.Now.Precipitation} 毫米`);
+                    sendmsg('api_data1', `日照時數: ${wadData.SunshineDuration} 小時`);
                     sendmsg('api_data1', `當日最高溫: ${wadData.DailyExtreme.DailyHigh.TemperatureInfo.AirTemperature} 度 (${wadData.DailyExtreme.DailyHigh.TemperatureInfo.Occurred_at.DateTime.replace('T', ' ').substring(11, 19)})`);
                     sendmsg('api_data1', `當日最低溫: ${wadData.DailyExtreme.DailyLow.TemperatureInfo.AirTemperature} 度 (${wadData.DailyExtreme.DailyLow.TemperatureInfo.Occurred_at.DateTime.replace('T', ' ').substring(11, 19)})`);
-                    sendmsg('api_data1', `日照時數: ${wadData.SunshineDuration} 小時`);
+                    sendmsg('api_data1', `時間: ${staData.ObsTime.DateTime.replace('T', ' ').substring(0, 19)}`);
                     sendmsg('api_data1', ' ');
 
                     // (這是我想的) 如果想 冒號對齊
