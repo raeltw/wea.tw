@@ -264,7 +264,8 @@
 
                 ///在最後終於要畫圖
                 w11chart();
-     
+                writedh('Chart7', 'xaxis7d', 'U', _dt0, 0, 0);
+    
                 //不要浪費記憶體
                 //sendmsg('1warea', '(完整數據請按[F12]至Console頁面查看)<br />');
                 //console.log(data); // 將完整數據物件輸出到瀏覽器控制台

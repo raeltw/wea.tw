@@ -266,7 +266,8 @@
                        //color: 'rgba(255, 255, 255, 0.1)' 
                    }, 
                    ticks: { // 新增：增加 X 軸刻度文字顏色 
-                       color: 'rgba(255, 255, 255, 0.9)' 
+                       color: 'rgba(255, 255, 255, 0.9)', 
+                       display: false // 將此屬性設置為 false 即可隱藏 X 軸的刻度標籤
                    } 
                } // end of x 
            }, // end of scales 

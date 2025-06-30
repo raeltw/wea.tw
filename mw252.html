@@ -1,0 +1,537 @@
+﻿<!-- 
+ file:///D:/mw251.html?key=CWB-A0E4FCC7-9BF5-4ABB-A778-3DB913641D8D;&station1=466881;&rep3=069;&rep7=071;&town1=新店區;
+ https://raeltw.github.io/wea.tw/mw251.html?key=CWA-422C592A-18E7-4C2E-BBD2-003CCC1F18D4;&station1=466881;&rep3=069;&rep7=071;&town1=新店區;
+Netlify rael.tw ss_aa_60412
+ -->
+
+<!DOCTYPE html>
+<html lang='zh-Hant'>
+<head>
+
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>天氣預報 '25 </title> <!-- 我挑戰成功了!! -->
+    <link rel="icon" href="wea.ai.2.ico" type="image/x-icon">
+
+<style>
+
+body 
+{
+display: flex;
+flex-direction: column; 
+
+    margin: 8px;
+    background-color: #000;
+    color: #ddd;
+}
+
+.undeline
+{
+   /* display: none; */
+   color: #999;
+   border-bottom: 1px solid #444; 
+   padding-bottom: 8px;
+}
+
+.chart-container {
+   height: 408px !important;
+   width: 960px;
+
+            position: relative; 
+}
+
+<!-- 自己產生X軸 -->
+        .chart-wrapper {
+            position: relative;
+            height: calc(100% - 100px); /* 這裡調整日期顯示的區域 */
+            width: 100%;
+        }
+
+       .x-axis-labels-container { 
+            position: absolute; 
+            bottom: 0; 
+            left: 0;
+            width: 100%;
+            height: 50px; /* 預留足夠高度給兩行文字和圖示 */
+            box-sizing: border-box; 
+            z-index: 10; 
+            background-color: #900;
+        }
+
+        .x-axis-label {
+            position: absolute;
+            display: flex;
+            flex-direction: column; 
+            align-items: center;     
+            text-align: center;
+            width: auto; /* 讓寬度自適應內容 */
+            height: 100%; /* 讓 label 充滿容器的垂直空間，以便 flex 對齊 */
+            transform: translateX(-50%); 
+       }
+
+       .x-axis-label .line1, .x-axis-label .line2 {
+           white-space: nowrap; 
+           margin: 0; 
+           padding: 0; 
+           line-height: 1.6; 
+       }
+
+       .x-axis-label .line1 {
+           margin-bottom: -5px; /* 保持這個值，或根據視覺效果微調 */
+      }
+
+      #hidden-text-width-calculator {
+           position: absolute;
+           visibility: hidden;
+           height: auto;
+           width: auto;
+           white-space: nowrap; 
+           line-height: 1.6; 
+      }
+<!-- 自己產生X軸 -->
+
+
+
+</style>
+</head>
+
+<body>
+<! -- background-color:#900; -->
+<table style='width:940px; text-align: left;'><tbody><tr>
+      <td style='width:50%; vertical-align: top;'><div id='api_data1'>現在天氣:<br /></div></td>
+      <td style='width:50%; vertical-align: top;'><div id='api_data30'><br /><br /></td>
+      </tr></tbody></table>
+
+<div id="hidden-text-width-calculator"></div>
+
+<div style='clear: both;'></div>
+<div class="chart-container">
+<div id='api_data3'>3日預報:<br /></div>
+     <div class="chart-wrapper">
+       <canvas id="Chart3"></canvas>
+     </div>
+ <div id='xaxis3d' class="x-axis-labels-container"></div>
+</div><br /><br /><br />
+<div id='api_data7'>1周預報:<br /></div>
+<div class="chart-container">
+     <div class="chart-wrapper">
+        <canvas id="Chart7"></canvas>
+     </div>
+ <div id='xaxis7d' class="x-axis-labels-container"></div>
+</div><br /><br />
+<span title='版本'>v 1.5.2</span>
+<!--  style='float:right; margin-top:0px; margin-right:20px;' -->
+
+
+<!-- 這些是工作區 或許等開發完 可以藏起來 -->
+<div id='testarea' class='undeline'>TEST<br /></div>
+<div id='nowarea' class='undeline'>NOW<br /></div>
+<div id='3darea' class='undeline'>3 Days<br /></div>
+<div id='1warea' class='undeline'>1 Week<br /></div>
+
+
+<!-- 繪圖工具 -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/@sgratzl/chartjs-chart-boxplot@4.0.0"></script>
+
+
+
+<script>
+// 共用函數
+
+
+//C
+function dtcalct(_dt0, _n1) {
+    // 1. 解析輸入字串 '年-月-日-時' 為 Date 物件
+    // 將 "2025-06-25-15" 轉換為 Date 物件可解析的格式，例如 "2025-06-25T15:00:00"
+    const parts = _dt0.split('-'); // 分割成 ['2025', '06', '25', '15']
+
+    if (parts.length !== 4) {
+        console.error("dtcalct 錯誤：日期時間字串格式不正確，應為 'YYYY-MM-DD-HH'");
+        return null; // 返回 null 或拋出錯誤，表示無效輸入
+    }
+
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1; // 月份在 JavaScript Date 物件中是 0-11
+    const day = parseInt(parts[2], 10);
+    const hour = parseInt(parts[3], 10);
+
+    // 建立一個 Date 物件。注意：如果沒有指定分鐘和秒，它們會預設為 0
+    // 使用 UTC 時間可以避免時區問題，確保加減結果的準確性
+    const dateObj = new Date(Date.UTC(year, month, day, hour, 0, 0));
+
+    // 2. 對小時進行加減運算
+    dateObj.setUTCHours(dateObj.getUTCHours() + _n1);
+
+    // 3. 將結果格式化回 '年-月-日-時' 字串
+
+    // 獲取新的日期時間組件
+    const newYear = dateObj.getUTCFullYear();
+    // getUTCMonth() 返回 0-11，所以需要 +1
+    const newMonth = (dateObj.getUTCMonth() + 1).toString().padStart(2, '0');
+    const newDay = dateObj.getUTCDate().toString().padStart(2, '0');
+    const newHour = dateObj.getUTCHours().toString().padStart(2, '0');
+
+    // 拼接成目標格式
+    return `${newYear}-${newMonth}-${newDay}-${newHour}`;
+}
+
+/**
+ * 根據給定的下限和上限數值，生成 Chart.js boxplot 數據格式的物件。
+ * 這個物件會使 boxplot 呈現為一個從 min 到 max 的實心方塊。
+ *
+ * @param {number} lowerBound - 方塊的下限 (對應 min 和 q1)。
+ * @param {number} upperBound - 方塊的上限 (對應 max 和 q3)。
+ * @returns {object} 符合 Chart.js boxplot 數據格式的單一數據物件。
+ */
+function createBoxplotData(lowerBound, upperBound) {
+    // 確保 lowerBound 不大於 upperBound
+    const minVal = Math.min(lowerBound, upperBound);
+    const maxVal = Math.max(lowerBound, upperBound);
+
+    return {
+        min: minVal,
+        max: maxVal,
+        q1: minVal,      // Q1 等於最小值，確保方塊從這裡開始
+        q3: maxVal,      // Q3 等於最大值，確保方塊到這裡結束
+        median: (minVal + maxVal) / 2, // 中位數在 min 和 max 的中間
+        outliers: []     // 盒鬚圖通常沒有離群值（如果沒有額外定義）
+    };
+}
+
+
+//M
+function makeA(_str, _url) 
+{ // 產生 a 連結 <a href="https://example.com" target="_blank">Website</a>
+  
+    _tmp1='<a href="'+_url+'" target="_blank">'+_str+'</a>';
+    //window.alert(_tmp1);
+
+    //這寫法比較長 但很容易懂 但傳回去的格式是不同的接收方式
+    //let _tmp1 = document.createElement('a');
+    //_tmp1.href = _url;
+    //_tmp1.textContent = _str;
+    //_tmp1.target = '_blank';
+    //window.alert(_tmp1);
+
+    return _tmp1;
+
+}
+
+// 可以不接收傳回去的值
+// 如果不需要點的陣列 應該這樣寫 mkrgba(_temp0, temp0, null, 0.8);
+function mkrgba(_values, _cMap, _rArr, _tran0) { // _rArr 不再有預設值 []
+
+    // 輔助函數：根據單一數值計算漸層色 (返回 [R, G, B] 陣列)
+    function getInterpColor(value, map) {
+        if (value <= map[0]) return map[1];
+        if (value >= map[map.length - 2]) return map[map.length - 1];
+
+        for (let i = 0; i < map.length - 2; i += 2) {
+            const v1 = map[i]; // 下限數值
+            const c1 = map[i + 1]; // 下限顏色 [R,G,B]
+            const v2 = map[i + 2]; // 上限數值
+            const c2 = map[i + 3]; // 上限顏色 [R,G,B]
+
+            if (value > v1 && value <= v2) {
+                const factor = (value - v1) / (v2 - v1);
+                const r = Math.round(c1[0] + (c2[0] - c1[0]) * factor);
+                const g = Math.round(c1[1] + (c2[1] - c1[1]) * factor);
+                const b = Math.round(c1[2] + (c2[2] - c1[2]) * factor);
+                return [r, g, b];
+            }
+        }
+        return [0, 0, 0];
+    }
+
+    let alpha = parseFloat(_tran0);
+    if (isNaN(alpha) || _tran0 === undefined) { alpha = 1;  } else { alpha = Math.max(0, Math.min(1, alpha));  }
+
+    // 在這裡判斷 _rArr 是否有效，只有在它是一個陣列時才操作
+    if (Array.isArray(_rArr)) {
+        _rArr.length = 0; // 如果有效，則清空
+        // 儲存所有個別數值的顏色到 _rArr
+        for (let i = 0; i < _values.length; i++) {
+            const value = _values[i];
+            _rArr.push(`rgba(${getInterpColor(value, _cMap).join(', ')}, ${alpha})`);
+        }
+    }
+
+    // 計算 _values 陣列的平均值
+    let sum = 0; count = 0;
+    
+    for (let i = 0; i < _values.length; i++) {
+        const _oriVal = _values[i];
+        let _numVal;
+
+        const parsed = Number(_oriVal);
+        if (typeof _oriVal === 'number' && !isNaN(_oriVal)) {  _numVal = _oriVal;  } else if (typeof _oriVal === 'string' && !isNaN(parsed)) {  _numVal = parsed;   } else { _numVal = NaN;  }
+        if (!isNaN(_numVal)) { sum += _numVal;  count++;  }
+    }
+
+    const _avgVal = count > 0 ? sum / count : 0;
+
+    // 計算平均值所對應的顏色
+    const averageColorString = `rgba(${getInterpColor(_avgVal, _cMap).join(', ')}, ${alpha})`;
+
+/// 檢查平均的開始
+    // --- 簡化後的檢查部分：只有在有錯時才顯示 alert ---
+    let minVal = Infinity;
+    let maxVal = -Infinity;
+    let checkValidNumbersCount = 0;
+    let check_numVals = [];
+
+    for (let i = 0; i < _values.length; i++) {
+        const _oriVal = _values[i];
+        let valForCheck;
+
+        const parsed = Number(_oriVal);
+
+        if (typeof _oriVal === 'number' && !isNaN(_oriVal)) {
+            valForCheck = _oriVal;
+        } else if (typeof _oriVal === 'string' && !isNaN(parsed)) {
+            valForCheck = parsed;
+        } else {
+            valForCheck = NaN;
+        }
+
+        if (!isNaN(valForCheck)) {
+            check_numVals.push(valForCheck);
+            checkValidNumbersCount++;
+        }
+    }
+
+    if (checkValidNumbersCount > 0) {
+        minVal = Math.min(...check_numVals);
+        maxVal = Math.max(...check_numVals);
+    }
+
+    let alertMessage = '';
+    let shouldAlert = false;
+
+    if (checkValidNumbersCount === 0) {
+        alertMessage = `--- 平均值範圍檢查 (針對陣列: ${_values}) ---\n`;
+        alertMessage += "  陣列中沒有找到有效數字進行極值和平均值範圍檢查。\n";
+        alertMessage += `  mkrgba 函數計算的平均值 (可能為 NaN 或 0): ${_avgVal}\n`;
+        alertMessage += "--------------------------------------------------";
+        shouldAlert = true;
+    } else if (typeof _avgVal === 'number' && !isNaN(_avgVal)) {
+        if (!(_avgVal >= minVal && _avgVal <= maxVal)) {
+            alertMessage = `--- 平均值範圍檢查 (針對陣列: ${_values}) ---\n`;
+            alertMessage += "  有效數字數值範圍：\n";
+            alertMessage += `    極小值 (Min): ${minVal}\n`;
+            alertMessage += `    極大值 (Max): ${maxVal}\n`;
+            alertMessage += `  mkrgba 函數計算的平均值: ${_avgVal}\n`;
+            alertMessage += "  檢查結果：[錯誤] 警告：平均值不在極大值和極小值之間！這可能表示計算有誤或數據特殊。\n";
+            alertMessage += "--------------------------------------------------";
+            shouldAlert = true;
+        }
+    } else { // _avgVal is NaN
+        alertMessage = `--- 平均值範圍檢查 (針對陣列: ${_values}) ---\n`;
+        alertMessage += "  有效數字數值範圍：\n";
+        alertMessage += `    極小值 (Min): ${minVal}\n`;
+        alertMessage += `    極大值 (Max): ${maxVal}\n`;
+        alertMessage += `  mkrgba 函數計算的平均值: ${_avgVal}\n`;
+        alertMessage += "  檢查結果：[警告] 平均值為非數字 (NaN) 或無效值，無法進行範圍檢查。\n";
+        alertMessage += "--------------------------------------------------";
+        shouldAlert = true;
+    }
+
+    if (shouldAlert) {
+        window.alert(alertMessage);
+    }
+    // --- 簡化檢查部分結束 ---
+/// 檢查平均的結束
+
+    return averageColorString;
+}
+
+
+//R
+function removeTrailingSemicolon(str) 
+{  // 檢查字串是否為空或非字串類型
+  if (typeof str !== 'string' || str.length === 0) {
+    return str;
+  }
+
+  // 使用 replace() 方法和正則表達式
+  // /;+$/: 
+  //   ;   - 匹配一個分號
+  //   +   - 匹配一個或多個（連續的）分號
+  //   $   - 匹配字串的結尾
+  //   ''  - 替換成空字串 (即刪除匹配到的內容)
+  return str.replace(/;+$/, '');
+}
+
+
+//S
+function sendmsg(block1, msg1, br1= 1) 
+ {  // 傳送訊息到某個區塊
+ 
+   //是否換行 只能0 或1 預設是 1
+   br1 = (br1 === 1) ? 1 : 0;
+   
+   const outputElement = document.getElementById(block1);
+   if (outputElement) {
+      // *** 重要的安全性考量：將訊息內容作為純文字追加 ***
+      // 使用 textContent 可以防止 msg 中的 HTML 標籤被解析，有效避免 XSS 攻擊。
+      outputElement.innerHTML += msg1; 
+
+      if (br1=== 1) {
+         outputElement.innerHTML += '<br />';
+      }
+   }
+}
+
+
+/// ---
+
+//測試區
+       //sendmsg('testarea', '大家好');
+       //sendmsg('testarea', '我是王先生');
+
+// 您的顏色映射表，適用於 -30°C 到 60°C 的溫度範圍
+let _colort09 = [
+    0, [255, 255, 255],
+    10, [125, 125, 255],
+    20, [125, 255, 125],
+    30, [255, 125, 125],
+    40, [255, 25, 25],
+    50, [125, 125, 125]
+];
+
+let _colort0 = [
+    // 極度嚴寒警示
+    -30, [0, 0, 51],   // 極深藍 (極度嚴寒開始)
+    -15, [0, 0, 128],  // 海軍藍 (嚴寒)
+    // 低溫警示
+    0,   [65, 105, 225], // 寶藍 (冰點，低溫警示)
+    5,   [173, 216, 230], // 淺藍 (低溫警示結束，準備進入涼爽)
+    // 涼爽舒適
+    15,  [60, 179, 113], // 中等海綠 (涼爽舒適區間中心)
+    // 溫暖宜人
+    25,  [255, 215, 0],  // 金色 (溫暖宜人，準備進入高溫區)
+    // 高溫警示
+    30,  [255, 165, 0],  // 橘色 (溫暖宜人結束，高溫警示開始)
+    35,  [255, 69, 0],   // 橘紅色 (明顯高溫警示)
+    40,  [220, 20, 60],  // 緋紅色 (炎熱，高溫警示加強)
+    // 極高溫警示
+    50,  [178, 34, 34],  // 火磚紅 (酷熱)
+    60,  [255, 0, 0]    // 純紅 (極度危險高溫)
+];
+
+// 您的顏色映射表，適用於 -10°C 到 40°C 的露點溫度範圍 | 也可考慮就用溫度的 因為現在這組看起來也沒差多少....
+let _colord0 = [
+    // 極度乾燥 / 冰冷
+    -10, [0, 0, 128],    // 深藍色
+    0, [173, 216, 230],  // 淺藍色
+    // 舒適 / 微濕
+    5, [0, 206, 209],    // 藍綠色
+    10, [46, 139, 87],   // 翠綠色
+    15, [144, 238, 144], // 淺綠色
+    17.5, [173, 255, 47], // 淺黃綠色
+    // 悶熱 / 不適
+    20, [154, 205, 50],  // 黃綠色
+    23, [255, 219, 88],  // 芥末黃
+    26, [255, 215, 0],   // 深黃色 / 金黃色
+    // 極端 / 危險
+    28, [128, 128, 0],   // 土黃色 / 橄欖綠
+    30, [101, 67, 33],    // 咖啡色 / 深棕色 / 深灰褐色
+    40, [63, 37, 11],    // 瀝青棕色
+];
+
+// 您的顏色映射表，適用於 0 到 100 的濕度
+let _colorh0 = [
+    0, [20, 20, 20],  
+    50, [3, 64, 129],  // ultramarine
+    100,  [80, 234, 209] // aqua
+];
+
+// 您的顏色映射表，適用於 0 到 100 的雨量
+let _colorr0 = [
+    0, [14, 48, 93],  // 鼠尾草藍色
+    100,  [121, 197, 207]  // 灰藍色
+];
+
+// 您的顏色映射表，適用於 黑夜白天
+let _colorb0 = [
+    0, [0, 0, 0],  
+    5, [0, 0, 0],  
+    6, [10, 10, 10],  
+    12, [210, 180, 140], // tan 日曬色 60, 60, 60], 
+    18, [10, 10, 10],  
+    19, [0, 0, 0],  
+    24,  [0, 0, 0] 
+];
+
+// 必須用不同組 因為是白天/黑夜
+let _colorb1 = [
+    0, [0, 0, 0],  
+    5.9, [0, 0, 0],  
+    6, [105, 90, 70], // 40, 40, 40],  
+    12, [210, 180, 140], // 60, 60, 60],  
+    18, [0, 0, 0],  
+    24,  [0, 0, 0] 
+];
+
+
+</script>
+
+
+ <!--  呼叫 現在觀測 -->
+<script src="now1.js"></script>
+<script> document.addEventListener('DOMContentLoaded', () => { nowwea1(); } ); </script>
+
+<!-- 3日預報 -->
+<script>
+   //變數陣列在此宣告 才能讓變數傳遞到所有子程序去
+   var currentDataIndex3 = -1; 
+   var _hi0=[]; _dt0=[]; _dt1=[]; _temp0=[]; _temp1=[]; _dew0=[]; _humi0=[]; _prec0=[]; _descl=[]; _weat3=[]; _comf0=[];
+   // 日期0(原始), 日期1(精簡), 溫度, 體感溫度, 露點溫度, 相對濕度, 降雨機率
+
+//溫度0 1 點 '線'
+//露點d 點 '線'
+//濕度h '線'
+//降雨r 點 //是點沒錯 因為是長條圖
+//背景d 點 //是點沒錯 因為是長條圖
+   var _col0p=[]; _col1p=[]; _coldp=[]; _colrp=[];  _colrd3=[];   // 點
+   var _col0, _col1, _cold, _colh; // 線
+   
+</script>
+ <!--  3日預報 -->
+<! -- 帶入順序 要從最底層的開始寫 -->
+<! -- 2版 改溫度的顏色 -->
+<script src="hhdd0.js"></script>
+<script src="3d2chart.js"></script>
+<script src="3d2.js"></script>
+<script> document.addEventListener('DOMContentLoaded', () => { d31(); } ); </script>
+
+<!-- 1周預報 -->
+<script>
+   //變數陣列在此宣告 才能讓變數傳遞到所有子程序去
+   var currentDataIndex7 = -1; 
+   var _hi0=[]; _dt0=[]; _dt1=[]; _temph=[]; _templ=[]; _tempah=[]; _tempal=[]; _tempa=[]; _dew0=[]; _humi0=[]; _prec0=[]; _descl=[]; _weat7=[]; _comf0=[]; _plot0=[];
+   // _weat7 '250624 我猜是chart需要動態讀取這個值(顯示給user看) 所以還是要保留讓它用 (至少改這樣就正常了)
+   // 日期0(原始), 日期1(精簡), 高溫, 低溫, 體感高溫, 體感低溫, 均溫, 露點溫度, 相對濕度, 降雨機率
+
+//體感ah al l  點 '線'
+//均溫a 點(當做箱形圖的方塊) '線'
+//露點d 點 '線'
+//濕度h '線'
+//降雨r 點 //是點沒錯 因為是長條圖
+//背景d 點 //是點沒錯 因為是長條圖
+   var _colahp=[]; _colalp=[]; _colap=[]; _coldp=[]; _colrp=[]; _colrd7=[];
+   var _colah, _colal, _cold, _cola, _colh;
+
+</script>
+<! -- 帶入順序 要從最底層的開始寫 -->
+<script src="1w2chart.js"></script>
+<script src="1w2.js"></script>
+
+<script> document.addEventListener('DOMContentLoaded', () => { w11(); } ); </script>
+
+
+</body>
+
+</html>
