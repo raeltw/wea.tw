@@ -88,6 +88,7 @@
                       _first= 0;
                       _hi0=[]; _dt0=[]; _dt1=[]; _temph=[]; _templ=[]; _tempah=[]; _tempal=[]; _tempa=[]; _dew0=[]; _humi0=[]; _prec0=[]; _descl=[]; _weat7=[]; _comf0=[]; _plot0=[];
                       // 日期0(原始), 日期1(精簡), 高溫, 低溫, 體感高溫, 體感低溫, 均溫, 露點溫度, 相對濕度, 降雨機率
+                      var _wc0=[]; 
                    }
                    var jj;
                    for (jj = 0; jj < forecastLocations[ii].Time.length; jj++) {
@@ -166,6 +167,7 @@
                          //sendmsg('1warea', forecastLocations[ii].Time[jj].ElementValue[0].Weather+' ', 0);
                          //sendmsg('1warea', forecastLocations[ii].Time[jj].ElementValue[0].WeatherCode+' '+jj+' ');
                          _weat7[jj]=forecastLocations[ii].Time[jj].ElementValue[0].Weather;
+                         _wc0[jj]=forecastLocations[ii].Time[jj].ElementValue[0].WeatherCode;
                       }
                       if (forecastLocations[ii].ElementName == '紫外線指數') {
                          //sendmsg('1warea', forecastLocations[ii].Time[jj].ElementValue[0].UVIndex+' ', 0);
@@ -264,7 +266,8 @@
 
                 ///在最後終於要畫圖
                 w11chart();
-                writedh('Chart7', 'xaxis7d', 'U', _dt0, 0, 0);
+                writedh('Chart7', 'xaxis7d', 'U', _dt0, 0, +40);
+                writeicon('Chart7', 'xicon7d', _dt0, _wc0, 32, _weat7, 0, 0);
     
                 //不要浪費記憶體
                 //sendmsg('1warea', '(完整數據請按[F12]至Console頁面查看)<br />');
