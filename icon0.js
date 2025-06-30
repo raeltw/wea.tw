@@ -1,6 +1,11 @@
-﻿// writeicon.js (您可以選擇將它放在單獨的文件，或與 hhdd0.js 合併)
+﻿/**
+* 透明度的完整規則
+* A 帶入時 沒有疊到前一個圖示 本身就不透明
+* B 帶入時 如果有疊到前一個圖示 本身50%透明+灰色邊框
+* C 當滑鼠移到 所有圖示上面時 該圖示移到最上層 變成不透明 且沒有邊框
+* D 當滑鼠離開時 回到原圖層 且原來的透明與邊框狀態
 
-/**
+
  * 自定義繪製 Chart.js 圖表下方的天氣圖示。
  *
  * @param {string} chartId - Chart.js canvas 元素的 ID (例如 'Chart3', 'Chart7')。
@@ -13,6 +18,14 @@
  * @param {number} [containerOffsetY=0] - 圖示顯示區域距離 Chart.js 圖表底部邊緣的垂直偏移量 (px)。正數向下，負數向上。
  */
 function writeicon(chartId, iconContainerId, dateArray, iconCodeArray, iconWidth, iconTitleArray, skipInterval, containerOffsetY = 0) {
+
+    // 半透明+有邊框
+    // drop-shadow(0px 0px 1px rgba(0, 0, 0, 1)) 前2個px是距離 第3個px是模糊
+    //const myDesired = 'drop-shadow(0px 0px 0px rgba(120, 120, 120, 1)) drop-shadow(1px 1px 0px rgba(120, 120, 120, 1)) drop-shadow(-1px -1px 0px rgba(120, 120, 120, 1))';
+    //const myDesired = 'drop-shadow(0px 0px 0px rgba(255, 0, 0, 1)) drop-shadow(1px 1px 0px rgba(0, 255, 0, 1)) drop-shadow(-1px -1px 0px rgba(0, 0, 255, 1))';
+    //const myDesired = 'drop-shadow(0px 0px 1px rgba(0, 0, 0, 1)) drop-shadow(1px 1px 1px rgba(0, 0, 0, 1)) drop-shadow(-1px -1px 1px rgba(0, 0, 0, 1))';
+    const myDesired = 'drop-shadow(1px 1px 1px rgba(40, 40, 40, 1)) drop-shadow(-1px -1px 1px rgba(40, 40, 40, 1))';
+
     const chart = Chart.getChart(chartId); // 獲取對應 ID 的 Chart.js 實例
     if (!chart) {
         console.error(`writeicon error: Chart with ID '${chartId}' not found. Ensure the chart is initialized before calling writeicon.`);
@@ -143,26 +156,58 @@ function writeicon(chartId, iconContainerId, dateArray, iconCodeArray, iconWidth
 
     // === 為所有已創建的圖示添加滑鼠事件監聽器 ===
     allIconsInThisContainer.forEach(icon => {
-        icon.addEventListener('mouseenter', () => {
-            // 1. 變為完全不透明
-            icon.style.opacity = 1;
+        // --- 設定初始透明度和濾鏡狀態 (根據規則 A 和 B) ---
+        // parseFloat(icon.dataset.originalOpacity) === 0.5 表示這是被疊到的圖示
+        if (parseFloat(icon.dataset.originalOpacity) === 0.5) {
+            icon.style.opacity = 0.5; // 規則 B: 半透明
+            // 規則 B: 有灰色邊框 (使用多個純白色、銳利的 drop-shadow 疊加，以創建更粗的邊框)
+            // 這裡疊加了三個 drop-shadow:
+            // 1. drop-shadow(0px 0px 0px rgba(255, 255, 255, 1))：核心銳利白邊
+            // 2. drop-shadow(1px 1px 0px rgba(255, 255, 255, 1))：向右下方偏移 1px，增加厚度
+            // 3. drop-shadow(-1px -1px 0px rgba(255, 255, 255, 1))：向左上方偏移 1px，進一步增加厚度
+            // 這樣會形成一個圍繞圖示的，約 2px 寬的純白色邊框效果。
+            //icon.style.filter = 'drop-shadow(0px 0px 0px rgba(255, 255, 255, 1)) drop-shadow(1px 1px 0px rgba(255, 255, 255, 1)) drop-shadow(-1px -1px 0px rgba(255, 255, 255, 1))'; 
+            icon.style.filter = myDesired; 
+        } else {
+            icon.style.opacity = 1; // 規則 A: 不透明
+            icon.style.filter = 'none'; // 規則 A: 沒有邊框
+        }
 
-            // 2. 移到最上層：
-            // 遍歷當前容器內的所有圖示，將它們的 z-index 都恢復到其原始層次
-            // 這樣確保當前懸停的圖示可以被設置為最高 z-index，而不被其他圖示覆蓋
+        icon.addEventListener('mouseenter', () => {
+            // 規則 C: 當滑鼠移到任何圖示上面時
+            // 先將所有圖示（包括當前懸停的）恢復到其非懸停狀態的 A 或 B 規則，
+            // 這樣可以避免其他圖示在 hover 時還保留 hover 狀態的 z-index 或濾鏡。
             allIconsInThisContainer.forEach(otherIcon => {
                 otherIcon.style.zIndex = otherIcon.dataset.originalZIndex;
+                if (parseFloat(otherIcon.dataset.originalOpacity) === 0.5) {
+                    otherIcon.style.opacity = 0.5; // 半透明
+                    //otherIcon.style.filter = 'drop-shadow(0px 0px 0px rgba(255, 255, 255, 1)) drop-shadow(1px 1px 0px rgba(255, 255, 255, 1)) drop-shadow(-1px -1px 0px rgba(255, 255, 255, 1))'; // 灰色邊框 (純白色銳利)
+                    otherIcon.style.filter = myDesired;
+                } else {
+                    otherIcon.style.opacity = 1; // 不透明
+                    otherIcon.style.filter = 'none'; // 無邊框
+                }
             });
-            // 將當前懸停的圖示設置為一個足夠高的 z-index，確保它在所有其他圖示之上
-            icon.style.zIndex = 99999; // 使用一個非常大的數字確保置頂
+
+            // 再對當前懸停的圖示應用規則 C 的樣式
+            icon.style.opacity = 1; // 該圖示變成不透明
+            icon.style.filter = 'none'; // 且沒有邊框 (移除所有濾鏡)
+            icon.style.zIndex = 99999; // 移到最上層
         });
 
         icon.addEventListener('mouseleave', () => {
-            // 1. 變回原始透明度
-            icon.style.opacity = icon.dataset.originalOpacity;
+            // 規則 D: 當滑鼠離開時
+            icon.style.zIndex = icon.dataset.originalZIndex; // 回到原圖層
 
-            // 2. 回到其本來的層次
-            icon.style.zIndex = icon.dataset.originalZIndex;
+            // 恢復到原來的透明度與邊框狀態 (根據 originalOpacity 判斷)
+            if (parseFloat(icon.dataset.originalOpacity) === 0.5) {
+                icon.style.opacity = 0.5; // 半透明
+                //icon.style.filter = 'drop-shadow(0px 0px 0px rgba(255, 255, 255, 1)) drop-shadow(1px 1px 0px rgba(255, 255, 255, 1)) drop-shadow(-1px -1px 0px rgba(255, 255, 255, 1))'; // 灰色邊框 (純白色銳利)
+                icon.style.filter = myDesired;
+            } else {
+                icon.style.opacity = 1; // 不透明
+                icon.style.filter = 'none'; // 無邊框
+            }
         });
     });
-}
+} // writeicon 函數結束
