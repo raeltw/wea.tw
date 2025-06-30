@@ -25,9 +25,9 @@ flex-direction: column;
     color: #ddd;
 }
 
-.undeline
+.underline
 {
-   /* display: none; */
+   display: none; 
    color: #999;
    border-bottom: 1px solid #444; 
    padding-bottom: 8px;
@@ -36,59 +36,59 @@ flex-direction: column;
 .chart-container {
    height: 408px !important;
    width: 960px;
-
-            position: relative; 
+   position: relative; 
 }
 
-<!-- 自己產生X軸 -->
-        .chart-wrapper {
-            position: relative;
-            height: calc(100% - 100px); /* 這裡調整日期顯示的區域 */
-            width: 100%;
-        }
+/* 自己產生X軸 */
+       .chart-wrapper {
+           position: relative;
+           height: calc(100% - 100px); /* 這裡調整日期顯示的區域 */
+           width: 100%;
+      }
 
-       .x-axis-labels-container { 
-            position: absolute; 
-            bottom: 0; 
-            left: 0;
-            width: 100%;
-            height: 50px; /* 預留足夠高度給兩行文字和圖示 */
-            box-sizing: border-box; 
-            z-index: 10; 
-            background-color: #900;
-        }
+      .x-axis-labels-container { 
+           position: absolute; 
+           bottom: 0; 
+           left: 0;
+           width: 100%;
+           height: 50px; /* 預留足夠高度給兩行文字和圖示 */
+           box-sizing: border-box; 
+           z-index: 10; 
+           background-color: #100;
+      }
 
-        .x-axis-label {
-            position: absolute;
-            display: flex;
-            flex-direction: column; 
-            align-items: center;     
-            text-align: center;
-            width: auto; /* 讓寬度自適應內容 */
-            height: 100%; /* 讓 label 充滿容器的垂直空間，以便 flex 對齊 */
-            transform: translateX(-50%); 
-       }
+      .x-axis-label {
+          position: absolute;
+          display: flex;
+          flex-direction: column; 
+          align-items: center;     
+          text-align: center;
+          width: auto; /* 讓寬度自適應內容 */
+          height: 100%; /* 讓 label 充滿容器的垂直空間，以便 flex 對齊 */
+         transform: translateX(-50%); 
+      }
 
-       .x-axis-label .line1, .x-axis-label .line2 {
-           white-space: nowrap; 
-           margin: 0; 
-           padding: 0; 
-           line-height: 1.6; 
-       }
+      .x-axis-label .line1, .x-axis-label .line2 {
+         white-space: nowrap; 
+         margin: 0; 
+         padding: 0; 
+         line-height: 1.6; 
+      }
 
-       .x-axis-label .line1 {
-           margin-bottom: -5px; /* 保持這個值，或根據視覺效果微調 */
+      .x-axis-label .line1 {
+         margin-bottom: -5px; /* 保持這個值，或根據視覺效果微調 */
       }
 
       #hidden-text-width-calculator {
-           position: absolute;
-           visibility: hidden;
-           height: auto;
-           width: auto;
-           white-space: nowrap; 
-           line-height: 1.6; 
+          position: absolute;
+          visibility: hidden;
+          height: auto;
+          width: auto;
+          white-space: nowrap; 
+          line-height: 1.6; 
       }
-<!-- 自己產生X軸 -->
+
+/* 自己產生X軸 */
 
 
 
@@ -119,15 +119,15 @@ flex-direction: column;
      </div>
  <div id='xaxis7d' class="x-axis-labels-container"></div>
 </div><br /><br />
-<span title='版本'>v 1.6.2</span>
+<span title='版本'>v 1.6.3</span>
 <!--  style='float:right; margin-top:0px; margin-right:20px;' -->
 
 
 <!-- 這些是工作區 或許等開發完 可以藏起來 -->
-<div id='testarea' class='undeline'>TEST<br /></div>
-<div id='nowarea' class='undeline'>NOW<br /></div>
-<div id='3darea' class='undeline'>3 Days<br /></div>
-<div id='1warea' class='undeline'>1 Week<br /></div>
+<div id='testarea' class='underline'>TEST<br /></div>
+<div id='nowarea' class='underline'>NOW<br /></div>
+<div id='3darea' class='underline'>3 Days<br /></div>
+<div id='1warea' class='underline'>1 Week<br /></div>
 
 
 <!-- 繪圖工具 -->
