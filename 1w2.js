@@ -267,7 +267,7 @@
                 ///在最後終於要畫圖
                 w11chart();
                 writedh('Chart7', 'xaxis7d', 'U', _dt0, 0, +40);
-                writeicon('Chart7', 'xicon7d', _dt0, _wc0, 32, _weat7, 0, 0);
+                writeicon('Chart7', 'xicon7d', _dt0, _wc0, 38, _weat7, 0, 0);
     
                 //不要浪費記憶體
                 //sendmsg('1warea', '(完整數據請按[F12]至Console頁面查看)<br />');
