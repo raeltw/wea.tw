@@ -108,7 +108,7 @@
                    yAxisID: 'yTemperature', // <--- 綁定到左側溫度 Y 軸 
                    pointStyle: 'circle',  //'rect', //
                    pointHitRadius: 8, // 感應區保持大
-                   pointRadius: 1.5, // 點的大小
+                   pointRadius: 1.0, // 點的大小
                    //pointBorderColor: '#888', // 點的邊框顏色
                    pointBorderWidth: 0, // 0.5, // 點的邊框的厚度
                    pointBackgroundColor: _col0p, // 填充點的顏色(背景色)
@@ -133,7 +133,7 @@
                    yAxisID: 'yTemperature', // <--- 綁定到左側溫度 Y 軸 
                    pointStyle: 'circle',  //'rect', //
                    pointHitRadius: 8, // 感應區保持大
-                   pointRadius: 1.5, // 點的大小
+                   pointRadius: 1.0, // 點的大小
                    //pointBorderColor: '#888', // 點的邊框顏色
                    pointBorderWidth: 0, // 0.5, // 點的邊框的厚度
                    pointBackgroundColor: _col1p, // 填充點的顏色(背景色)
@@ -342,7 +342,7 @@
                               mode: 'horizontal',
                               scaleID: 'yRainfall', // 綁定到右側降雨機率 Y 軸
                               value: value,         // 使用當前迭代的數值
-                              borderColor: 'rgba(255, 255, 255, 0.3)', // 淺灰色、半透明
+                              borderColor: 'rgba(250, 250, 250, 0.2)', // 淺灰色、半透明
                               borderWidth: 1,
                               borderDash: [5, 5],   // 虛線效果
                               z: -1, // <-- 新增：設定 z 屬性為 -1，讓它繪製在數據集之下

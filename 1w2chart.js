@@ -393,7 +393,7 @@
                               mode: 'horizontal',
                               scaleID: 'yRainfall', // 綁定到右側降雨機率 Y 軸
                               value: value,         // 使用當前迭代的數值
-                              borderColor: 'rgba(255, 255, 255, 0.3)', // 淺灰色、半透明
+                              borderColor: 'rgba(250, 250, 250, 0.2)', // 淺灰色、半透明
                               borderWidth: 1,
                               borderDash: [5, 5],   // 虛線效果
                               z: -1, // <-- 新增：設定 z 屬性為 -1，讓它繪製在數據集之下
