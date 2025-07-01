@@ -65,6 +65,6 @@
       // fraction 告訴您月亮多亮。
       // phase 告訴您月亮在整個盈虧週期中處於哪個階段和方向。
       sendmsg('moon_data0', `亮度: ${(_sm0.moon.被照亮比例*100).toFixed(0)}%`); // fraction
-      sendmsg('moon_data0', `月相: ${_sm0.moon.月相} ${_sm0.moon.月相進程.toFixed(2)}`); // phase
+      sendmsg('moon_data0', `月相: ${_sm0.moon.月相} (${_sm0.moon.月相進程.toFixed(2)})`); // phase
    }   
 }
