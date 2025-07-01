@@ -42,24 +42,16 @@
    
    
    
-   //    "moon": {
-         //"被照亮比例": moonIllumination.fraction.toFixed(2),
-         //"月相進程": moonIllumination.phase,
-         //"月相": moonPhaseInfo.name,
-         //"月相編號": moonPhaseInfo.code,
-         //"高度角": toDegrees(moonPosition.altitude),
-         ///"方位角": toDegrees(moonPosition.azimuth)
-   //    }
-   
-   sendmsg('moon_data0', `高度角: ${_sm0.moon.高度角.toFixed(0)} 度`);
-   sendmsg('moon_data0', `方位角: ${atos0(_sm0.moon.方位角)} (${_sm0.moon.方位角.toFixed(0)})`);
-   sendmsg('moon_data0', ` `);
-
    if ( _sm0.moon.狀態 != '整日不可見' ) {
       //sendmsg('moon_data0', `月相編號: ${_sm0.moon.月相編號}`);
       //sendmsg('moon_data0', "https://raeltw.github.io/wea.tw/moon/"+_sm0.moon.月相編號+".png" );
       sendmsg('moon_data0', "<img style='float:right; width: 128px;' src='https://raeltw.github.io/wea.tw/moon/"+_sm0.moon.月相編號+".png'>", 0 );
    }   
+
+   sendmsg('moon_data0', `高度角: ${_sm0.moon.高度角.toFixed(0)} 度`);
+   sendmsg('moon_data0', `方位角: ${atos0(_sm0.moon.方位角)} (${_sm0.moon.方位角.toFixed(0)})`);
+   sendmsg('moon_data0', ` `);
+
    if ( _sm0.moon.狀態 == '正常' ) {
       sendmsg('moon_data0', `月出: ${_sm0.moon.月出}`);
       sendmsg('moon_data0', `月落: ${_sm0.moon.月落}`);
