@@ -3,7 +3,7 @@ function getSunMoon(_date, _time, _lati, _long) {
 //window.alert('這裡');
 
   // 組合日期和時間字串，並建立 Date 物件
-  const dateTimeString = `${_date}T${_time}`;
+  const dateTimeString = `${_date}T${_time}+08:00`;
   const targetDateTime = new Date(dateTimeString);
 
   // 檢查日期物件是否有效
