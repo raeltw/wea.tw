@@ -15,8 +15,8 @@
    var _sm0 = JSON.parse(jsonString); // <-- 這是關鍵的修正
    //window.alert(_sm0);
    
-   sendmsg('sun_data0', `高度角: ${_sm0.sun.高度角.toFixed(0)} 度`);
-   sendmsg('sun_data0', `方位角: ${atos0(_sm0.sun.方位角)} (${_sm0.sun.方位角.toFixed(0)})`);
+   sendmsg('sun_data0', `高度: ${_sm0.sun.高度角.toFixed(0)} 度`);
+   sendmsg('sun_data0', `方位: ${atos0(_sm0.sun.方位角)} (${_sm0.sun.方位角.toFixed(0)})`);
    sendmsg('sun_data0', ` `);
    
    //sendmsg('sun_data0', `日期時間: ${_sm0.日期} ${_sm0.時間}`);
@@ -40,16 +40,14 @@
    // 天空從天文黃昏過渡到完全的黑暗夜空的那個時間點。 (太陽在地平線下 18 度)
    sendmsg('sun_data0', `黑夜: ${_sm0.sun.夜晚}`);
    
-   
-   
    if ( _sm0.moon.狀態 != '整日不可見' ) {
       //sendmsg('moon_data0', `月相編號: ${_sm0.moon.月相編號}`);
       //sendmsg('moon_data0', "https://raeltw.github.io/wea.tw/moon/"+_sm0.moon.月相編號+".png" );
       sendmsg('moon_data0', "<img style='float:right; width: 128px;' src='https://raeltw.github.io/wea.tw/moon/"+_sm0.moon.月相編號+".png'>", 0 );
    }   
 
-   sendmsg('moon_data0', `高度角: ${_sm0.moon.高度角.toFixed(0)} 度`);
-   sendmsg('moon_data0', `方位角: ${atos0(_sm0.moon.方位角)} (${_sm0.moon.方位角.toFixed(0)})`);
+   sendmsg('moon_data0', `高度: ${_sm0.moon.高度角.toFixed(0)} 度`);
+   sendmsg('moon_data0', `方位: ${atos0(_sm0.moon.方位角)} (${_sm0.moon.方位角.toFixed(0)})`);
    sendmsg('moon_data0', ` `);
 
    if ( _sm0.moon.狀態 == '正常' ) {
