@@ -44,7 +44,7 @@
    if ( _sm0.moon.狀態 != '整日不可見' ) {
       //sendmsg('moon_data0', `月相編號: ${_sm0.moon.月相編號}`);
       //sendmsg('moon_data0', "https://raeltw.github.io/wea.tw/moon/"+_sm0.moon.月相編號+".png" );
-      sendmsg('moon_data0', "<img style='float:right; width: 128px;' src='https://raeltw.github.io/wea.tw/moon/"+_sm0.moon.月相編號+".png'>", 0 );
+      sendmsg('moon_data0', "<img style='float:right; width: 128px; transform: rotate(23.4deg);' src='https://raeltw.github.io/wea.tw/moon/"+_sm0.moon.月相編號+".png'>", 0 );
    }   
 
    sendmsg('moon_data0', `高度: ${_sm0.moon.高度角.toFixed(0)} 度`);

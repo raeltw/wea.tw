@@ -68,10 +68,28 @@ function getSunMoon(_date, _time, _lati, _long) {
     let name = "未知";
     let code = "00";
 
+/**
+ * 實現 "四捨五入，遇 0.5 則捨去" (Round Half Down / To Zero for positive) 的四捨五入邏輯。
+ * @param {number} num 要四捨五入的數字。
+ * @returns {number} 四捨五入後的整數。
+ */
+const roundHalfDown = (num) => {
+    // 將數字拆分為整數部分和小數部分
+    const integerPart = Math.trunc(num); // Math.trunc() 無條件捨去小數部分 (不考慮正負號)
+    const fractionalPart = num - integerPart;
+
+    // 如果小數部分小於或等於 0.5，則無條件捨去
+    // 否則，無條件進位
+    if (fractionalPart <= 0.5) {
+        return integerPart;
+    } else {
+        return integerPart + 1;
+    }
+};
     // --- 計算月相編號 (00-16，基於 Math.round(phase * 16)) ---
-    const phaseIndex = Math.round(phase * 16);
+    const phaseIndex = roundHalfDown(phase * 16);
     // 確保 phaseIndex 不會超過 16 (理論上 Math.round(1*16) = 16，但以防萬一)
-    const clampedPhaseIndex = Math.min(phaseIndex, 16);
+    const clampedPhaseIndex = Math.min(Math.max(0, phaseIndex), 16);
     code = String(clampedPhaseIndex).padStart(2, '0'); // 格式化為兩位數字串
 
     // --- 判斷月相名稱 (維持最初的 8 種區間定義) ---
