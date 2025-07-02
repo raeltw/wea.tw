@@ -6,6 +6,11 @@
    // from https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001
    
    var now = new Date(); 
+   //now = now.getTime()-24*60*60*1000;
+   //now = new Date(now);
+   //月相的關係 考慮抓前一天的 
+   // 不行 因為月出/月落就差太多了
+
    _tmp1=String(now.getFullYear())+'-'+String(now.getMonth()+1).padStart(2, '0')+'-'+String(now.getDate()).padStart(2, '0'); 
    _tmp2=String(now.getHours()).padStart(2, '0')+':'+String(now.getMinutes()).padStart(2, '0')+':'+String(now.getSeconds()).padStart(2, '0'); 
    //window.alert(_tmp1+' '+_tmp2);
@@ -16,7 +21,7 @@
    //window.alert(_sm0);
    
    sendmsg('sun_data0', `高度: ${_sm0.sun.高度角.toFixed(1)} 度`);
-   sendmsg('sun_data0', `方位: ${atos0(_sm0.sun.方位角+180)} (${_sm0.sun.方位角.toFixed(1)})`);
+   sendmsg('sun_data0', `方位: ${atos0(_sm0.sun.方位角+180)} (${_sm0.sun.方位角.toFixed(1)} 度)`);
    //suncalc的0度是正南 但atos0()的0度是正北 所以要轉換
    sendmsg('sun_data0', ` `);
    
@@ -48,7 +53,7 @@
    }   
 
    sendmsg('moon_data0', `高度: ${_sm0.moon.高度角.toFixed(1)} 度`);
-   sendmsg('moon_data0', `方位: ${atos0(_sm0.moon.方位角+180)} (${_sm0.moon.方位角.toFixed(1)})`);
+   sendmsg('moon_data0', `方位: ${atos0(_sm0.moon.方位角+180)} (${_sm0.moon.方位角.toFixed(1)} 度)`);
    //suncalc的0度是正南 但atos0()的0度是正北 所以要轉換
    sendmsg('moon_data0', ` `);
 
