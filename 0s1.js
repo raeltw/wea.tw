@@ -15,8 +15,8 @@
    var _sm0 = JSON.parse(jsonString); // <-- 這是關鍵的修正
    //window.alert(_sm0);
    
-   sendmsg('sun_data0', `高度: ${_sm0.sun.高度角.toFixed(0)} 度`);
-   sendmsg('sun_data0', `方位: ${atos0(_sm0.sun.方位角+180)} (${_sm0.sun.方位角.toFixed(0)})`);
+   sendmsg('sun_data0', `高度: ${_sm0.sun.高度角.toFixed(1)} 度`);
+   sendmsg('sun_data0', `方位: ${atos0(_sm0.sun.方位角+180)} (${_sm0.sun.方位角.toFixed(1)})`);
    //suncalc的0度是正南 但atos0()的0度是正北 所以要轉換
    sendmsg('sun_data0', ` `);
    
@@ -47,8 +47,8 @@
       sendmsg('moon_data0', "<img style='float:right; width: 128px; transform: rotate(23.4deg);' src='https://raeltw.github.io/wea.tw/moon/"+_sm0.moon.月相編號+".png'>", 0 );
    }   
 
-   sendmsg('moon_data0', `高度: ${_sm0.moon.高度角.toFixed(0)} 度`);
-   sendmsg('moon_data0', `方位: ${atos0(_sm0.moon.方位角+180)} (${_sm0.moon.方位角.toFixed(0)})`);
+   sendmsg('moon_data0', `高度: ${_sm0.moon.高度角.toFixed(1)} 度`);
+   sendmsg('moon_data0', `方位: ${atos0(_sm0.moon.方位角+180)} (${_sm0.moon.方位角.toFixed(1)})`);
    //suncalc的0度是正南 但atos0()的0度是正北 所以要轉換
    sendmsg('moon_data0', ` `);
 
@@ -64,7 +64,7 @@
    if ( _sm0.moon.狀態 != '整日不可見' ) {
       // fraction 告訴您月亮多亮。
       // phase 告訴您月亮在整個盈虧週期中處於哪個階段和方向。
-      sendmsg('moon_data0', `亮度: ${(_sm0.moon.被照亮比例*100).toFixed(0)}%`); // fraction
+      sendmsg('moon_data0', `飽滿度: ${(_sm0.moon.被照亮比例*100).toFixed(1)}%`); // fraction
       sendmsg('moon_data0', `月相: ${_sm0.moon.月相} (${_sm0.moon.月相進程.toFixed(2)})`); // phase
    }   
 }
