@@ -16,7 +16,8 @@
    //window.alert(_sm0);
    
    sendmsg('sun_data0', `高度: ${_sm0.sun.高度角.toFixed(0)} 度`);
-   sendmsg('sun_data0', `方位: ${atos0(_sm0.sun.方位角)} (${_sm0.sun.方位角.toFixed(0)})`);
+   sendmsg('sun_data0', `方位: ${atos0(_sm0.sun.方位角+180)} (${_sm0.sun.方位角.toFixed(0)})`);
+   //suncalc的0度是正南 但atos0()的0度是正北 所以要轉換
    sendmsg('sun_data0', ` `);
    
    //sendmsg('sun_data0', `日期時間: ${_sm0.日期} ${_sm0.時間}`);
@@ -47,7 +48,8 @@
    }   
 
    sendmsg('moon_data0', `高度: ${_sm0.moon.高度角.toFixed(0)} 度`);
-   sendmsg('moon_data0', `方位: ${atos0(_sm0.moon.方位角)} (${_sm0.moon.方位角.toFixed(0)})`);
+   sendmsg('moon_data0', `方位: ${atos0(_sm0.moon.方位角+180)} (${_sm0.moon.方位角.toFixed(0)})`);
+   //suncalc的0度是正南 但atos0()的0度是正北 所以要轉換
    sendmsg('moon_data0', ` `);
 
    if ( _sm0.moon.狀態 == '正常' ) {
