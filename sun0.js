@@ -124,22 +124,27 @@ const roundHalfDown = (num) => {
   const dayLength = calculateDuration(sunTimes.sunrise, sunTimes.sunset);
 
   // 計算月長和月亮可見性狀態
-  let moonLengthCalculated = null;
+  let moonLengthCalculated = '--';
   let moonVisibilityStatus = "正常";
 
   if (moonTimes.alwaysUp) {
     moonVisibilityStatus = "整日可見";
-    moonLengthCalculated = null; // 或者您可以設定為 '24:00' 如果需要
+    moonLengthCalculated = '24:00'; // 或者您可以設定為 '24:00' 如果需要
   } else if (moonTimes.alwaysDown) {
     moonVisibilityStatus = "整日不可見";
-    moonLengthCalculated = null; // 或者您可以設定為 '00:00' 如果需要
+    moonLengthCalculated = '00:00'; // 或者您可以設定為 '00:00' 如果需要
   } else {
-    moonLengthCalculated = calculateDuration(moonTimes.rise, moonTimes.set);
+    if( typeof moonTimes.rise != "undefined"  && typeof moonTimes.set != "undefined" ) {
+       moonLengthCalculated = calculateDuration(moonTimes.rise, moonTimes.set);
+    }
   }
 
   // 獲取月相名稱和編號
   const moonPhaseInfo = getMoonPhaseInfo(moonIllumination.phase);
 
+//window.alert(moonTimes.rise);
+//window.alert(moonTimes.set);
+//月落會沒抓到
 
   // 建構結果物件
   const resultData = {
@@ -163,8 +168,8 @@ const roundHalfDown = (num) => {
       "方位角": toDegrees(sunPosition.azimuth)
     },
     "moon": {
-      "月出": formatTime(moonTimes.rise),
-      "月落": formatTime(moonTimes.set),
+      "月出": moonTimes.rise === undefined ? '--' : formatTime(moonTimes.rise),
+      "月落": moonTimes.set === undefined ? '--' : formatTime(moonTimes.set),
       "狀態": moonVisibilityStatus, // 新增：月長狀態 (正常, 整日可見, 整日不可見)
       "月長": moonLengthCalculated, // 新增：HH:MM 格式的月長，非正常情況為 null
       "被照亮比例": moonIllumination.fraction.toFixed(2),
