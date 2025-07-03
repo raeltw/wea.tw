@@ -5,6 +5,7 @@ function getSunMoon(_date, _time, _lati, _long) {
   // 組合日期和時間字串，並建立 Date 物件
   const dateTimeString = `${_date}T${_time}+08:00`;
   const targetDateTime = new Date(dateTimeString);
+  //window.alert(targetDateTime);
 
   // 檢查日期物件是否有效
   if (isNaN(targetDateTime.getTime())) {
@@ -30,6 +31,7 @@ function getSunMoon(_date, _time, _lati, _long) {
   const sunPosition = SunCalc.getPosition(targetDateTime, _lati, _long);
   // 取得月亮相關時間 (一整天的事件)
   const moonTimes = SunCalc.getMoonTimes(targetDateTime, _lati, _long);
+  //window.alert(targetDateTime);
   // 取得月亮位置 (針對 `targetDateTime` 精確時間點的位置)
   const moonPosition = SunCalc.getMoonPosition(targetDateTime, _lati, _long);
   // 取得月相資訊 (針對 `targetDateTime` 當天)
