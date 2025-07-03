@@ -59,7 +59,9 @@ function getSunMoon(_date, _time, _lati, _long) {
     if (!startTime || !endTime || isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
       return null;
     }
-    const diffMs = endTime.getTime() - startTime.getTime();
+ window.alert(startTime.getTime() );
+ window.alert(endTime.getTime() );
+const diffMs = endTime.getTime() () - startTime.getTime();
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
     return `${String(diffHours).padStart(2, '0')}:${String(diffMinutes).padStart(2, '0')}`;
