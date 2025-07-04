@@ -1,11 +1,16 @@
-﻿
-function getSunMoon(_date, _time, _lati, _long) {
+﻿function getSunMoon(_date, _time, _lati, _long) {
+//這版本修正了 suncalc 對月升/月落的定義
+//他本來只管'當日'曾發生過月升/月落 但不管是不是同一次(完整一次)月升/月落
+//我就找明天的替代 '250704
 //window.alert('這裡');
 
   // 組合日期和時間字串，並建立 Date 物件
   const dateTimeString = `${_date}T${_time}+08:00`;
   const targetDateTime = new Date(dateTimeString);
   //window.alert(targetDateTime);
+  //明天
+  const targetTomorrow = new Date(targetDateTime); 
+  targetTomorrow.setDate(targetDateTime.getDate() + 1); 
 
   // 檢查日期物件是否有效
   if (isNaN(targetDateTime.getTime())) {
@@ -31,7 +36,8 @@ function getSunMoon(_date, _time, _lati, _long) {
   const sunPosition = SunCalc.getPosition(targetDateTime, _lati, _long);
   // 取得月亮相關時間 (一整天的事件)
   const moonTimes = SunCalc.getMoonTimes(targetDateTime, _lati, _long);
-  //window.alert(targetDateTime);
+  // 取得明天月亮相關時間 (一整天的事件)
+  const moonTimes2 = SunCalc.getMoonTimes(targetTomorrow, _lati, _long);
   // 取得月亮位置 (針對 `targetDateTime` 精確時間點的位置)
   const moonPosition = SunCalc.getMoonPosition(targetDateTime, _lati, _long);
   // 取得月相資訊 (針對 `targetDateTime` 當天)
@@ -49,6 +55,32 @@ function getSunMoon(_date, _time, _lati, _long) {
     });
   };
 
+// 輔助函數：格式化 Date 物件為 DD HH:MM 字串
+const formatTime2 = (dateObj) => {
+  const formatter = new Intl.DateTimeFormat('zh-TW', {
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: 'Asia/Taipei' // 明確指定時區為台灣時間
+  });
+
+  const parts = formatter.formatToParts(dateObj);
+  
+  let day = '';
+  let hour = '';
+  let minute = '';
+
+  for (const part of parts) {
+    if (part.type === 'day') {       day = part.value;
+    } else if (part.type === 'hour') {       hour = part.value;
+    } else if (part.type === 'minute') {       minute = part.value;     }
+  }
+
+  return `${day} ${hour}:${minute}`;
+};
+
+
   // 輔助函數：將弧度轉換為度數 (回傳數字型態)
   const toDegrees = (radians) => {
     return (radians * 180 / Math.PI); // 不使用 toFixed()
@@ -59,9 +91,7 @@ function getSunMoon(_date, _time, _lati, _long) {
     if (!startTime || !endTime || isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
       return null;
     }
- window.alert(startTime.getTime() );
- window.alert(endTime.getTime() );
-const diffMs = endTime.getTime() () - startTime.getTime();
+    const diffMs = endTime.getTime() - startTime.getTime();
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
     return `${String(diffHours).padStart(2, '0')}:${String(diffMinutes).padStart(2, '0')}`;
@@ -131,6 +161,21 @@ const roundHalfDown = (num) => {
   let moonLengthCalculated = '--';
   let moonVisibilityStatus = "正常";
 
+  //window.alert(_moonrise);
+  //window.alert(_moonset);
+  //月落會沒抓到
+
+  //月落要搭配月升
+  var _moonrise=moonTimes.rise;
+  var _moonset=moonTimes.set;
+  var _moonset2=moonTimes2.set;
+  
+  if ( typeof _moonrise != "undefined" && typeof _moonset != "undefined" && typeof _moonset2 != "undefined") {
+     if ( _moonrise>_moonset ) {
+       _moonset= _moonset2;
+     }
+  }
+
   if (moonTimes.alwaysUp) {
     moonVisibilityStatus = "整日可見";
     moonLengthCalculated = '24:00'; // 或者您可以設定為 '24:00' 如果需要
@@ -138,17 +183,14 @@ const roundHalfDown = (num) => {
     moonVisibilityStatus = "整日不可見";
     moonLengthCalculated = '00:00'; // 或者您可以設定為 '00:00' 如果需要
   } else {
-    if( typeof moonTimes.rise != "undefined"  && typeof moonTimes.set != "undefined" ) {
-       moonLengthCalculated = calculateDuration(moonTimes.rise, moonTimes.set);
+    if ( typeof _moonrise != "undefined" && typeof _moonset != "undefined" && _moonrise < _moonset ) {
+       moonLengthCalculated = calculateDuration(_moonrise, _moonset);
     }
   }
 
+
   // 獲取月相名稱和編號
   const moonPhaseInfo = getMoonPhaseInfo(moonIllumination.phase);
-
-//window.alert(moonTimes.rise);
-//window.alert(moonTimes.set);
-//月落會沒抓到
 
   // 建構結果物件
   const resultData = {
@@ -172,8 +214,8 @@ const roundHalfDown = (num) => {
       "方位角": toDegrees(sunPosition.azimuth)
     },
     "moon": {
-      "月出": moonTimes.rise === undefined ? '--' : formatTime(moonTimes.rise),
-      "月落": moonTimes.set === undefined ? '--' : formatTime(moonTimes.set),
+      "月出": _moonrise === undefined ? '--' : formatTime2(_moonrise),
+      "月落": _moonset === undefined ? '--' : formatTime2(_moonset),
       "狀態": moonVisibilityStatus, // 新增：月長狀態 (正常, 整日可見, 整日不可見)
       "月長": moonLengthCalculated, // 新增：HH:MM 格式的月長，非正常情況為 null
       "被照亮比例": moonIllumination.fraction.toFixed(2),
