@@ -8,6 +8,9 @@
   const dateTimeString = `${_date}T${_time}+08:00`;
   const targetDateTime = new Date(dateTimeString);
   //window.alert(targetDateTime);
+  //昨天
+  const targetYesterday = new Date(targetDateTime); 
+  targetYesterday.setDate(targetDateTime.getDate() - 1); 
   //明天
   const targetTomorrow = new Date(targetDateTime); 
   targetTomorrow.setDate(targetDateTime.getDate() + 1); 
@@ -36,6 +39,8 @@
   const sunPosition = SunCalc.getPosition(targetDateTime, _lati, _long);
   // 取得月亮相關時間 (一整天的事件)
   const moonTimes = SunCalc.getMoonTimes(targetDateTime, _lati, _long);
+  // 取得昨天月亮相關時間 (一整天的事件)
+  const moonTimes1 = SunCalc.getMoonTimes(targetYesterday, _lati, _long);
   // 取得明天月亮相關時間 (一整天的事件)
   const moonTimes2 = SunCalc.getMoonTimes(targetTomorrow, _lati, _long);
   // 取得月亮位置 (針對 `targetDateTime` 精確時間點的位置)
@@ -57,6 +62,9 @@
 
 // 輔助函數：格式化 Date 物件為 DD HH:MM 字串
 const formatTime2 = (dateObj) => {
+   if (!dateObj || isNaN(dateObj.getTime())) {
+     return null;
+   }
   const formatter = new Intl.DateTimeFormat('zh-TW', {
     day: '2-digit',
     hour: '2-digit',
@@ -168,11 +176,28 @@ const roundHalfDown = (num) => {
   //月落要搭配月升
   var _moonrise=moonTimes.rise;
   var _moonset=moonTimes.set;
-  var _moonset2=moonTimes2.set;
+  var _tmp1;
   
-  if ( typeof _moonrise != "undefined" && typeof _moonset != "undefined" && typeof _moonset2 != "undefined") {
-     if ( _moonrise>_moonset ) {
-       _moonset= _moonset2;
+  if ( typeof _moonrise !== "undefined" && _moonrise !== null && 
+       typeof _moonset !== "undefined" && _moonset !== null) {
+     if ( _moonrise>_moonset ) { 
+        // 有跨日
+        // 如果 _moonset>=targetDateTime 表示現在還是昨天的月亮 那就把 昨天的月升時間找出來
+        // 如果 _moonset<targetDateTime 表示昨天的月亮已經走了 那就把 明天的月落時間找出來
+        if ( _moonset>=targetDateTime) {
+           _tmp1=moonTimes1.rise;
+           if ( typeof _tmp1 !== "undefined" && _tmp1 !== null ) {
+              // 拿昨天的月升來補
+              _moonrise=_tmp1;
+           }
+        } else {
+           // 不然就拿 明天的月落來補 
+           _tmp1=moonTimes2.set;
+           if ( typeof _tmp1 !== "undefined" && _tmp1 !== null ) {
+              // 拿明天的月落來補 
+               _moonset=_tmp1;
+           }
+        }
      }
   }
 
@@ -183,7 +208,9 @@ const roundHalfDown = (num) => {
     moonVisibilityStatus = "整日不可見";
     moonLengthCalculated = '00:00'; // 或者您可以設定為 '00:00' 如果需要
   } else {
-    if ( typeof _moonrise != "undefined" && typeof _moonset != "undefined" && _moonrise < _moonset ) {
+    if (typeof _moonrise !== "undefined" && _moonrise !== null && 
+        typeof _moonset !== "undefined" && _moonset !== null && 
+        _moonrise < _moonset ) {
        moonLengthCalculated = calculateDuration(_moonrise, _moonset);
     }
   }

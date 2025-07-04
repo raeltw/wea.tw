@@ -46,7 +46,7 @@
    // 天空從天文黃昏過渡到完全的黑暗夜空的那個時間點。 (太陽在地平線下 18 度)
    sendmsg('sun_data0', `黑夜: ${_sm0.sun.夜晚}`);
    
-   if ( _sm0.moon.狀態 != '整日不可見' ) {
+   if ( _sm0.moon.狀態 !== '整日不可見' ) {
       //sendmsg('moon_data0', `月相編號: ${_sm0.moon.月相編號}`);
       //sendmsg('moon_data0', "https://raeltw.github.io/wea.tw/moon/"+_sm0.moon.月相編號+".png" );
       sendmsg('moon_data0', "<img style='float:right; width: 128px; transform: rotate(23.4deg);' src='https://raeltw.github.io/wea.tw/moon/"+_sm0.moon.月相編號+".png'>", 0 );
@@ -66,7 +66,7 @@
       sendmsg('moon_data0', `狀態: ${_sm0.moon.狀態}`);
    }
 
-   if ( _sm0.moon.狀態 != '整日不可見' ) {
+   if ( _sm0.moon.狀態 !== '整日不可見' ) {
       // fraction 告訴您月亮多亮。
       // phase 告訴您月亮在整個盈虧週期中處於哪個階段和方向。
       sendmsg('moon_data0', `飽滿度: ${(_sm0.moon.被照亮比例*100).toFixed(1)}%`); // fraction
