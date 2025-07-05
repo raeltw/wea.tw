@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>圓形弧線水平線填色測試 (V14 - 水平掃描線填充)</title>
+<title>圓形弧線水平線填色測試 (V15 - 修正填充顯示問題)</title>
 <style>
   body {
     display: flex;
@@ -57,7 +57,7 @@
   const canvasWidth = 200;
   const canvasHeight = 200;
   const circleRadius = 80; // 圓形的半徑 (像素)
-  const renderLineDensity = 1; // 每多少像素畫一條水平線，值越小線越密，填充越平滑
+  const renderDensity = 1; // 每多少像素渲染一行，值越小越精細，填充越平滑
 
   // 辅助函数：绘制单个弧线和填充
   function drawArcAndFill(canvasId, angleValue, fillLeftBlack) { // fillLeftBlack: true 则左侧黑，false 则右侧黑
@@ -78,7 +78,7 @@
     // 独立添加版本信息到每个 canvas container
     const versionBox = document.createElement('div');
     versionBox.className = 'version-info-box';
-    versionBox.textContent = 'V14'; // 每次更新版本号
+    versionBox.textContent = 'V15'; // 每次更新版本号
     container.appendChild(versionBox);
 
     document.body.appendChild(container);
@@ -91,4 +91,113 @@
     const observationAngleRadians = (angleValue / 100) * Math.PI;
 
     const semiMinorAxis_horizontal = circleRadius * Math.cos(observationAngleRadians);
-    const semiMajorAxis_
+    const semiMajorAxis_vertical = circleRadius; 
+    const currentAbsoluteSemiMinorAxis = Math.abs(semiMinorAxis_horizontal); 
+
+    // --- 水平掃描線填充邏輯 ---
+    // 遍歷圓形從上到下的所有 Y 座標
+    for (let y = centerY - circleRadius; y <= centerY + circleRadius; y += renderDensity) {
+      // 計算綠圓在當前 Y 座標上的左右 X 邊界
+      const dxGreen = Math.sqrt(Math.pow(circleRadius, 2) - Math.pow(y - centerY, 2));
+      const greenLeftX = centerX - dxGreen;
+      const greenRightX = centerX + dxGreen;
+
+      let redArcX = null; // 紅線在當前 Y 座標上的 X 座標
+
+      // 計算紅線在當前 Y 座標上的 X 座標
+      const discriminant = 1 - Math.pow(y - centerY, 2) / Math.pow(semiMajorAxis_vertical, 2);
+      
+      if (discriminant >= 0) { 
+        const dxRed = currentAbsoluteSemiMinorAxis * Math.sqrt(discriminant);
+        
+        // 根據紅線是左半邊還是右半邊的橢圓弧來取 X 值
+        if (semiMinorAxis_horizontal >= 0) { // 紅線在右半邊 (0-50度)，取右側的X值
+            redArcX = centerX + dxRed;
+        } else { // 紅線在左半邊 (50-100度)，取左側的X值
+            redArcX = centerX - dxRed;
+        }
+      }
+      
+      // 確保 redArcX 在綠圓範圍內，並處理邊緣情況
+      if (redArcX !== null) {
+          redArcX = Math.max(greenLeftX, Math.min(greenRightX, redArcX));
+      } else {
+          // 如果紅線在當前 Y 座標上沒有對應的點 (例如紅線是點，或者 Y 超出了紅線的垂直範圍)
+          // 則根據紅線的整體位置（是偏左還是偏右），將 redArcX 設為圓的邊界，以便整個半邊被填充
+          if (semiMinorAxis_horizontal >= 0) { // 紅線偏右，此時應填充左邊整個區域
+              redArcX = greenLeftX; // 或 centerX，取決於期望的直線切割效果
+          } else { // 紅線偏左，此時應填充右邊整個區域
+              redArcX = greenRightX; // 或 centerX
+          }
+      }
+
+      // 執行填充
+      // 填充「左側」區域
+      ctx.fillStyle = fillLeftBlack ? 'black' : 'white';
+      ctx.fillRect(greenLeftX, y, redArcX - greenLeftX, renderDensity);
+
+      // 填充「右側」區域
+      ctx.fillStyle = fillLeftBlack ? 'white' : 'black';
+      ctx.fillRect(redArcX, y, greenRightX - redArcX, renderDensity);
+    }
+
+
+    // 2. 繪製綠色圓形邊框，確保在填充之上
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI);
+    ctx.strokeStyle = 'green';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // 3. 繪製紅色弧線，確保在填充之上
+    let redArcOutlineStartAngle, redArcOutlineEndAngle;
+    if (semiMinorAxis_horizontal >= 0) { 
+        redArcOutlineStartAngle = -Math.PI / 2;
+        redArcOutlineEndAngle = Math.PI / 2;
+    } else { 
+        redArcOutlineStartAngle = Math.PI / 2;
+        redArcOutlineEndAngle = 3 * Math.PI / 2;
+    }
+
+    ctx.beginPath();
+    const redOutlinePoint1X = centerX + currentAbsoluteSemiMinorAxis * Math.cos(redArcOutlineStartAngle);
+    const redOutlinePoint1Y = centerY + semiMajorAxis_vertical * Math.sin(redArcOutlineStartAngle);
+    
+    ctx.moveTo(redOutlinePoint1X, redOutlinePoint1Y);
+    const numSegments = 100;
+    for (let i = 0; i <= numSegments; i++) {
+        const t = redArcOutlineStartAngle + (redArcOutlineEndAngle - redArcOutlineStartAngle) * (i / numSegments);
+        const x = centerX + currentAbsoluteSemiMinorAxis * Math.cos(t);
+        const y = centerY + semiMajorAxis_vertical * Math.sin(t);
+        ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = 'red';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // 繪製中心點 (藍色)
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 2, 0, 2 * Math.PI);
+    ctx.fillStyle = 'blue';
+    ctx.fill();
+  }
+
+  // 第一組: 紅線左側塗黑，右側塗白 (0-100)
+  for (let i = 0; i <= gridSize; i++) {
+    const angleValue = i * 10;
+    drawArcAndFill(`canvas_left_black_${angleValue}`, angleValue, true); // true 表示左側黑色
+  }
+</script>
+
+<div class="section-title" style="clear: both;">第二組: 紅線左側塗白，右側塗黑 (0-100)</div>
+
+<script>
+  // 第二組: 紅線左側塗白，右側塗黑 (0-100)
+  for (let i = 0; i <= gridSize; i++) {
+    const angleValue = i * 10;
+    drawArcAndFill(`canvas_right_black_${angleValue}`, angleValue, false); // false 表示右側黑色
+  }
+</script>
+
+</body>
+</html>
