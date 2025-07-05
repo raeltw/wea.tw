@@ -3,24 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>圓形點移動進度 (10% - 100%) - 含傾斜</title>
+    <title>月相盈虧模擬 (疊圖與覆蓋方式)</title>
     <style>
         body {
             margin: 0;
-            overflow-x: hidden;
+            overflow-x: hidden; /* 允許垂直滾動，水平隱藏 */
             display: flex;
-            flex-direction: column;
+            flex-direction: column; /* 垂直排列圖形 */
             align-items: center;
             min-height: 100vh;
-            background-color: #000;
+            background-color: #000; /* 純黑色背景 */
             color: #eee;
             font-family: sans-serif;
             font-size: 14px;
-            padding: 20px 0;
+            padding: 20px 0; /* 上下留白 */
         }
         .figure-wrapper {
-            margin-bottom: 40px;
-            background-color: #1a1a1a;
+            margin-bottom: 40px; /* 每個圖形之間間距 */
+            background-color: #1a1a1a; /* 每個圖形區塊的背景色 */
             padding: 15px;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
@@ -32,13 +32,13 @@
             margin-bottom: 15px;
         }
         canvas {
-            background-color: #222;
+            background-color: #222; /* Canvas 背景色，在圖片載入失敗時可見 */
             border: 2px solid #555;
             display: block;
-            margin: 0 auto;
+            margin: 0 auto; /* 讓 canvas 在其容器中居中 */
         }
         #version-info {
-            position: fixed;
+            position: fixed; /* 固定在視窗左上角 */
             top: 10px;
             left: 10px;
             background: rgba(0, 0, 0, 0.5);
@@ -49,27 +49,31 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.05.12</div>
+    <div id="version-info">版本: v2025.07.05.13</div>
 
     <div class="figures-container">
         </div>
 
     <script>
         // --- 設定版本號 ---
-        const VERSION = 'v2025.07.05.12';
+        const VERSION = 'v2025.07.05.13';
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
         const commonCanvasWidth = 400;
         const commonCanvasHeight = 400;
         const centerX = commonCanvasWidth / 2;
         const centerY = commonCanvasHeight / 2;
-        const radius = 150;
-        const dotSize = 2;
-        const numDots = 180;
+        const radius = 150; // 圓的半徑
+        const dotSize = 2; // 每個點的大小 (像素)
+        const numDots = 180; // 繪製點的數量 (從 90 到 270 度，每度一個點)
         const tiltAngleDegrees = 23.4; // 月亮的傾斜角度
         const tiltAngleRadians = tiltAngleDegrees * Math.PI / 180; // 轉換為弧度
 
-        // 旋轉點的輔助函數
+        // 加載月亮底圖
+        const moonImage = new Image();
+        moonImage.src = 'https://raeltw.github.io/wea.tw/moon/moon256.png'; // 你提供的底圖網址
+
+        // 輔助函數：旋轉點
         function rotatePoint(px, py, cx, cy, angle) {
             const tempX = px - cx;
             const tempY = py - cy;
@@ -83,22 +87,29 @@
             };
         }
 
-        // 繪製單一畫布的函數
-        function drawFigure(canvasId, percentage) {
-            const canvas = document.getElementById(canvasId);
+        // 繪製單一 Canvas 圖形的函數
+        function drawFigure(canvas, illuminatedPercentage, backgroundImage) {
             const ctx = canvas.getContext('2d');
 
-            // 清空畫布為背景色
-            ctx.fillStyle = '#222';
-            ctx.fillRect(0, 0, commonCanvasWidth, commonCanvasHeight);
+            // 1. 清空 Canvas 並繪製背景圖片
+            ctx.clearRect(0, 0, commonCanvasWidth, commonCanvasHeight);
+            if (backgroundImage) {
+                // 確保圖片能完整覆蓋 Canvas 區域
+                ctx.drawImage(backgroundImage, 0, 0, commonCanvasWidth, commonCanvasHeight);
+            } else {
+                // 如果圖片載入失敗，則使用預設的 Canvas 背景色
+                ctx.fillStyle = '#222';
+                ctx.fillRect(0, 0, commonCanvasWidth, commonCanvasHeight);
+            }
 
-            // 繪製圓心 (白色，顯示在最上層) - 圓心是旋轉的原點，所以它不動
+
+            // 2. 繪製圓心 (白色，作為旋轉的原點，因此不會移動)
             ctx.beginPath();
             ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
             ctx.fillStyle = '#fff';
             ctx.fill();
 
-            // 繪製原始的藍色左半圓周上的點 (基礎點，現在也會傾斜)
+            // 3. 繪製原始的藍色左半圓周上的點 (基礎點，現在也會傾斜)
             for (let i = 0; i <= numDots; i++) {
                 const angleDegrees = 90 + i;
                 const angleRadians = angleDegrees * Math.PI / 180;
@@ -113,23 +124,29 @@
                 ctx.fillRect(rotatedBluePoint.x - dotSize / 2, rotatedBluePoint.y - dotSize / 2, dotSize, dotSize);
             }
 
-            // 繪製變換後的紅色點 (現在也會傾斜)
+            // 4. 繪製變換後的紅色點 (代表亮暗分界線，現在也會傾斜)
+            // illuminatedPercentage 從 100 (全月) 到 0 (新月)
+            // newX 的計算與之前的 'walk_percentage' 邏輯相同
+            const currentWalkPercentage = illuminatedPercentage;
+
             for (let i = 0; i <= numDots; i++) {
                 const angleDegrees = 90 + i;
                 const angleRadians = angleDegrees * Math.PI / 180;
 
-                const originalX = centerX + radius * Math.cos(angleRadians);
-                const originalY = centerY + radius * Math.sin(angleRadians);
+                const originalX = centerX + radius * Math.cos(angleRadians); // 原始藍點的 X 座標（未傾斜前）
+                const originalY = centerY + radius * Math.sin(angleRadians); // 原始藍點的 Y 座標（未傾斜前）
 
                 // 計算原始點到中心線的距離 D0
-                const D0 = centerX - originalX; // 因為是左半圓，originalX <= centerX
+                const D0 = centerX - originalX; // 對於左半圓，D0 >= 0
 
-                // 計算移動的距離 (根據百分比 N%)
-                const moveDistance = (percentage / 100) * (2 * D0);
+                // 計算水平移動的距離 (根據當前亮度百分比)
+                // 亮度百分比 0 相當於原始左半圓形 (walk 0%)
+                // 亮度百分比 100 相當於完整圓形 (walk 100%)
+                const moveDistance = (currentWalkPercentage / 100) * (2 * D0);
 
-                // 新點的 X 座標 (水平位移後)
+                // 計算水平位移後的新點座標 (未傾斜前)
                 const newXBeforeTilt = originalX + moveDistance;
-                const newYBeforeTilt = originalY; // Y 座標不變
+                const newYBeforeTilt = originalY;
 
                 // 應用傾斜旋轉
                 const rotatedRedPoint = rotatePoint(newXBeforeTilt, newYBeforeTilt, centerX, centerY, tiltAngleRadians);
@@ -139,27 +156,50 @@
             }
         }
 
-        // 動態生成和繪製所有畫布
-        const figuresContainer = document.querySelector('.figures-container');
-        for (let p = 10; p <= 100; p += 10) {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'figure-wrapper';
+        // 當圖片載入完成後，才開始動態生成並繪製所有 Canvas
+        moonImage.onload = () => {
+            const figuresContainer = document.querySelector('.figures-container');
+            // 從 100% 亮度開始，每 5% 遞減，直到 0%
+            for (let p = 100; p >= 0; p -= 5) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'figure-wrapper';
 
-            const title = document.createElement('h3');
-            title.textContent = `走到 ${p}% 的傾斜月相`;
-            wrapper.appendChild(title);
+                const title = document.createElement('h3');
+                title.textContent = `月相模擬：亮度 ${p}%`;
+                wrapper.appendChild(title);
 
-            const canvas = document.createElement('canvas');
-            canvas.id = `canvas${p}`;
-            canvas.width = commonCanvasWidth;
-            canvas.height = commonCanvasHeight;
-            wrapper.appendChild(canvas);
+                const canvas = document.createElement('canvas');
+                canvas.id = `canvas${p}`;
+                canvas.width = commonCanvasWidth;
+                canvas.height = commonCanvasHeight;
+                wrapper.appendChild(canvas);
 
-            figuresContainer.appendChild(wrapper);
+                figuresContainer.appendChild(wrapper);
 
-            // 繪製內容
-            drawFigure(canvas.id, p);
-        }
+                // 繪製內容，傳入加載好的圖片
+                drawFigure(canvas, p, moonImage);
+            }
+        };
+
+        // 處理圖片載入失敗的情況
+        moonImage.onerror = () => {
+            alert('無法載入月亮底圖，請檢查圖片網址或網路連線。將顯示無底圖版本。');
+            const figuresContainer = document.querySelector('.figures-container');
+            for (let p = 100; p >= 0; p -= 5) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'figure-wrapper';
+                const title = document.createElement('h3');
+                title.textContent = `月相模擬：亮度 ${p}% (無底圖)`;
+                wrapper.appendChild(title);
+                const canvas = document.createElement('canvas');
+                canvas.id = `canvas${p}`;
+                canvas.width = commonCanvasWidth;
+                canvas.height = commonCanvasHeight;
+                wrapper.appendChild(canvas);
+                figuresContainer.appendChild(wrapper);
+                drawFigure(canvas, p, null); // 傳入 null 表示沒有背景圖片
+            }
+        };
     </script>
 </body>
 </html>
