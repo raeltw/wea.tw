@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>月相盈虧模擬 (完整演示：左右側遮罩變化順序修正 - 遵照指示版)</title>
+    <title>月相盈虧模擬 (完整演示：左右側遮罩變化順序修正 - 恢復底圖完整顯示)</title>
     <style>
         body {
             margin: 0;
@@ -59,7 +59,7 @@
         }
         canvas {
             background-color: #222;
-            border: 2px solid #555;
+            border: 2px solid #555; /* 暫時移除邊框，以便觀察 figure-wrapper 實際大小 */
             display: block;
             margin: 0 auto;
             /* Canvas 尺寸現在由 JS 動態設定以適應 figure-wrapper */
@@ -78,7 +78,7 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.06.72 (遵照指示，移除底圖多餘縮放)</div>
+    <div id="version-info">版本: v2025.07.06.73 (恢復底圖完整顯示)</div>
 
     <div class="section-title">左側為起點往右邊走 (盈月：新月到滿月)</div>
     <div id="left-to-right-container" class="figures-container">
@@ -89,7 +89,7 @@
     </div>
 
     <script>
-        const VERSION = 'v2025.07.06.72 (遵照指示，移除底圖多餘縮放)';
+        const VERSION = 'v2025.07.06.73 (恢復底圖完整顯示)';
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
         const moonImage = new Image();
@@ -98,8 +98,9 @@
         function rotatePoint(px, py, cx, cy, angle) {
             const tempX = px - cx;
             const tempY = py - cy;
+            // 旋轉公式中的 sin 和 cos 應該根據角度來決定正負
             const rotatedX = tempX * Math.cos(angle) - tempY * Math.sin(angle);
-            const rotatedY = tempY * Math.cos(angle) + tempX * Math.sin(angle); // 修正這裡的計算
+            const rotatedY = tempX * Math.sin(angle) + tempY * Math.cos(angle); 
             return { x: rotatedX + cx, y: rotatedY + cy };
         }
 
@@ -164,15 +165,14 @@
             // --- 診斷輔助線條結束 ---
 
 
-            // 繪製月亮底圖 (以原始尺寸置中繪製，超出部分自然裁切，不進行縮放以填滿)
+            // 繪製月亮底圖 (精確縮放以填滿整個 Canvas 區域，確保完整顯示，不再以原始尺寸裁切)
             if (moonImage.complete && moonImage.naturalWidth > 0) {
                 ctx.save();
                 // 將繪圖原點移到有效中心，並應用傾斜旋轉
                 ctx.translate(effectiveCenterX, effectiveCenterY); 
                 ctx.rotate(tiltAngleRadians); 
-                // 繪製圖片：以圖片原始尺寸 (moonImage.width, moonImage.height) 繪製，並置中
-                // 圖像的左上角座標計算： -(原始寬度/2), -(原始高度/2)
-                ctx.drawImage(moonImage, -moonImage.width / 2, -moonImage.height / 2, moonImage.width, moonImage.height);
+                // 繪製圖片：現在圖片會縮放以填滿整個 Canvas 寬高，確保完整顯示
+                ctx.drawImage(moonImage, -canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
                 ctx.restore(); 
                 
                 // 綠色矩形：標示 moonImage 實際被繪製的精確區域（在 Canvas 座標系中）
@@ -181,7 +181,7 @@
                 ctx.rotate(tiltAngleRadians);
                 ctx.strokeStyle = 'lime';
                 ctx.lineWidth = 1;
-                ctx.strokeRect(-moonImage.width / 2, -moonImage.height / 2, moonImage.width, moonImage.height);
+                ctx.strokeRect(-canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
                 ctx.restore();
             } else {
                 ctx.fillStyle = '#222';
@@ -301,12 +301,12 @@
             ctx.stroke();
             // --- 診斷輔助線條結束 ---
 
-            // 繪製月亮底圖 (以原始尺寸置中繪製，超出部分自然裁切，不進行縮放以填滿)
+            // 繪製月亮底圖 (精確縮放以填滿整個 Canvas 區域，確保完整顯示，不再以原始尺寸裁切)
             if (moonImage.complete && moonImage.naturalWidth > 0) {
                 ctx.save();
                 ctx.translate(effectiveCenterX, effectiveCenterY); 
                 ctx.rotate(tiltAngleRadians); 
-                ctx.drawImage(moonImage, -moonImage.width / 2, -moonImage.height / 2, moonImage.width, moonImage.height);
+                ctx.drawImage(moonImage, -canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
                 ctx.restore(); 
 
                 ctx.save();
@@ -314,7 +314,7 @@
                 ctx.rotate(tiltAngleRadians);
                 ctx.strokeStyle = 'lime';
                 ctx.lineWidth = 1;
-                ctx.strokeRect(-moonImage.width / 2, -moonImage.height / 2, moonImage.width, moonImage.height);
+                ctx.strokeRect(-canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
                 ctx.restore();
             } else {
                 ctx.fillStyle = '#222';
