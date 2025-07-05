@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>月相盈虧模擬 (可呼叫函式版 - maskmoon)</title>
+    <title>月相盈虧模擬 (完整週期)</title>
     <style>
         body {
             margin: 0;
@@ -18,12 +18,20 @@
             font-size: 14px;
             padding: 20px 0;
         }
+        h2 {
+            color: #fff;
+            margin-top: 30px;
+            margin-bottom: 20px;
+            width: 100%;
+            text-align: center;
+        }
         .figures-container {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
             gap: 20px;
             max-width: 1200px;
+            margin-bottom: 40px; /* 增加容器底部間距 */
         }
         .figure-wrapper {
             background-color: #1a1a1a;
@@ -62,18 +70,24 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.05.18</div>
+    <div id="version-info">版本: v2025.07.05.19</div>
 
-    <div class="figures-container">
+    <h2>月相盈虧模擬 - 正在變亮 (Waxing)</h2>
+    <div id="waxing-container" class="figures-container">
+        </div>
+
+    <h2>月相盈虧模擬 - 正在變暗 (Waning)</h2>
+    <div id="waning-container" class="figures-container">
         </div>
 
     <script>
-        const VERSION = 'v2025.07.05.18';
+        const VERSION = 'v2025.07.05.19';
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
         const moonImage = new Image();
         moonImage.src = 'https://raeltw.github.io/wea.tw/moon/moon256.png';
 
+        // 輔助函式：旋轉點 (保持不變)
         function rotatePoint(px, py, cx, cy, angle) {
             const tempX = px - cx;
             const tempY = py - cy;
@@ -88,9 +102,10 @@
          *
          * @param {string} targetDivId 目標 div 的 ID，Canvas 將會被創建並放入此 div 中。
          * @param {number} radius 月亮圓形（藍點/紅點構成的圓形）的半徑。
-         * @param {number} illuminatedPercentage 月亮的亮度百分比 (0-100)，決定紅色分界線位置。
+         * @param {number} illuminatedPercentage 月亮的亮度百分比 (0-100)。
+         * @param {boolean} isWaning 如果為 true，表示月亮正在變暗 (滿月到新月)；如果為 false，表示月亮正在變亮 (新月到滿月)。
          */
-        function maskmoon(targetDivId, radius, illuminatedPercentage) {
+        function maskmoon(targetDivId, radius, illuminatedPercentage, isWaning) {
             const targetDiv = document.getElementById(targetDivId);
             if (!targetDiv) {
                 console.error(`找不到 ID 為 ${targetDivId} 的 div 元素。請確認 HTML 中存在該 ID。`);
@@ -116,11 +131,11 @@
 
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
-            const dotSize = 2;
-            const numDots = 180;
-            const tiltAngleDegrees = 23.4;
-            const tiltAngleRadians = tiltAngleDegrees * Math.PI / 180;
+            const dotSize = 2; // 點的大小 (像素)
+            const tiltAngleDegrees = 23.4; // 月亮的傾斜角度
+            const tiltAngleRadians = tiltAngleDegrees * Math.PI / 180; // 轉換為弧度
 
+            // 1. 繪製背景圖片 (傾斜)
             if (moonImage.complete && moonImage.naturalWidth > 0) {
                 ctx.save();
                 ctx.translate(centerX, centerY);
@@ -133,58 +148,88 @@
                 console.warn('月亮底圖尚未載入或載入失敗，顯示預設背景。');
             }
 
-            const bluePoints = [];
-            const redPoints = [];
+            // 將亮度百分比轉換為 0 到 1 的正規化值
+            const p_norm = illuminatedPercentage / 100;
 
-            for (let i = 0; i <= numDots; i++) {
-                const angleDegrees = 90 + i;
-                const angleRadians = angleDegrees * Math.PI / 180;
+            // 2. 繪製月相遮罩 (黑色陰影)
+            ctx.fillStyle = '#000'; // 陰影顏色
 
-                const originalX = centerX + radius * Math.cos(angleRadians);
-                const originalY = centerY + radius * Math.sin(angleRadians);
-
-                const rotatedBluePoint = rotatePoint(originalX, originalY, centerX, centerY, tiltAngleRadians);
-                bluePoints.push(rotatedBluePoint);
-
-                const D0 = centerX - originalX;
-                const newXBeforeTilt = originalX + (illuminatedPercentage / 100) * (2 * D0);
-                const newYBeforeTilt = originalY;
-                const rotatedRedPoint = rotatePoint(newXBeforeTilt, newYBeforeTilt, centerX, centerY, tiltAngleRadians);
-                redPoints.push(rotatedRedPoint);
-            }
-
-            // 2. 在藍點和紅點之間繪製黑線 (覆蓋效果)
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = dotSize * 2;
-            ctx.lineCap = 'round';
-
-            for (let i = 0; i < bluePoints.length; i++) {
+            if (p_norm <= 0) { // 新月 (完全變暗)
                 ctx.beginPath();
-                ctx.moveTo(bluePoints[i].x, bluePoints[i].y);
-                ctx.lineTo(redPoints[i].x, redPoints[i].y);
-                ctx.stroke();
+                ctx.arc(centerX, centerY, radius, 0, Math.PI * 2); // 繪製一個完整的黑色圓形
+                ctx.fill();
+            } else if (p_norm >= 1) { // 滿月 (完全變亮)
+                // 不需要繪製陰影，背景圖片就是滿月
+            } else {
+                ctx.beginPath();
+
+                // 根據盈虧階段繪製靜態半邊陰影 (滿月到半月之間，一半是固定陰影)
+                if (isWaning) { // 正在變暗 (Waning: 滿月到新月)，陰影從右側增長，亮部在左側
+                    // 繪製右半邊的固定陰影
+                    ctx.arc(centerX, centerY, radius, -Math.PI / 2, Math.PI / 2, false); // 右半圓 (從上方 -90 度到下方 90 度，順時針)
+                } else { // 正在變亮 (Waxing: 新月到滿月)，陰影從左側減少，亮部在右側
+                    // 繪製左半邊的固定陰影
+                    ctx.arc(centerX, centerY, radius, Math.PI / 2, Math.PI * 3 / 2, false); // 左半圓 (從下方 90 度到上方 270 度，順時針)
+                }
+
+                // 繪製動態的彎曲終結線 (terminator)
+                // 終結線弧形的中心點 X 座標計算
+                // 這個值控制了弧形的彎曲程度，模擬月相變化
+                let terminatorArcCenterX;
+                if (isWaning) { // 正在變暗：亮部在左側，陰影從右側向左側推進
+                    // 終結線弧形中心從右側 (p_norm=0) 移向左側 (p_norm=1)
+                    // 當 p_norm=1 (滿月)，terminatorArcCenterX = centerX - radius
+                    // 當 p_norm=0.5 (下弦月)，terminatorArcCenterX = centerX
+                    // 當 p_norm=0 (新月)，terminatorArcCenterX = centerX + radius
+                    terminatorArcCenterX = centerX - radius * (2 * p_norm - 1);
+                    ctx.arc(terminatorArcCenterX, centerY, radius, Math.PI / 2, Math.PI * 3 / 2, true); // 弧線從下方到上方 (逆時針)
+                } else { // 正在變亮：亮部在右側，陰影從左側向右側推進
+                    // 終結線弧形中心從左側 (p_norm=0) 移向右側 (p_norm=1)
+                    // 當 p_norm=0 (新月)，terminatorArcCenterX = centerX + radius
+                    // 當 p_norm=0.5 (上弦月)，terminatorArcCenterX = centerX
+                    // 當 p_norm=1 (滿月)，terminatorArcCenterX = centerX - radius
+                    terminatorArcCenterX = centerX + radius * (2 * p_norm - 1);
+                    ctx.arc(terminatorArcCenterX, centerY, radius, Math.PI * 3 / 2, Math.PI / 2, true); // 弧線從上方到下方 (逆時針)
+                }
+                ctx.closePath(); // 閉合路徑
+                ctx.fill(); // 填充陰影
             }
 
-            // --- 紅點和藍點的程式碼標註開始 ---
+            // --- 紅點、藍點、中心白點的程式碼標註開始 ---
 
-            // 3. 繪製藍點
-            ctx.fillStyle = '#00aaff'; // 藍色
-            for (const p of bluePoints) {
-                ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
-            }
+            // 3. 繪製藍點 (你可以將這段註解或刪除來隱藏藍點)
+            // ctx.fillStyle = '#00aaff'; // 藍色
+            // for (let i = 0; i <= 180; i++) { // 這裡需要重新計算 bluePoints，或者直接繪製圓弧
+            //     const angleDegrees = 90 + i;
+            //     const angleRadians = angleDegrees * Math.PI / 180;
+            //     const originalX = centerX + radius * Math.cos(angleRadians);
+            //     const originalY = centerY + radius * Math.sin(angleRadians);
+            //     const rotatedPoint = rotatePoint(originalX, originalY, centerX, centerY, tiltAngleRadians);
+            //     ctx.fillRect(rotatedPoint.x - dotSize / 2, rotatedPoint.y - dotSize / 2, dotSize, dotSize);
+            // }
 
-            // 4. 繪製紅點
-            ctx.fillStyle = '#ff0000'; // 紅色
-            for (const p of redPoints) {
-                ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
-            }
+            // 4. 繪製紅點 (你可以將這段註解或刪除來隱藏紅點)
+            // 由於陰影繪製邏輯已改變，紅點的生成方式需要重新思考其意義，
+            // 或與新的月相繪製方式同步。目前保持註解。
+            // ctx.fillStyle = '#ff0000'; // 紅色
+            // const numDots = 180;
+            // for (let i = 0; i <= numDots; i++) {
+            //     const angleDegrees = 90 + i;
+            //     const angleRadians = angleDegrees * Math.PI / 180;
+            //     const originalX = centerX + radius * Math.cos(angleRadians);
+            //     const originalY = centerY + radius * Math.sin(angleRadians);
+            //     const D0 = centerX - originalX;
+            //     const newXBeforeTilt = originalX + (illuminatedPercentage / 100) * (2 * D0);
+            //     const rotatedRedPoint = rotatePoint(newXBeforeTilt, originalY, centerX, centerY, tiltAngleRadians);
+            //     ctx.fillRect(rotatedRedPoint.x - dotSize / 2, rotatedRedPoint.y - dotSize / 2, dotSize, dotSize);
+            // }
             
             // --- 紅點和藍點的程式碼標註結束 ---
 
 
             // --- 中心白點的程式碼標註開始 ---
 
-            // 5. 繪製圓心 (白色)
+            // 5. 繪製圓心 (白色) (你可以將這段註解或刪除來隱藏中心白點)
             ctx.beginPath();
             ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
             ctx.fillStyle = '#fff';
@@ -193,41 +238,73 @@
             // --- 中心白點的程式碼標註結束 ---
         }
 
+        // 當月亮底圖圖片載入完成後，執行範例繪圖迴圈
         moonImage.onload = () => {
-            const figuresContainer = document.querySelector('.figures-container');
-            // 將預設半徑從 150 調整為 160，使其在 320x320 的畫布上能完全覆蓋背景圖
-            const defaultRadiusForExample = 160; 
+            const waxingContainer = document.getElementById('waxing-container');
+            const waningContainer = document.getElementById('waning-container');
+            const defaultRadiusForExample = 160; // 配合 320x320 畫布可完全覆蓋
 
-            for (let p = 100; p >= 0; p -= 5) {
+            // 繪製「正在變亮 (Waxing)」階段的月相 (新月到滿月)
+            for (let p = 0; p <= 100; p += 5) {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'figure-wrapper';
-                const uniqueDivId = `moonPhaseWrapper_${p}`;
+                const uniqueDivId = `waxingPhaseWrapper_${p}`;
                 wrapper.id = uniqueDivId;
 
                 const title = document.createElement('h3');
-                title.textContent = `月相模擬：亮度 ${p}%`;
+                title.textContent = `亮度 ${p}%`;
                 wrapper.appendChild(title);
 
-                figuresContainer.appendChild(wrapper);
+                waxingContainer.appendChild(wrapper);
+                maskmoon(uniqueDivId, defaultRadiusForExample, p, false); // isWaning = false
+            }
 
-                maskmoon(uniqueDivId, defaultRadiusForExample, p); 
+            // 繪製「正在變暗 (Waning)」階段的月相 (滿月到新月)
+            // 從 100% 亮度開始，遞減到 0%
+            for (let p = 100; p >= 0; p -= 5) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'figure-wrapper';
+                const uniqueDivId = `waningPhaseWrapper_${p}`;
+                wrapper.id = uniqueDivId;
+
+                const title = document.createElement('h3');
+                title.textContent = `亮度 ${p}%`;
+                wrapper.appendChild(title);
+
+                waningContainer.appendChild(wrapper);
+                maskmoon(uniqueDivId, defaultRadiusForExample, p, true); // isWaning = true
             }
         };
 
+        // 處理月亮底圖圖片載入失敗的情況
         moonImage.onerror = () => {
             alert('無法載入月亮底圖，請檢查圖片網址或網路連線。所有月相圖將顯示為預設背景。');
-            const figuresContainer = document.querySelector('.figures-container');
-            const defaultRadiusForExample = 160; // 即使無圖也設定半徑 160
+            const waxingContainer = document.getElementById('waxing-container');
+            const waningContainer = document.getElementById('waning-container');
+            const defaultRadiusForExample = 160;
+
+            for (let p = 0; p <= 100; p += 5) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'figure-wrapper';
+                const uniqueDivId = `waxingPhaseWrapper_${p}`;
+                wrapper.id = uniqueDivId;
+                const title = document.createElement('h3');
+                title.textContent = `亮度 ${p}% (無底圖)`;
+                wrapper.appendChild(title);
+                waxingContainer.appendChild(wrapper);
+                maskmoon(uniqueDivId, defaultRadiusForExample, p, false);
+            }
+
             for (let p = 100; p >= 0; p -= 5) {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'figure-wrapper';
-                const uniqueDivId = `moonPhaseWrapper_${p}`;
+                const uniqueDivId = `waningPhaseWrapper_${p}`;
                 wrapper.id = uniqueDivId;
                 const title = document.createElement('h3');
-                title.textContent = `月相模擬：亮度 ${p}% (無底圖)`;
+                title.textContent = `亮度 ${p}% (無底圖)`;
                 wrapper.appendChild(title);
-                figuresContainer.appendChild(wrapper);
-                maskmoon(uniqueDivId, defaultRadiusForExample, p);
+                waningContainer.appendChild(wrapper);
+                maskmoon(uniqueDivId, defaultRadiusForExample, p, true);
             }
         };
 
