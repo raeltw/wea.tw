@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>切西瓜弧線填色測試 (V7 - 修正左右填充邏輯)</title>
+<title>切西瓜弧線填色測試 (V8 - 精確左右填充)</title>
 <style>
   body {
     display: flex;
@@ -77,7 +77,7 @@
     // 独立添加版本信息到每个 canvas container
     const versionBox = document.createElement('div');
     versionBox.className = 'version-info-box';
-    versionBox.textContent = 'V7'; // 每次更新版本号
+    versionBox.textContent = 'V8'; // 每次更新版本号
     container.appendChild(versionBox);
 
     document.body.appendChild(container);
@@ -125,12 +125,11 @@
     const redArcPoint2Y = centerY + semiMajorAxis_vertical * Math.sin(redArcEndAngle);
 
     // --- 填充逻辑 ---
-    // 构建填充区域的路径
     ctx.beginPath();
     ctx.fillStyle = 'black'; // 始终用黑色填充
 
-    if (fillSide === 'left') { // 填充红色弧线的“左侧”（靠近西瓜中心的那一側）
-        // 路径：从 redArcPoint1 -> 沿红线到 redArcPoint2 -> 沿绿圆逆时针回到 redArcPoint1
+    if (fillSide === 'left') { // 填充红色弧线的“左侧”（靠近西瓜中心的那一側，即瓜瓤部分）
+        // 路径：从红线起点 -> 沿红线到终点 -> 连接到圆心 -> 闭合
         ctx.moveTo(redArcPoint1X, redArcPoint1Y);
         // 绘制红色弧线
         for (let i = 0; i <= numSegments; i++) {
@@ -139,11 +138,11 @@
             const y = centerY + semiMajorAxis_vertical * Math.sin(t);
             ctx.lineTo(x, y);
         }
-        // 沿绿圆逆时针回到起点
-        ctx.arc(centerX, centerY, watermelonRadius, redArcEndAngle, redArcStartAngle, true);
+        ctx.lineTo(centerX, centerY); // 连接到圆心
+        ctx.closePath(); // 闭合路径
         
-    } else if (fillSide === 'right') { // 填充红色弧线的“右侧”（远离西瓜中心的那一側）
-        // 路径：从 redArcPoint1 -> 沿绿圆顺时针到 redArcPoint2 -> 沿红线反向回到 redArcPoint1
+    } else if (fillSide === 'right') { // 填充红色弧线的“右侧”（远离西瓜中心的那一側，即瓜皮部分）
+        // 路径：从红线起点 -> 沿绿圆顺时针到红线终点 -> 沿红线反向回到起点
         ctx.moveTo(redArcPoint1X, redArcPoint1Y);
         // 沿绿圆顺时针到终点
         ctx.arc(centerX, centerY, watermelonRadius, redArcStartAngle, redArcEndAngle, false);
@@ -155,7 +154,6 @@
             ctx.lineTo(x, y);
         }
     }
-    ctx.closePath(); // 闭合路径
     ctx.fill(); // 填充
 
     // 3. 重新绘制红色弧线，确保它在填充之上
