@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>月相盈虧模擬 (疊圖與覆蓋方式)</title>
+    <title>月相盈虧模擬 (疊圖與覆蓋方式 - 全圖傾斜)</title>
     <style>
         body {
             margin: 0;
@@ -49,14 +49,14 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.05.13</div>
+    <div id="version-info">版本: v2025.07.05.14</div>
 
     <div class="figures-container">
         </div>
 
     <script>
         // --- 設定版本號 ---
-        const VERSION = 'v2025.07.05.13';
+        const VERSION = 'v2025.07.05.14';
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
         const commonCanvasWidth = 400;
@@ -91,11 +91,21 @@
         function drawFigure(canvas, illuminatedPercentage, backgroundImage) {
             const ctx = canvas.getContext('2d');
 
-            // 1. 清空 Canvas 並繪製背景圖片
+            // 1. 清空 Canvas
             ctx.clearRect(0, 0, commonCanvasWidth, commonCanvasHeight);
+            
+            // 2. 繪製背景圖片 (現在會跟著傾斜)
             if (backgroundImage) {
-                // 確保圖片能完整覆蓋 Canvas 區域
-                ctx.drawImage(backgroundImage, 0, 0, commonCanvasWidth, commonCanvasHeight);
+                ctx.save(); // 保存當前 Canvas 狀態
+
+                // 將原點移動到 Canvas 中心，以便繞中心旋轉
+                ctx.translate(centerX, centerY);
+                // 旋轉 Canvas
+                ctx.rotate(tiltAngleRadians);
+                // 繪製圖片，現在圖片的中心點位於新的原點 (0,0)
+                ctx.drawImage(backgroundImage, -commonCanvasWidth / 2, -commonCanvasHeight / 2, commonCanvasWidth, commonCanvasHeight);
+                
+                ctx.restore(); // 恢復之前保存的 Canvas 狀態，這樣接下來的繪圖就不會再傾斜了
             } else {
                 // 如果圖片載入失敗，則使用預設的 Canvas 背景色
                 ctx.fillStyle = '#222';
@@ -103,13 +113,15 @@
             }
 
 
-            // 2. 繪製圓心 (白色，作為旋轉的原點，因此不會移動)
+            // 3. 繪製圓心 (白色，作為旋轉的原點，因此不會移動)
+            // 圓心點會繪製在未傾斜的座標系中，所以它的位置不變
             ctx.beginPath();
             ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
             ctx.fillStyle = '#fff';
             ctx.fill();
 
-            // 3. 繪製原始的藍色左半圓周上的點 (基礎點，現在也會傾斜)
+            // 4. 繪製原始的藍色左半圓周上的點 (基礎點，現在整體會被傾斜的背景和點覆蓋)
+            // 由於整個畫布已經傾斜，點的座標計算仍然在原來的座標系中，但繪製時會自動傾斜
             for (let i = 0; i <= numDots; i++) {
                 const angleDegrees = 90 + i;
                 const angleRadians = angleDegrees * Math.PI / 180;
@@ -117,38 +129,31 @@
                 const x = centerX + radius * Math.cos(angleRadians);
                 const y = centerY + radius * Math.sin(angleRadians);
 
-                // 應用傾斜旋轉
+                // 應用傾斜旋轉 - 這裡的旋轉是為了讓點的邏輯位置和旋轉後的底圖匹配
                 const rotatedBluePoint = rotatePoint(x, y, centerX, centerY, tiltAngleRadians);
 
                 ctx.fillStyle = '#00aaff'; // 藍色
                 ctx.fillRect(rotatedBluePoint.x - dotSize / 2, rotatedBluePoint.y - dotSize / 2, dotSize, dotSize);
             }
 
-            // 4. 繪製變換後的紅色點 (代表亮暗分界線，現在也會傾斜)
-            // illuminatedPercentage 從 100 (全月) 到 0 (新月)
-            // newX 的計算與之前的 'walk_percentage' 邏輯相同
-            const currentWalkPercentage = illuminatedPercentage;
+            // 5. 繪製變換後的紅色點 (代表亮暗分界線，整體也會傾斜)
+            const currentWalkPercentage = illuminatedPercentage; // 亮度百分比直接映射到點的水平位移
 
             for (let i = 0; i <= numDots; i++) {
                 const angleDegrees = 90 + i;
                 const angleRadians = angleDegrees * Math.PI / 180;
 
-                const originalX = centerX + radius * Math.cos(angleRadians); // 原始藍點的 X 座標（未傾斜前）
-                const originalY = centerY + radius * Math.sin(angleRadians); // 原始藍點的 Y 座標（未傾斜前）
+                const originalX = centerX + radius * Math.cos(angleRadians);
+                const originalY = centerY + radius * Math.sin(angleRadians);
 
-                // 計算原始點到中心線的距離 D0
-                const D0 = centerX - originalX; // 對於左半圓，D0 >= 0
+                const D0 = centerX - originalX;
 
-                // 計算水平移動的距離 (根據當前亮度百分比)
-                // 亮度百分比 0 相當於原始左半圓形 (walk 0%)
-                // 亮度百分比 100 相當於完整圓形 (walk 100%)
                 const moveDistance = (currentWalkPercentage / 100) * (2 * D0);
 
-                // 計算水平位移後的新點座標 (未傾斜前)
                 const newXBeforeTilt = originalX + moveDistance;
                 const newYBeforeTilt = originalY;
 
-                // 應用傾斜旋轉
+                // 應用傾斜旋轉 - 讓紅點跟藍點和背景圖一起傾斜
                 const rotatedRedPoint = rotatePoint(newXBeforeTilt, newYBeforeTilt, centerX, centerY, tiltAngleRadians);
 
                 ctx.fillStyle = '#ff0000'; // 紅色
