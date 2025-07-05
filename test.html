@@ -33,24 +33,39 @@
             max-width: 1200px;
             margin-bottom: 40px; /* 增加容器底部間距 */
         }
+        /* 新增：每個月相單元的容器，包含標籤和圖框 */
+        .moon-unit-item {
+            display: flex;
+            flex-direction: column; /* 垂直排列，標籤在上方 */
+            align-items: center; /* 水平居中 */
+            margin-bottom: 20px; /* 每個單元之間的垂直間距 */
+        }
+        /* 新增：百分比標籤的樣式 (普通格式) */
+        .percentage-label {
+            color: #eee;
+            font-size: 14px; /* 普通字體大小 */
+            margin-bottom: 5px; /* 標籤與圖框之間的間距 */
+            text-align: center;
+        }
         .figure-wrapper {
             background-color: #1a1a1a;
             padding: 15px;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
             text-align: center;
-            
-            width: 320px; 
-            height: 320px; 
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
+            display: flex; /* 使用 flexbox 讓 Canvas 居中 */
+            flex-direction: column; /* 讓 Canvas 垂直居中 */
+            align-items: center; /* 水平居中 */
+            justify-content: center; /* 垂直居中 */
+            overflow: hidden; /* 防止 Canvas 超出其容器 */
+            width: 320px;
+            height: 320px;
         }
-        h3 {
-            color: #fff;
-            margin-top: 0;
-            margin-bottom: 15px;
+        /* 原本 h3 在 figure-wrapper 內的樣式，由於標籤移出，這裡可以保留或調整 */
+        .figure-wrapper h3 {
+             /* 由於標籤已移出 figure-wrapper 並改為 div，此 h3 樣式將不再影響每個月相圖的個別標籤 */
+             /* 如果其他地方沒有使用 h3，可以考慮移除此處樣式 */
+             display: none; /* 隱藏原本可能存在的 h3，因為我們改用 div.percentage-label */
         }
         canvas {
             background-color: #222;
@@ -70,18 +85,18 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.05.25</div>
+    <div id="version-info">版本: v2025.07.05.39</div>
 
-    <h2>左側為起點往右邊走 (遮罩遞減：100% 遮罩到 0% 遮罩 - 新月到滿月)</h2>
+    <h2>左側為起點往右邊走 (盈月：新月到滿月)</h2>
     <div id="left-to-right-container" class="figures-container">
         </div>
 
-    <h2>右側為起點往左邊走 (遮罩遞增：0% 遮罩到 100% 遮罩 - 滿月到新月)</h2>
+    <h2>右側為起點往左邊走 (虧月：滿月到新月)</h2>
     <div id="right-to-left-container" class="figures-container">
         </div>
 
     <script>
-        const VERSION = 'v2025.07.05.25';
+        const VERSION = 'v2025.07.05.39'; // 更新版本號
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
         const moonImage = new Image();
@@ -97,8 +112,8 @@
         }
 
         /**
-         * v2025.07.05.18 版本中的原始 maskmoon 函式，完全保持不變。
          * 繪製月相圖的函式：藍點從左半圓開始，紅點往右邊移動，並繪製黑線遮罩。
+         * 用於顯示遮罩從 0% 遞增到 100% 的效果 (新月到滿月，即盈月)。
          *
          * @param {string} targetDivId 目標 div 的 ID，Canvas 將會被創建並放入此 div 中。
          * @param {number} radius 月亮圓形（藍點/紅點構成的圓形）的半徑。
@@ -111,6 +126,7 @@
                 return;
             }
 
+            // Canvas 寬高從其父容器的客戶端寬高獲取 (v2025.07.05.25 版本邏輯)
             const canvasWidth = targetDiv.clientWidth;
             const canvasHeight = targetDiv.clientHeight;
 
@@ -310,37 +326,53 @@
         moonImage.onload = () => {
             const leftToRightContainer = document.getElementById('left-to-right-container');
             const rightToLeftContainer = document.getElementById('right-to-left-container');
-            const defaultRadiusForExample = 160; 
+            const defaultRadiusForExample = 160; // 此處半徑保持為 160，與您提供的 .25 版一致
 
-            // 第一組：使用原 maskmoon 函數 (左側為起點往右邊走 - 遮罩遞減：100% 遮罩到 0% 遮罩)
-            // p 代表遮罩百分比，從 100 遞減到 0
+            // 第一組：左側為起點往右邊走 (遮罩遞減：100% 遮罩到 0% 遮罩 - 盈月)
             for (let p = 100; p >= 0; p -= 5) {
-                const wrapper = document.createElement('div');
-                wrapper.className = 'figure-wrapper';
+                // 創建一個新的父容器，包含百分比標籤和圖框
+                const moonUnitItem = document.createElement('div');
+                moonUnitItem.className = 'moon-unit-item';
+
+                // 創建百分比標籤 (普通格式)
+                const percentageLabel = document.createElement('div');
+                percentageLabel.className = 'percentage-label';
+                percentageLabel.textContent = `遮罩 ${p}%`; // 直接顯示百分比
+                moonUnitItem.appendChild(percentageLabel);
+
+                // 創建原有的圖框
+                const figureWrapper = document.createElement('div');
+                figureWrapper.className = 'figure-wrapper';
                 const uniqueDivId = `leftRightPhaseWrapper_${p}`;
-                wrapper.id = uniqueDivId;
+                figureWrapper.id = uniqueDivId;
+                moonUnitItem.appendChild(figureWrapper); // 將圖框加入到 moonUnitItem
 
-                const title = document.createElement('h3');
-                title.textContent = `遮罩 ${p}%`; // 直接顯示 p (遮罩百分比)
-                wrapper.appendChild(title);
+                leftToRightContainer.appendChild(moonUnitItem); // 將整個單元加入到主容器
 
-                leftToRightContainer.appendChild(wrapper);
                 maskmoon(uniqueDivId, defaultRadiusForExample, p); 
             }
 
-            // 第二組：使用新的 drawMoonDotsRightToLeft 函數 (右側為起點往左邊走 - 遮罩遞增：0% 遮罩到 100% 遮罩)
-            // p 代表遮罩百分比，從 0 遞增到 100
+            // 第二組：右側為起點往左邊走 (遮罩遞增：0% 遮罩到 100% 遮罩 - 虧月)
             for (let p = 0; p <= 100; p += 5) {
-                const wrapper = document.createElement('div');
-                wrapper.className = 'figure-wrapper';
+                // 創建一個新的父容器，包含百分比標籤和圖框
+                const moonUnitItem = document.createElement('div');
+                moonUnitItem.className = 'moon-unit-item';
+
+                // 創建百分比標籤 (普通格式)
+                const percentageLabel = document.createElement('div');
+                percentageLabel.className = 'percentage-label';
+                percentageLabel.textContent = `遮罩 ${p}%`; // 直接顯示百分比
+                moonUnitItem.appendChild(percentageLabel);
+
+                // 創建原有的圖框
+                const figureWrapper = document.createElement('div');
+                figureWrapper.className = 'figure-wrapper';
                 const uniqueDivId = `rightLeftPhaseWrapper_${p}`;
-                wrapper.id = uniqueDivId;
+                figureWrapper.id = uniqueDivId;
+                moonUnitItem.appendChild(figureWrapper); // 將圖框加入到 moonUnitItem
 
-                const title = document.createElement('h3');
-                title.textContent = `遮罩 ${p}%`; // 直接顯示 p (遮罩百分比)
-                wrapper.appendChild(title);
+                rightToLeftContainer.appendChild(moonUnitItem); // 將整個單元加入到主容器
 
-                rightToLeftContainer.appendChild(wrapper);
                 drawMoonDotsRightToLeft(uniqueDivId, defaultRadiusForExample, p); 
             }
         };
@@ -350,31 +382,45 @@
             alert('無法載入月亮底圖，請檢查圖片網址或網路連線。所有月相圖將顯示為預設背景。');
             const leftToRightContainer = document.getElementById('left-to-right-container');
             const rightToLeftContainer = document.getElementById('right-to-left-container');
-            const defaultRadiusForExample = 160; 
+            const defaultRadiusForExample = 160; // 此處半徑保持為 160，與您提供的 .25 版一致
 
             // 第一組 (無底圖)
             for (let p = 100; p >= 0; p -= 5) {
-                const wrapper = document.createElement('div');
-                wrapper.className = 'figure-wrapper';
+                const moonUnitItem = document.createElement('div');
+                moonUnitItem.className = 'moon-unit-item';
+
+                const percentageLabel = document.createElement('div');
+                percentageLabel.className = 'percentage-label';
+                percentageLabel.textContent = `遮罩 ${p}% (無底圖)`;
+                moonUnitItem.appendChild(percentageLabel);
+
+                const figureWrapper = document.createElement('div');
+                figureWrapper.className = 'figure-wrapper';
                 const uniqueDivId = `leftRightPhaseWrapper_${p}`;
-                wrapper.id = uniqueDivId;
-                const title = document.createElement('h3');
-                title.textContent = `遮罩 ${p}% (無底圖)`;
-                wrapper.appendChild(title);
-                leftToRightContainer.appendChild(wrapper);
+                figureWrapper.id = uniqueDivId;
+                moonUnitItem.appendChild(figureWrapper);
+
+                leftToRightContainer.appendChild(moonUnitItem);
                 maskmoon(uniqueDivId, defaultRadiusForExample, p);
             }
 
             // 第二組 (無底圖)
             for (let p = 0; p <= 100; p += 5) {
-                const wrapper = document.createElement('div');
-                wrapper.className = 'figure-wrapper';
+                const moonUnitItem = document.createElement('div');
+                moonUnitItem.className = 'moon-unit-item';
+
+                const percentageLabel = document.createElement('div');
+                percentageLabel.className = 'percentage-label';
+                percentageLabel.textContent = `遮罩 ${p}% (無底圖)`;
+                moonUnitItem.appendChild(percentageLabel);
+
+                const figureWrapper = document.createElement('div');
+                figureWrapper.className = 'figure-wrapper';
                 const uniqueDivId = `rightLeftPhaseWrapper_${p}`;
-                wrapper.id = uniqueDivId;
-                const title = document.createElement('h3');
-                title.textContent = `遮罩 ${p}% (無底圖)`;
-                wrapper.appendChild(title);
-                rightToLeftContainer.appendChild(wrapper);
+                figureWrapper.id = uniqueDivId;
+                moonUnitItem.appendChild(figureWrapper);
+
+                rightToLeftContainer.appendChild(moonUnitItem);
                 drawMoonDotsRightToLeft(uniqueDivId, defaultRadiusForExample, p);
             }
         };
