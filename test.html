@@ -3,116 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>球體弧形切割動畫 (黑底白球版)</title>
+    <title>指針時鐘 - 10點10分</title>
     <style>
-        /* 確保 body 和 canvas 都填滿整個視窗，且背景為黑色 */
         body {
             margin: 0;
-            overflow: hidden; /* 避免滾動條 */
-            background-color: #000; /* 純黑色背景 */
-            display: flex; /* 使用 Flexbox 確保 canvas 居中 */
+            overflow: hidden;
+            display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh; /* 確保 body 至少有視窗高度 */
-            color: #eee; /* 文字顏色 */
+            min-height: 100vh;
+            background-color: #333; /* 深灰色背景 */
+            color: #eee;
             font-family: sans-serif;
             font-size: 14px;
         }
         canvas {
-            display: block; /* 移除圖片底部預設的空白 */
-            /* 讓 canvas 填滿視窗，確保沒有邊緣被切掉 */
-            width: 100vw;
-            height: 100vh;
+            background-color: #222; /* Canvas 背景色 */
+            border: 2px solid #555;
+            display: block;
         }
         #version-info {
             position: absolute;
             top: 10px;
             left: 10px;
-            background: rgba(0, 0, 0, 0.5); /* 半透明黑色背景 */
+            background: rgba(0, 0, 0, 0.5);
             padding: 5px 10px;
             border-radius: 5px;
-            z-index: 100; /* 確保在 canvas 上方 */
+            z-index: 100;
         }
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.05.2</div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.165.0/three.min.js"></script>
+    <div id="version-info">版本: v2025.07.05.4</div>
+    <canvas id="clockCanvas" width="400" height="400"></canvas>
 
     <script>
         // --- 設定版本號 ---
-        const VERSION = 'v2025.07.05.2'; // **版本號已更新**
+        const VERSION = 'v2025.07.05.4';
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
-        // --- 設定 Three.js 場景 ---
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); // alpha: true 讓背景透明，與 body 背景融合
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
+        const canvas = document.getElementById('clockCanvas');
+        const ctx = canvas.getContext('2d');
 
-        // 關鍵：啟用渲染器的局部裁剪功能
-        renderer.localClippingEnabled = true;
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const radius = Math.min(centerX, centerY) * 0.8; // 時鐘半徑
 
-        // --- 建立一個**純白色球體** ---
-        const sphereRadius = 2;
-        const sphereGeometry = new THREE.SphereGeometry(sphereRadius, 64, 64);
-        const sphereMaterial = new THREE.MeshLambertMaterial({
-            color: 0xffffff, // **純白色**
-            side: THREE.DoubleSide // 讓材質在兩面都可見
-        });
-        const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-        scene.add(sphere);
+        // 繪製時鐘
+        function drawClock() {
+            // 清空畫布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 調整相機位置，以便看到整個球體
-        camera.position.set(0, 0, 5);
+            // 繪製時鐘外圓
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            ctx.strokeStyle = '#fff'; // 白色邊框
+            ctx.lineWidth = 2;
+            ctx.stroke();
 
-        // --- 設定光源 (讓白色球體看得見陰影和立體感) ---
-        // 環境光：提供基本亮度
-        const ambientLight = new THREE.AmbientLight(0x404040, 2); // 顏色，強度
-        scene.add(ambientLight);
+            // 繪製中心點
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 5, 0, Math.PI * 2);
+            ctx.fillStyle = '#fff';
+            ctx.fill();
 
-        // 定向光：模擬主要光源方向
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 2); // 顏色，強度
-        directionalLight.position.set(1, 1, 1).normalize(); // 從 (1,1,1) 方向照射
-        scene.add(directionalLight);
+            // --- 計算指針角度 ---
+            // 10 點 10 分
+            const hours = 10;
+            const minutes = 10;
 
-        // --- 核心：設定裁剪平面來模擬切割 ---
-        const clippingPlane = new THREE.Plane(new THREE.Vector3(1, 0, 0), -sphereRadius);
-        sphereMaterial.clippingPlanes = [clippingPlane];
-        sphereMaterial.needsUpdate = true;
+            // 分針角度計算：每分鐘 6 度
+            // 12 點方向為 0 度，順時針增加
+            const minuteAngle = (minutes / 60) * 360; // 10/60 * 360 = 60 度
 
-        // --- 動畫迴圈 ---
-        let currentCutPosition = -sphereRadius;
-        const cutSpeed = 0.01;
+            // 時針角度計算：
+            // 1. 小時部分：每小時 30 度 (360/12)
+            // 2. 分鐘部分：每分鐘時針額外移動 0.5 度 (30/60)
+            const hourAngle = ((hours % 12) / 12) * 360 + (minutes / 60) * 30; // (10/12)*360 + (10/60)*30 = 300 + 5 = 305 度
 
-        function animate() {
-            requestAnimationFrame(animate);
+            // 將角度轉換為弧度 (Canvas 繪圖使用弧度)
+            // 0 度在右側，Canvas 0 度在右側，但時鐘 0 度在上方 (12 點方向)。
+            // 因此需要減去 90 度 (或 PI/2 弧度) 來對齊。
+            const minuteRad = (minuteAngle - 90) * Math.PI / 180;
+            const hourRad = (hourAngle - 90) * Math.PI / 180;
 
-            sphere.rotation.y += 0.005;
+            // --- 繪製分針 ---
+            drawHand(minuteRad, radius * 0.7, 4, '#00aaff'); // 藍色，長度為半徑的 70%
+            // --- 繪製時針 ---
+            drawHand(hourRad, radius * 0.5, 6, '#ff0000'); // 紅色，長度為半徑的 50%
 
-            if (currentCutPosition <= sphereRadius) {
-                currentCutPosition += cutSpeed;
-                clippingPlane.constant = -currentCutPosition;
-
-                if (currentCutPosition > sphereRadius) {
-                    console.log("球體已完全切割消失！");
-                    // 這裡可以選擇重置動畫
-                    // currentCutPosition = -sphereRadius;
-                }
+            // 繪製指針的輔助函數
+            function drawHand(angleRad, length, width, color) {
+                ctx.beginPath();
+                ctx.lineWidth = width;
+                ctx.lineCap = 'round'; // 指針末端圓潤
+                ctx.strokeStyle = color;
+                ctx.moveTo(centerX, centerY); // 從中心點開始
+                // 計算指針終點座標
+                const endX = centerX + length * Math.cos(angleRad);
+                const endY = centerY + length * Math.sin(angleRad);
+                ctx.lineTo(endX, endY);
+                ctx.stroke();
             }
-
-            renderer.render(scene, camera);
         }
 
-        animate();
+        // 首次繪製時鐘
+        drawClock();
 
-        // --- 處理視窗大小改變 ---
+        // 處理視窗大小改變 (雖然這個例子中 Canvas 大小固定，但保持良好習慣)
         window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
+            // 如果 Canvas 大小需要響應式調整，這裡需要重新設定 canvas.width/height
+            // drawClock(); // 重新繪製
         });
     </script>
 </body>
