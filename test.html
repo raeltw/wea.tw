@@ -47,7 +47,7 @@
         }
         .figure-wrapper {
             background-color: #1a1a1a;
-            padding: 15px;
+            /* padding: 15px; 已移除此行 */
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
             text-align: center;
@@ -56,14 +56,14 @@
             align-items: center; /* 水平居中 */
             justify-content: center; /* 垂直居中 */
             overflow: hidden; /* 防止 Canvas 超出其容器 */
-            width: 320px;
-            height: 320px;
+            /* 移除 width 和 height 屬性，讓其由內容和 padding 決定 */
         }
         canvas {
             background-color: #222;
             border: 2px solid #555;
             display: block;
             margin: 0 auto;
+            /* Canvas 的實際尺寸將在 JS 中設定為 320x320 */
         }
         #version-info {
             position: fixed;
@@ -77,7 +77,7 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.06.63 (診斷版)</div>
+    <div id="version-info">版本: v2025.07.06.65 (診斷版)</div>
 
     <div class="section-title">左側為起點往右邊走 (盈月：新月到滿月)</div>
     <div id="left-to-right-container" class="figures-container">
@@ -88,7 +88,7 @@
     </div>
 
     <script>
-        const VERSION = 'v2025.07.06.63 (診斷版)'; // 版本號已更新
+        const VERSION = 'v2025.07.06.65 (診斷版)'; // 版本號已更新
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
         const moonImage = new Image();
@@ -118,22 +118,21 @@
                 return;
             }
 
-            const canvasWidth = targetDiv.clientWidth;
-            const canvasHeight = targetDiv.clientHeight;
-            
+            // 直接設定 Canvas 的實際繪圖尺寸為 320x320
+            const CANVAS_DIMENSION = 320; 
             const canvas = document.createElement('canvas');
-            canvas.width = canvasWidth;
-            canvas.height = canvasHeight;
+            canvas.width = CANVAS_DIMENSION;
+            canvas.height = CANVAS_DIMENSION;
             
             targetDiv.innerHTML = ''; 
             targetDiv.appendChild(canvas);
 
             const ctx = canvas.getContext('2d');
 
-            const centerX = canvas.width / 2; // Canvas 的實際中心 X 座標
-            const centerY = canvas.height / 2; // Canvas 的實際中心 Y 座標
-            const horizontalOffset = 0; // 診斷模式：暫時設為 0
-            const verticalOffset = 0; // 診斷模式：暫時設為 0
+            const centerX = canvas.width / 2; // 現在固定是 160
+            const centerY = canvas.height / 2; // 現在固定是 160
+            const horizontalOffset = 0; // 診斷模式：保持為 0
+            const verticalOffset = 0; // 診斷模式：保持為 0
 
             // 定義整個繪圖的有效中心，將偏移量應用於此
             const effectiveCenterX = centerX + horizontalOffset;
@@ -170,18 +169,16 @@
                 ctx.translate(effectiveCenterX, effectiveCenterY); 
                 ctx.rotate(tiltAngleRadians); 
                 // 繪製圖片：現在圖片是相對於新的原點(0,0)繪製的
-                ctx.drawImage(moonImage, -canvasWidth / 2, -canvasHeight / 2, canvasWidth, canvasHeight);
+                ctx.drawImage(moonImage, -canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
                 ctx.restore(); 
                 
                 // 綠色矩形：標示 moonImage 實際被繪製的區域（在 Canvas 座標系中）
-                // 需要計算旋轉後的包圍盒，這會比較複雜，簡單起見，先畫出未旋轉時的理論邊界
-                // 為了更精確，我們直接在繪製圖片後，透過 transform 逆運算來畫出原始繪圖區域的邊界
                 ctx.save();
                 ctx.translate(effectiveCenterX, effectiveCenterY);
                 ctx.rotate(tiltAngleRadians);
                 ctx.strokeStyle = 'lime';
                 ctx.lineWidth = 1;
-                ctx.strokeRect(-canvasWidth / 2, -canvasHeight / 2, canvasWidth, canvasHeight);
+                ctx.strokeRect(-canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
                 ctx.restore();
             } else {
                 ctx.fillStyle = '#222';
@@ -267,22 +264,21 @@
                 return;
             }
 
-            const canvasWidth = targetDiv.clientWidth;
-            const canvasHeight = targetDiv.clientHeight;
-            
+            // 直接設定 Canvas 的實際繪圖尺寸為 320x320
+            const CANVAS_DIMENSION = 320; 
             const canvas = document.createElement('canvas');
-            canvas.width = canvasWidth;
-            canvas.height = canvasHeight;
+            canvas.width = CANVAS_DIMENSION;
+            canvas.height = CANVAS_DIMENSION;
             
             targetDiv.innerHTML = ''; 
             targetDiv.appendChild(canvas);
 
             const ctx = canvas.getContext('2d');
 
-            const centerX = canvas.width / 2; // Canvas 的實際中心 X 座標
-            const centerY = canvas.height / 2; // Canvas 的實際中心 Y 座標
-            const horizontalOffset = 0; // 診斷模式：暫時設為 0
-            const verticalOffset = 0; // 診斷模式：暫時設為 0
+            const centerX = canvas.width / 2; // 現在固定是 160
+            const centerY = canvas.height / 2; // 現在固定是 160
+            const horizontalOffset = 0; // 診斷模式：保持為 0
+            const verticalOffset = 0; // 診斷模式：保持為 0
 
             // 定義整個繪圖的有效中心，將偏移量應用於此
             const effectiveCenterX = centerX + horizontalOffset;
@@ -319,7 +315,7 @@
                 ctx.translate(effectiveCenterX, effectiveCenterY); 
                 ctx.rotate(tiltAngleRadians); 
                 // 繪製圖片：現在圖片是相對於新的原點(0,0)繪製的
-                ctx.drawImage(moonImage, -canvasWidth / 2, -canvasHeight / 2, canvasWidth, canvasHeight);
+                ctx.drawImage(moonImage, -canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
                 ctx.restore(); 
 
                 // 綠色矩形：標示 moonImage 實際被繪製的區域（在 Canvas 座標系中）
@@ -328,7 +324,7 @@
                 ctx.rotate(tiltAngleRadians);
                 ctx.strokeStyle = 'lime';
                 ctx.lineWidth = 1;
-                ctx.strokeRect(-canvasWidth / 2, -canvasHeight / 2, canvasWidth, canvasHeight);
+                ctx.strokeRect(-canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
                 ctx.restore();
             } else {
                 ctx.fillStyle = '#222';
