@@ -85,7 +85,7 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.05.44</div>
+    <div id="version-info">版本: v2025.07.05.47</div>
 
     <h2>左側為起點往右邊走 (盈月：新月到滿月)</h2>
     <div id="left-to-right-container" class="figures-container">
@@ -96,7 +96,7 @@
         </div>
 
     <script>
-        const VERSION = 'v2025.07.05.44'; // 更新版本號
+        const VERSION = 'v2025.07.05.47'; // 更新版本號
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
         const moonImage = new Image();
@@ -146,7 +146,7 @@
             const centerX = canvas.width / 2; // Canvas 的實際中心 X 座標
             const centerY = canvas.height / 2; // Canvas 的實際中心 Y 座標
             const horizontalOffset = -5; // 向左偏移的像素量
-            const verticalOffset = 2; // 向下偏移的像素量 (新調整為 2px)
+            const verticalOffset = 1; // 僅影響圖片繪製的向下偏移量 (調整為 1px)
 
             const dotSize = 2;
             const numDots = 180;
@@ -157,7 +157,7 @@
                 ctx.save();
                 ctx.translate(centerX, centerY); // 將繪圖原點移到 Canvas 中心
                 ctx.rotate(tiltAngleRadians); // 旋轉整個繪圖環境
-                // 繪製圖片，並加上水平偏移量 和 垂直偏移量
+                // 繪製圖片：只對圖片的 Y 座標應用 verticalOffset
                 ctx.drawImage(moonImage, -canvasWidth / 2 + horizontalOffset, -canvasHeight / 2 + verticalOffset, canvasWidth, canvasHeight);
                 ctx.restore(); // 恢復到未翻譯和未旋轉的狀態
             } else {
@@ -169,15 +169,15 @@
             const bluePoints = [];
             const redPoints = [];
 
-            // 定義點和遮罩計算的實際中心，它包含水平和垂直偏移
+            // 定義點和遮罩計算的實際中心，它只包含水平偏移，垂直方向上仍然是畫布的中心
             const effectiveCenterX = centerX + horizontalOffset;
-            const effectiveCenterY = centerY + verticalOffset; // 新增垂直偏移
+            const effectiveCenterY = centerY; // 移除 verticalOffset，確保點陣不隨底圖移動
 
             for (let i = 0; i <= numDots; i++) {
                 const angleDegrees = 90 + i; // 左半圓
                 const angleRadians = angleDegrees * Math.PI / 180;
 
-                // 點的原始位置計算基於新的 effectiveCenterX, effectiveCenterY
+                // 點的原始位置計算基於 effectiveCenterX, effectiveCenterY
                 const originalX = effectiveCenterX + radius * Math.cos(angleRadians);
                 const originalY = effectiveCenterY + radius * Math.sin(angleRadians);
 
@@ -256,7 +256,7 @@
             const centerX = canvas.width / 2; // Canvas 的實際中心 X 座標
             const centerY = canvas.height / 2; // Canvas 的實際中心 Y 座標
             const horizontalOffset = -5; // 向左偏移的像素量
-            const verticalOffset = 2; // 向下偏移的像素量 (新調整為 2px)
+            const verticalOffset = 1; // 僅影響圖片繪製的向下偏移量 (調整為 1px)
 
             const dotSize = 2;
             const numDots = 180; 
@@ -267,7 +267,7 @@
                 ctx.save();
                 ctx.translate(centerX, centerY); // 將繪圖原點移到 Canvas 中心
                 ctx.rotate(tiltAngleRadians); // 旋轉整個繪圖環境
-                // 繪製圖片，並加上水平偏移量 和 垂直偏移量
+                // 繪製圖片：只對圖片的 Y 座標應用 verticalOffset
                 ctx.drawImage(moonImage, -canvasWidth / 2 + horizontalOffset, -canvasHeight / 2 + verticalOffset, canvasWidth, canvasHeight);
                 ctx.restore(); // 恢復到未翻譯和未旋轉的狀態
             } else {
@@ -279,15 +279,15 @@
             const bluePoints = [];
             const redPoints = [];
 
-            // 定義點和遮罩計算的實際中心，它包含水平和垂直偏移
+            // 定義點和遮罩計算的實際中心，它只包含水平偏移，垂直方向上仍然是畫布的中心
             const effectiveCenterX = centerX + horizontalOffset;
-            const effectiveCenterY = centerY + verticalOffset; // 新增垂直偏移
+            const effectiveCenterY = centerY; // 移除 verticalOffset，確保點陣不隨底圖移動
 
             for (let i = 0; i <= numDots; i++) {
                 const angleDegrees = -90 + i; // 從 -90 度 (圓下方) 到 90 度 (圓上方)，代表右半圓
                 const angleRadians = angleDegrees * Math.PI / 180;
 
-                // 點的原始位置計算基於新的 effectiveCenterX, effectiveCenterY
+                // 點的原始位置計算基於 effectiveCenterX, effectiveCenterY
                 const originalX = effectiveCenterX + radius * Math.cos(angleRadians);
                 const originalY = effectiveCenterY + radius * Math.sin(angleRadians);
 
@@ -347,7 +347,7 @@
                 percentageLabel.className = 'percentage-label';
                 // 計算 SunCalc 月相數值 (0.00-0.50)
                 const sunCalcPhase = ((100 - p) * 0.5 / 100).toFixed(2); 
-                percentageLabel.textContent = `遮罩 ${p}% (${sunCalcPhase})`; // 移除 "SunCalc:"
+                percentageLabel.textContent = `遮罩 ${p}% (${sunCalcPhase})`; 
                 moonUnitItem.appendChild(percentageLabel);
 
                 const figureWrapper = document.createElement('div');
@@ -370,7 +370,7 @@
                 percentageLabel.className = 'percentage-label';
                 // 計算 SunCalc 月相數值 (0.50-1.00)
                 const sunCalcPhase = (0.5 + (p * 0.5 / 100)).toFixed(2); 
-                percentageLabel.textContent = `遮罩 ${p}% (${sunCalcPhase})`; // 移除 "SunCalc:"
+                percentageLabel.textContent = `遮罩 ${p}% (${sunCalcPhase})`; 
                 moonUnitItem.appendChild(percentageLabel);
 
                 const figureWrapper = document.createElement('div');
@@ -401,7 +401,7 @@
                 percentageLabel.className = 'percentage-label';
                 // 計算 SunCalc 月相數值 (0.00-0.50)
                 const sunCalcPhase = ((100 - p) * 0.5 / 100).toFixed(2); 
-                percentageLabel.textContent = `遮罩 ${p}% (${sunCalcPhase}) (無底圖)`; // 移除 "SunCalc:"
+                percentageLabel.textContent = `遮罩 ${p}% (${sunCalcPhase}) (無底圖)`; 
                 moonUnitItem.appendChild(percentageLabel);
 
                 const figureWrapper = document.createElement('div');
@@ -423,7 +423,7 @@
                 percentageLabel.className = 'percentage-label';
                 // 計算 SunCalc 月相數值 (0.50-1.00)
                 const sunCalcPhase = (0.5 + (p * 0.5 / 100)).toFixed(2); 
-                percentageLabel.textContent = `遮罩 ${p}% (${sunCalcPhase}) (無底圖)`; // 移除 "SunCalc:"
+                percentageLabel.textContent = `遮罩 ${p}% (${sunCalcPhase}) (無底圖)`; 
                 moonUnitItem.appendChild(percentageLabel);
 
                 const figureWrapper = document.createElement('div');
