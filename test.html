@@ -15,7 +15,6 @@
             background-color: #000;
             color: #eee;
             font-family: sans-serif;
-            /* font-size: 14px; // 已移除 */
             padding: 20px 0;
         }
         h2 {
@@ -43,7 +42,6 @@
         /* 新增：百分比標籤的樣式 (普通格式) */
         .percentage-label {
             color: #eee;
-            /* font-size: 14px; // 已移除 */
             margin-bottom: 5px; /* 標籤與圖框之間的間距 */
             text-align: center;
         }
@@ -61,11 +59,8 @@
             width: 320px;
             height: 320px;
         }
-        /* 原本 h3 在 figure-wrapper 內的樣式，由於標籤移出，這裡可以保留或調整 */
         .figure-wrapper h3 {
-             /* 由於標籤已移出 figure-wrapper 並改為 div，此 h3 樣式將不再影響每個月相圖的個別標籤 */
-             /* 如果其他地方沒有使用 h3，可以考慮移除此處樣式 */
-             display: none; /* 隱藏原本可能存在的 h3，因為我們改用 div.percentage-label */
+             display: none;
         }
         canvas {
             background-color: #222;
@@ -85,7 +80,7 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.05.50</div>
+    <div id="version-info">版本: v2025.07.05.51</div>
 
     <h2>左側為起點往右邊走 (盈月：新月到滿月)</h2>
     <div id="left-to-right-container" class="figures-container">
@@ -96,7 +91,7 @@
         </div>
 
     <script>
-        const VERSION = 'v2025.07.05.50'; // 版本號已更新
+        const VERSION = 'v2025.07.05.51'; // 版本號已更新
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
         const moonImage = new Image();
@@ -145,34 +140,18 @@
 
             const centerX = canvas.width / 2; // Canvas 的實際中心 X 座標
             const centerY = canvas.height / 2; // Canvas 的實際中心 Y 座標
-            // const horizontalOffset = -5; // 已移除
-            // const verticalOffset = 1; // 已移除
 
             const dotSize = 2;
             const numDots = 180;
             const tiltAngleDegrees = 23.4;
             const tiltAngleRadians = tiltAngleDegrees * Math.PI / 180;
 
-            // 計算旋轉後整個內容的邊界框大小
-            const cosAngle = Math.cos(tiltAngleRadians);
-            const sinAngle = Math.sin(tiltAngleRadians);
-            const rotatedContentWidth = Math.abs(canvasWidth * cosAngle) + Math.abs(canvasHeight * sinAngle);
-            const rotatedContentHeight = Math.abs(canvasWidth * sinAngle) + Math.abs(canvasHeight * cosAngle);
-
-            // 計算因旋轉而「超出」的尺寸，用於調整中心點
-            const widthDiff = rotatedContentWidth - canvasWidth;
-            const heightDiff = rotatedContentHeight - canvasHeight;
-
-            // 動態計算需要偏移的量 (往左、往上)
-            const dynamicOffsetX = -widthDiff / 2;
-            const dynamicOffsetY = -heightDiff / 2;
-
             if (moonImage.complete && moonImage.naturalWidth > 0) {
                 ctx.save();
-                // 將繪圖原點移到新的有效中心 (包含動態偏移量)
-                ctx.translate(centerX + dynamicOffsetX, centerY + dynamicOffsetY); 
+                // 將繪圖原點直接移到 Canvas 中心，不考慮額外偏移
+                ctx.translate(centerX, centerY); 
                 ctx.rotate(tiltAngleRadians); // 旋轉整個繪圖環境
-                // 繪製圖片：現在沒有固定偏移量
+                // 繪製圖片：直接在旋轉後的中心點繪製，不帶額外偏移
                 ctx.drawImage(moonImage, -canvasWidth / 2, -canvasHeight / 2, canvasWidth, canvasHeight);
                 ctx.restore(); // 恢復到未翻譯和未旋轉的狀態
             } else {
@@ -184,9 +163,9 @@
             const bluePoints = [];
             const redPoints = [];
 
-            // 定義點和遮罩計算的實際中心，使用動態偏移量
-            const effectiveCenterX = centerX + dynamicOffsetX;
-            const effectiveCenterY = centerY + dynamicOffsetY; 
+            // 定義點和遮罩計算的實際中心，直接使用畫布中心
+            const effectiveCenterX = centerX;
+            const effectiveCenterY = centerY; 
 
             for (let i = 0; i <= numDots; i++) {
                 const angleDegrees = 90 + i; // 左半圓
@@ -273,34 +252,18 @@
 
             const centerX = canvas.width / 2; // Canvas 的實際中心 X 座標
             const centerY = canvas.height / 2; // Canvas 的實際中心 Y 座標
-            // const horizontalOffset = -5; // 已移除
-            // const verticalOffset = 1; // 已移除
 
             const dotSize = 2;
             const numDots = 180; 
             const tiltAngleDegrees = 23.4;
             const tiltAngleRadians = tiltAngleDegrees * Math.PI / 180;
 
-            // 計算旋轉後整個內容的邊界框大小
-            const cosAngle = Math.cos(tiltAngleRadians);
-            const sinAngle = Math.sin(tiltAngleRadians);
-            const rotatedContentWidth = Math.abs(canvasWidth * cosAngle) + Math.abs(canvasHeight * sinAngle);
-            const rotatedContentHeight = Math.abs(canvasWidth * sinAngle) + Math.abs(canvasHeight * cosAngle);
-
-            // 計算因旋轉而「超出」的尺寸，用於調整中心點
-            const widthDiff = rotatedContentWidth - canvasWidth;
-            const heightDiff = rotatedContentHeight - canvasHeight;
-
-            // 動態計算需要偏移的量 (往左、往上)
-            const dynamicOffsetX = -widthDiff / 2;
-            const dynamicOffsetY = -heightDiff / 2;
-
             if (moonImage.complete && moonImage.naturalWidth > 0) {
                 ctx.save();
-                // 將繪圖原點移到新的有效中心 (包含動態偏移量)
-                ctx.translate(centerX + dynamicOffsetX, centerY + dynamicOffsetY);
+                // 將繪圖原點直接移到 Canvas 中心，不考慮額外偏移
+                ctx.translate(centerX, centerY);
                 ctx.rotate(tiltAngleRadians); // 旋轉整個繪圖環境
-                // 繪製圖片：現在沒有固定偏移量
+                // 繪製圖片：直接在旋轉後的中心點繪製，不帶額外偏移
                 ctx.drawImage(moonImage, -canvasWidth / 2, -canvasHeight / 2, canvasWidth, canvasHeight);
                 ctx.restore(); // 恢復到未翻譯和未旋轉的狀態
             } else {
@@ -312,9 +275,9 @@
             const bluePoints = [];
             const redPoints = [];
 
-            // 定義點和遮罩計算的實際中心，使用動態偏移量
-            const effectiveCenterX = centerX + dynamicOffsetX;
-            const effectiveCenterY = centerY + dynamicOffsetY; 
+            // 定義點和遮罩計算的實際中心，直接使用畫布中心
+            const effectiveCenterX = centerX;
+            const effectiveCenterY = centerY; 
 
             for (let i = 0; i <= numDots; i++) {
                 const angleDegrees = -90 + i; // 從 -90 度 (圓下方) 到 90 度 (圓上方)，代表右半圓
