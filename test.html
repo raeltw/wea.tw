@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>圓形弧線水平線填色測試 (V26 - 優化邊緣漏色)</title>
+<title>圓形弧線水平線填色測試 (V27 - 旋轉角度固定為 24.5 度)</title>
 <style>
   body {
     display: flex;
@@ -61,25 +61,25 @@
 </head>
 <body>
 
-<div class="page-version-info">當前版本: V26</div>
+<div class="page-version-info">當前版本: V27</div>
 
-<div class="section-title">第一組: 顯示所有文字，顯示線條圓心 (無旋轉)</div>
+<div class="section-title">第一組: 所有圖形皆旋轉 24.5 度</div>
 <div id="group1Div" class="drawing-group-container">
     </div>
 
-<div class="section-title" style="clear: both;">第二組: 隱藏所有文字，顯示線條圓心 (旋轉 24.5 度)</div>
+<div class="section-title" style="clear: both;">第二組: 所有圖形皆旋轉 24.5 度</div>
 <div id="group2Div" class="drawing-group-container">
     </div>
 
-<div class="section-title" style="clear: both;">第三組: 隱藏所有文字，隱藏所有線條圓心 (旋轉 24.5 度) - 優化後只繪製亮面</div>
+<div class="section-title" style="clear: both;">第三組: 所有圖形皆旋轉 24.5 度</div>
 <div id="group3Div" class="drawing-group-container">
     </div>
 
-<div class="section-title" style="clear: both;">第四組: 顯示所有文字，隱藏所有線條圓心 (無旋轉) - 優化後只繪製亮面</div>
+<div class="section-title" style="clear: both;">第四組: 所有圖形皆旋轉 24.5 度</div>
 <div id="group4Div" class="drawing-group-container">
     </div>
 
-<div class="section-title" style="clear: both;">第五組: 隱藏所有文字，隱藏所有線條圓心 (旋轉 -24.5 度) - 優化後只繪製亮面</div>
+<div class="section-title" style="clear: both;">第五組: 所有圖形皆旋轉 24.5 度</div>
 <div id="group5Div" class="drawing-group-container">
     </div>
 
@@ -87,12 +87,15 @@
 <script>
   const gridSize = 10; 
   const renderDensity = 1;
-  const ANTI_ALIASING_OFFSET = 0.5; // 為了抵消抗鋸齒可能造成的邊緣溢出，增加一點點半徑
+  const ANTI_ALIASING_OFFSET = 0.5; 
 
   const MOON_COLOR_LIGHT = '#e0e0e0'; 
   const MOON_COLOR_DARK = 'black'; 
 
-  function _drawInternal(canvasId, angleValue, fillLeftBlack, targetDivId, newCanvasWidth, newCanvasHeight, hideLabel, hideOutlines, rotationDegrees = 0) {
+  const FIXED_ROTATION_DEGREES = 24.5; // *** 寫死旋轉角度為 24.5 度 ***
+
+  // 核心繪圖邏輯函數 (移除了 rotationDegrees 參數)
+  function _drawInternal(canvasId, angleValue, fillLeftBlack, targetDivId, newCanvasWidth, newCanvasHeight, hideLabel, hideOutlines) {
     const container = document.createElement('div');
     container.className = 'canvas-container';
 
@@ -122,19 +125,18 @@
     const centerY = canvas.height / 2;
     const circleRadius = Math.min(canvas.width, canvas.height) / 2 - 5; 
 
-    if (rotationDegrees !== 0) {
-        ctx.save(); 
-        ctx.translate(centerX, centerY); 
-        ctx.rotate(rotationDegrees * Math.PI / 180); 
-        ctx.translate(-centerX, -centerY); 
-    }
+    // *** 直接應用寫死的旋轉角度 ***
+    ctx.save(); 
+    ctx.translate(centerX, centerY); 
+    ctx.rotate(FIXED_ROTATION_DEGREES * Math.PI / 180); 
+    ctx.translate(-centerX, -centerY); 
+    // ********************************************
 
-    // *** 關鍵優化：先繪製一個完整的、稍大一點的暗色圓 ***
+    // 先繪製一個完整的、稍大一點的暗色圓
     ctx.beginPath();
-    ctx.arc(centerX, centerY, circleRadius + ANTI_ALIASING_OFFSET, 0, 2 * Math.PI); // 半徑略增
+    ctx.arc(centerX, centerY, circleRadius + ANTI_ALIASING_OFFSET, 0, 2 * Math.PI); 
     ctx.fillStyle = MOON_COLOR_DARK; 
     ctx.fill();
-    // ********************************************
 
     const observationAngleRadians = (angleValue / 100) * Math.PI;
 
@@ -175,9 +177,9 @@
           }
       }
 
-      if (fillLeftBlack) { // 左側是暗面 (由預先繪製的暗色圓負責)，右側是亮面
+      if (fillLeftBlack) { 
           ctx.fillRect(redArcX, y, greenRightX - redArcX, renderDensity);
-      } else { // 左側是亮面，右側是暗面 (由預先繪製的暗色圓負責)
+      } else { 
           ctx.fillRect(greenLeftX, y, redArcX - greenLeftX, renderDensity);
       }
     }
@@ -220,58 +222,36 @@
         ctx.fill();
     }
 
-    if (rotationDegrees !== 0) {
-        ctx.restore(); 
-    }
+    // *** 無論如何都恢復 Canvas 狀態，因為總是會旋轉 ***
+    ctx.restore(); 
+    // ********************************************
   }
 
-  /**
-   * 繪製第一組圖形 (紅線左側為月亮暗面，右側為亮面)。
-   * @param {string} targetDivId - 要將圖形添加到哪個 div 的 ID。
-   * @param {number} size - 每個圖形的寬高 (例如 200 表示 200x200 像素)。
-   * @param {boolean} [hideLabel=false] - (可選) 是否隱藏圖形下方的文字標示。預設為 false (顯示)。
-   * @param {boolean} [hideOutlines=false] - (可選) 是否隱藏紅/綠線邊框及中心圓點。預設為 false (顯示)。
-   * @param {number} [rotationDegrees=0] - (可選) 圖形整體旋轉的角度 (度)。正值為順時針，負值為逆時針。預設為 0。
-   */
-  function funcm1(targetDivId, size, hideLabel = false, hideOutlines = false, rotationDegrees = 0) {
+  // 繪製第一組圖形 (紅線左側為月亮暗面，右側為亮面)。
+  // 移除了 rotationDegrees 參數
+  function funcm1(targetDivId, size, hideLabel = false, hideOutlines = false) {
       for (let i = 0; i <= gridSize; i++) {
           const angleValue = i * 10;
-          // fillLeftBlack = true: 表示紅線左側為暗面 (由預繪製的暗色圓負責)，右側繪製亮面
-          _drawInternal(`canvas_${targetDivId}_m1_${angleValue}_${size}_${hideLabel}_${hideOutlines}_${rotationDegrees}`, angleValue, true, targetDivId, size, size, hideLabel, hideOutlines, rotationDegrees); 
+          _drawInternal(`canvas_${targetDivId}_m1_${angleValue}_${size}_${hideLabel}_${hideOutlines}`, angleValue, true, targetDivId, size, size, hideLabel, hideOutlines); 
       }
   }
 
-  /**
-   * 繪製第二組圖形 (紅線左側為月亮亮面，右側為暗面)。
-   * @param {string} targetDivId - 要將圖形添加到哪個 div 的 ID。
-   * @param {number} size - 每個圖形的寬高 (例如 200 表示 200x200 像素)。
-   * @param {boolean} [hideLabel=false] - (可選) 是否隱藏圖形下方的文字標示。預設為 false (顯示)。
-   * @param {boolean} [hideOutlines=false] - (可選) 是否隱藏紅/綠線邊框及中心圓點。預設為 false (顯示)。
-   * @param {number} [rotationDegrees=0] - (可選) 圖形整體旋轉的角度 (度)。正值為順時針，負值為逆時針。預設為 0。
-   */
-  function funcm2(targetDivId, size, hideLabel = false, hideOutlines = false, rotationDegrees = 0) {
+  // 繪製第二組圖形 (紅線左側為月亮亮面，右側為暗面)。
+  // 移除了 rotationDegrees 參數
+  function funcm2(targetDivId, size, hideLabel = false, hideOutlines = false) {
       for (let i = 0; i <= gridSize; i++) {
           const angleValue = i * 10;
-          // fillLeftBlack = false: 表示紅線左側繪製亮面，右側為暗面 (由預繪製的暗色圓負責)
-          _drawInternal(`canvas_${targetDivId}_m2_${angleValue}_${size}_${hideLabel}_${hideOutlines}_${rotationDegrees}`, angleValue, false, targetDivId, size, size, hideLabel, hideOutlines, rotationDegrees); 
+          _drawInternal(`canvas_${targetDivId}_m2_${angleValue}_${size}_${hideLabel}_${hideOutlines}`, angleValue, false, targetDivId, size, size, hideLabel, hideOutlines); 
       }
   }
 
   // --- 頁面加載後調用這些函數來生成圖形 ---
-  // 第一組：顯示所有文字，顯示線條圓心 (無旋轉)
+  // 所有圖形現在都將會自動旋轉 24.5 度
   funcm1('group1Div', 200); 
-
-  // 第二組：隱藏所有文字，顯示線條圓心 (旋轉 24.5 度)
-  funcm2('group2Div', 250, true, false, 24.5); 
-
-  // 第三組：隱藏所有文字，隱藏所有線條圓心 (旋轉 24.5 度) - 優化後只繪製亮面
-  funcm1('group3Div', 180, true, true, 24.5); 
-
-  // 第四組：顯示所有文字，隱藏所有線條圓心 (無旋轉) - 優化後只繪製亮面
+  funcm2('group2Div', 250, true, false); 
+  funcm1('group3Div', 180, true, true); 
   funcm2('group4Div', 220, false, true); 
-
-  // 第五組：隱藏所有文字，隱藏所有線條圓心 (旋轉 -24.5 度) - 優化後只繪製亮面
-  funcm1('group5Div', 150, true, true, -24.5);
+  funcm1('group5Div', 150, true, true);
 
 </script>
 
