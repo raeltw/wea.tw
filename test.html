@@ -80,7 +80,7 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.05.53</div>
+    <div id="version-info">版本: v2025.07.05.54</div>
 
     <h2>左側為起點往右邊走 (盈月：新月到滿月)</h2>
     <div id="left-to-right-container" class="figures-container">
@@ -91,7 +91,7 @@
         </div>
 
     <script>
-        const VERSION = 'v2025.07.05.53'; // 版本號已更新
+        const VERSION = 'v2025.07.05.54'; // 版本號已更新
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
         const moonImage = new Image();
@@ -140,7 +140,7 @@
 
             const centerX = canvas.width / 2; // Canvas 的實際中心 X 座標
             const centerY = canvas.height / 2; // Canvas 的實際中心 Y 座標
-            const horizontalOffset = 0; // 已修改為 0
+            const horizontalOffset = -5; // 重新設定為 -5
             const verticalOffset = 1; // 保持為 1
 
             const dotSize = 2;
@@ -148,26 +148,39 @@
             const tiltAngleDegrees = 23.4;
             const tiltAngleRadians = tiltAngleDegrees * Math.PI / 180;
 
+            // 定義整個繪圖的有效中心，將偏移量應用於此
+            const effectiveCenterX = centerX + horizontalOffset;
+            const effectiveCenterY = centerY + verticalOffset; 
+
+            // 繪製月亮底圖
             if (moonImage.complete && moonImage.naturalWidth > 0) {
                 ctx.save();
-                // 將繪圖原點移到 Canvas 中心，並應用固定偏移量
-                ctx.translate(centerX + horizontalOffset, centerY + verticalOffset); 
-                ctx.rotate(tiltAngleRadians); // 旋轉整個繪圖環境
-                // 繪製圖片：在旋轉後的中心點繪製，並應用固定偏移量
+                // 將繪圖原點移到有效中心，並應用傾斜旋轉
+                ctx.translate(effectiveCenterX, effectiveCenterY); 
+                ctx.rotate(tiltAngleRadians); 
+                // 繪製圖片：現在圖片是相對於新的原點(0,0)繪製的
                 ctx.drawImage(moonImage, -canvasWidth / 2, -canvasHeight / 2, canvasWidth, canvasHeight);
-                ctx.restore(); // 恢復到未翻譯和未旋轉的狀態
+                ctx.restore(); 
             } else {
                 ctx.fillStyle = '#222';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 console.warn('月亮底圖尚未載入或載入失敗，顯示預設背景。');
             }
 
+            // 如果 maskPercentage 是 100，則直接繪製一個全黑的圓形遮罩
+            if (maskPercentage === 100) {
+                ctx.save();
+                ctx.translate(effectiveCenterX, effectiveCenterY);
+                ctx.rotate(tiltAngleRadians);
+                ctx.beginPath();
+                ctx.arc(0, 0, radius, 0, Math.PI * 2); // 在有效中心繪製圓形
+                ctx.fillStyle = '#000'; // 黑色
+                ctx.fill();
+                ctx.restore();
+            }
+
             const bluePoints = [];
             const redPoints = [];
-
-            // 定義點和遮罩計算的實際中心，應用固定偏移量
-            const effectiveCenterX = centerX + horizontalOffset;
-            const effectiveCenterY = centerY + verticalOffset; 
 
             for (let i = 0; i <= numDots; i++) {
                 const angleDegrees = 90 + i; // 左半圓
@@ -201,14 +214,17 @@
                 ctx.stroke();
             }
 
-            ctx.fillStyle = '#00aaff'; // 藍色
-            for (const p of bluePoints) {
-                ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
-            }
+            // 只有在不是全黑月亮時才繪製藍紅點
+            if (maskPercentage !== 100) {
+                ctx.fillStyle = '#00aaff'; // 藍色
+                for (const p of bluePoints) {
+                    ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
+                }
 
-            ctx.fillStyle = '#ff0000'; // 紅色
-            for (const p of redPoints) {
-                ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
+                ctx.fillStyle = '#ff0000'; // 紅色
+                for (const p of redPoints) {
+                    ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
+                }
             }
             
             // 中心白點也繪製在 effectiveCenterX, effectiveCenterY
@@ -252,7 +268,7 @@
 
             const centerX = canvas.width / 2; // Canvas 的實際中心 X 座標
             const centerY = canvas.height / 2; // Canvas 的實際中心 Y 座標
-            const horizontalOffset = 0; // 已修改為 0
+            const horizontalOffset = -5; // 重新設定為 -5
             const verticalOffset = 1; // 保持為 1
 
             const dotSize = 2;
@@ -260,26 +276,39 @@
             const tiltAngleDegrees = 23.4;
             const tiltAngleRadians = tiltAngleDegrees * Math.PI / 180;
 
+            // 定義整個繪圖的有效中心，將偏移量應用於此
+            const effectiveCenterX = centerX + horizontalOffset;
+            const effectiveCenterY = centerY + verticalOffset; 
+
+            // 繪製月亮底圖
             if (moonImage.complete && moonImage.naturalWidth > 0) {
                 ctx.save();
-                // 將繪圖原點移到 Canvas 中心，並應用固定偏移量
-                ctx.translate(centerX + horizontalOffset, centerY + verticalOffset);
-                ctx.rotate(tiltAngleRadians); // 旋轉整個繪圖環境
-                // 繪製圖片：在旋轉後的中心點繪製，並應用固定偏移量
+                // 將繪圖原點移到有效中心，並應用傾斜旋轉
+                ctx.translate(effectiveCenterX, effectiveCenterY); 
+                ctx.rotate(tiltAngleRadians); 
+                // 繪製圖片：現在圖片是相對於新的原點(0,0)繪製的
                 ctx.drawImage(moonImage, -canvasWidth / 2, -canvasHeight / 2, canvasWidth, canvasHeight);
-                ctx.restore(); // 恢復到未翻譯和未旋轉的狀態
+                ctx.restore(); 
             } else {
                 ctx.fillStyle = '#222';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 console.warn('月亮底圖尚未載入或載入失敗，顯示預設背景。');
             }
 
+            // 如果 maskPercentage 是 100，則直接繪製一個全黑的圓形遮罩
+            if (maskPercentage === 100) {
+                ctx.save();
+                ctx.translate(effectiveCenterX, effectiveCenterY);
+                ctx.rotate(tiltAngleRadians);
+                ctx.beginPath();
+                ctx.arc(0, 0, radius, 0, Math.PI * 2); // 在有效中心繪製圓形
+                ctx.fillStyle = '#000'; // 黑色
+                ctx.fill();
+                ctx.restore();
+            }
+
             const bluePoints = [];
             const redPoints = [];
-
-            // 定義點和遮罩計算的實際中心，應用固定偏移量
-            const effectiveCenterX = centerX + horizontalOffset;
-            const effectiveCenterY = centerY + verticalOffset; 
 
             for (let i = 0; i <= numDots; i++) {
                 const angleDegrees = -90 + i; // 從 -90 度 (圓下方) 到 90 度 (圓上方)，代表右半圓
@@ -313,14 +342,17 @@
                 ctx.stroke();
             }
 
-            ctx.fillStyle = '#00aaff'; // 藍色
-            for (const p of bluePoints) {
-                ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
-            }
+            // 只有在不是全黑月亮時才繪製藍紅點
+            if (maskPercentage !== 100) {
+                ctx.fillStyle = '#00aaff'; // 藍色
+                for (const p of bluePoints) {
+                    ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
+                }
 
-            ctx.fillStyle = '#ff0000'; // 紅色
-            for (const p of redPoints) {
-                ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
+                ctx.fillStyle = '#ff0000'; // 紅色
+                for (const p of redPoints) {
+                    ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
+                }
             }
             
             // 中心白點也繪製在 effectiveCenterX, effectiveCenterY
