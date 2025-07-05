@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>指針時鐘 - 10點10分</title>
+    <title>圓形左半邊點繪製</title>
     <style>
         body {
             margin: 0;
@@ -34,87 +34,51 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.05.4</div>
-    <canvas id="clockCanvas" width="400" height="400"></canvas>
+    <div id="version-info">版本: v2025.07.05.5</div>
+    <canvas id="dotCanvas" width="400" height="400"></canvas>
 
     <script>
         // --- 設定版本號 ---
-        const VERSION = 'v2025.07.05.4';
+        const VERSION = 'v2025.07.05.5';
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
-        const canvas = document.getElementById('clockCanvas');
+        const canvas = document.getElementById('dotCanvas');
         const ctx = canvas.getContext('2d');
 
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
-        const radius = Math.min(centerX, centerY) * 0.8; // 時鐘半徑
+        const radius = 150; // 圓的半徑
+        const dotSize = 2; // 每個點的大小 (像素)
+        const numDots = 180; // 繪製點的數量 (決定密度，角度為 90 到 270 度共 180 度，每度一個點)
 
-        // 繪製時鐘
-        function drawClock() {
+        function drawLeftHalfCircle() {
             // 清空畫布
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // 繪製時鐘外圓
+            // 繪製圓心 (可選)
             ctx.beginPath();
-            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-            ctx.strokeStyle = '#fff'; // 白色邊框
-            ctx.lineWidth = 2;
-            ctx.stroke();
-
-            // 繪製中心點
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, 5, 0, Math.PI * 2);
+            ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
             ctx.fillStyle = '#fff';
             ctx.fill();
 
-            // --- 計算指針角度 ---
-            // 10 點 10 分
-            const hours = 10;
-            const minutes = 10;
+            // 繪製左半圓周上的點
+            // 角度從 90 度 (圓上方) 到 270 度 (圓下方)，代表左半圓
+            for (let i = 0; i <= numDots; i++) {
+                const angleDegrees = 90 + i; // 從 90 度開始，到 270 度結束
+                const angleRadians = angleDegrees * Math.PI / 180; // 轉換為弧度
 
-            // 分針角度計算：每分鐘 6 度
-            // 12 點方向為 0 度，順時針增加
-            const minuteAngle = (minutes / 60) * 360; // 10/60 * 360 = 60 度
+                // 計算點的 X, Y 座標
+                const x = centerX + radius * Math.cos(angleRadians);
+                const y = centerY + radius * Math.sin(angleRadians);
 
-            // 時針角度計算：
-            // 1. 小時部分：每小時 30 度 (360/12)
-            // 2. 分鐘部分：每分鐘時針額外移動 0.5 度 (30/60)
-            const hourAngle = ((hours % 12) / 12) * 360 + (minutes / 60) * 30; // (10/12)*360 + (10/60)*30 = 300 + 5 = 305 度
-
-            // 將角度轉換為弧度 (Canvas 繪圖使用弧度)
-            // 0 度在右側，Canvas 0 度在右側，但時鐘 0 度在上方 (12 點方向)。
-            // 因此需要減去 90 度 (或 PI/2 弧度) 來對齊。
-            const minuteRad = (minuteAngle - 90) * Math.PI / 180;
-            const hourRad = (hourAngle - 90) * Math.PI / 180;
-
-            // --- 繪製分針 ---
-            drawHand(minuteRad, radius * 0.7, 4, '#00aaff'); // 藍色，長度為半徑的 70%
-            // --- 繪製時針 ---
-            drawHand(hourRad, radius * 0.5, 6, '#ff0000'); // 紅色，長度為半徑的 50%
-
-            // 繪製指針的輔助函數
-            function drawHand(angleRad, length, width, color) {
-                ctx.beginPath();
-                ctx.lineWidth = width;
-                ctx.lineCap = 'round'; // 指針末端圓潤
-                ctx.strokeStyle = color;
-                ctx.moveTo(centerX, centerY); // 從中心點開始
-                // 計算指針終點座標
-                const endX = centerX + length * Math.cos(angleRad);
-                const endY = centerY + length * Math.sin(angleRad);
-                ctx.lineTo(endX, endY);
-                ctx.stroke();
+                // 繪製點 (使用小方塊來表示)
+                ctx.fillStyle = '#00aaff'; // 點的顏色
+                ctx.fillRect(x - dotSize / 2, y - dotSize / 2, dotSize, dotSize);
             }
         }
 
-        // 首次繪製時鐘
-        drawClock();
-
-        // 處理視窗大小改變 (雖然這個例子中 Canvas 大小固定，但保持良好習慣)
-        window.addEventListener('resize', () => {
-            // 如果 Canvas 大小需要響應式調整，這裡需要重新設定 canvas.width/height
-            // drawClock(); // 重新繪製
-        });
+        // 首次繪製
+        drawLeftHalfCircle();
     </script>
 </body>
 </html>
