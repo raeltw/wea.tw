@@ -34,7 +34,8 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement); // 將 canvas 加入到網頁中
 
-        // 啟用渲染器的局部裁剪功能，這是實現切割效果的關鍵
+        // **關鍵修正點：確保渲染器的局部裁剪功能已啟用**
+        // 沒有這行，clippingPlanes 將不起作用
         renderer.localClippingEnabled = true;
 
         // --- 建立一個球體 ---
@@ -66,8 +67,6 @@
         // new THREE.Plane(normal: Vector3, constant: Number)
         // normal (法向量): 決定平面的方向。Vector3(1, 0, 0) 表示平面垂直於 X 軸，面向正 X 方向。
         // constant (常數): 決定平面與原點的距離。
-        //                 當 constant 是正值時，平面會保留法向量方向的內容；
-        //                 當 constant 是負值時，平面會保留法向量反方向的內容。
         //                 這裡我們用 (1,0,0) 的法向量和負的 constant，表示它會從右邊 (正 X) 開始切除。
         const clippingPlane = new THREE.Plane(new THREE.Vector3(1, 0, 0), -sphereRadius); // 初始位置在球體最右側
 
@@ -96,7 +95,7 @@
                 if (currentCutPosition > sphereRadius) {
                     console.log("球體已完全切割消失！");
                     // 這裡可以選擇停止動畫，例如取消 requestAnimationFrame
-                    // 或重置 currentCutPosition = -sphereRadius; 重新開始
+                    // 或設置為從頭開始：currentCutPosition = -sphereRadius;
                 }
             }
 
