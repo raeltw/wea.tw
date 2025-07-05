@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>月相盈虧模擬 (最終比例修正版)</title>
+    <title>月相盈虧模擬 (最終比例與間距修正版)</title>
     <style>
         body {
             margin: 0;
@@ -75,7 +75,7 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.05.55</div>
+    <div id="version-info">版本: v2025.07.05.56</div>
 
     <h2>左側為起點往右邊走 (盈月：新月到滿月)</h2>
     <div id="left-container" class="figures-container"></div>
@@ -84,13 +84,16 @@
     <div id="right-container" class="figures-container"></div>
 
     <script>
-        const VERSION = 'v2025.07.05.55'; 
+        const VERSION = 'v2025.07.05.56'; 
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
         const moonImg = new Image();
         moonImg.src = 'https://raeltw.github.io/wea.tw/moon/moon256.png';
 
         const scaleFactor = 0.5; 
+        const innerMarginRatio = 0.05; // 月亮/點陣與 canvas 邊緣的內部間距比例 (例如 0.05 = 5% 邊距)
+        const dotPixelSize = 3;       // 點陣的像素大小
+        const maskLineThickness = 4;  // 遮罩線的像素粗細
 
         function rotatePoint(px, py, cx, cy, angle) {
             const tempX = px - cx;
@@ -100,8 +103,8 @@
             return { x: rotatedX + cx, y: rotatedY + cy };
         }
 
-        // drawMoon 函數現在不再需要 baseR 參數，因為它會自動填充 canvas 
-        function drawMoon(divId, currScale, maskP, isRightToLeft = false) {
+        // drawMoon 函數現在帶有更多的控制參數
+        function drawMoon(divId, currScale, maskP, isRightToLeft = false, innerMarginRatio, dotPixelSize, maskLineThickness) {
             const targetDiv = document.getElementById(divId);
             if (!targetDiv) return;
 
@@ -121,18 +124,23 @@
             const cX = canvas.width / 2; 
             const cY = canvas.height / 2; 
             
-            const dSize = 2 * currScale; // 點的大小
-            const radius = cWidth / 2; // 月亮圓形（藍點/紅點構成的圓形）的半徑，現在與 canvas 半徑相同
+            // 計算有效繪圖區域的尺寸 (扣除內部邊距後)
+            const effectiveDrawingWidth = cWidth * (1 - 2 * innerMarginRatio);
+            
+            // 月亮圓形（藍點/紅點構成的圓形）的半徑，現在與有效繪圖區域的半徑相同
+            const radius = effectiveDrawingWidth / 2; 
+            const moonDrawSize = effectiveDrawingWidth; // 月亮圖像的繪製尺寸，與有效繪圖區域的寬度相同
 
             const dots = 180;
             const tiltDeg = 23.4;
             const tiltRad = tiltDeg * Math.PI / 180;
 
             if (moonImg.complete && moonImg.naturalWidth > 0) {
-                const moonDrawSize = cWidth; // 月亮圖像的繪製尺寸，與 canvas 寬度相同
                 ctx.save();
+                // 移動繪圖原點到有效繪圖區域的中心
                 ctx.translate(cX, cY); 
                 ctx.rotate(tiltRad);
+                // 繪製月亮圖片，確保其尺寸與有效繪圖區域對齊，並居中
                 ctx.drawImage(moonImg, -moonDrawSize / 2, -moonDrawSize / 2, moonDrawSize, moonDrawSize);
                 ctx.restore();
             } else {
@@ -147,9 +155,11 @@
                 const angleDeg = isRightToLeft ? (-90 + i) : (90 + i);
                 const angleRad = angleDeg * Math.PI / 180;
 
+                // 點的原始位置計算基於有效繪圖區域的中心和半徑
                 const origX = cX + radius * Math.cos(angleRad);
                 const origY = cY + radius * Math.sin(angleRad);
 
+                // 旋轉點時使用 canvas 的中心作為旋轉中心
                 const rBp = rotatePoint(origX, origY, cX, cY, tiltRad);
                 bluePts.push(rBp);
 
@@ -161,9 +171,10 @@
             }
 
             ctx.strokeStyle = '#000';
-            ctx.lineWidth = dSize * 2;
+            ctx.lineWidth = maskLineThickness; // 使用固定像素粗細
             ctx.lineCap = 'round';
 
+            // 繪製黑線遮罩
             for (let i = 0; i < bluePts.length; i++) {
                 ctx.beginPath();
                 ctx.moveTo(bluePts[i].x, bluePts[i].y);
@@ -171,18 +182,21 @@
                 ctx.stroke();
             }
 
+            // 繪製藍點 (在黑線之上)
             ctx.fillStyle = '#00aaff';
             for (const p of bluePts) {
-                ctx.fillRect(p.x - dSize / 2, p.y - dSize / 2, dSize, dSize);
+                ctx.fillRect(p.x - dotPixelSize / 2, p.y - dotPixelSize / 2, dotPixelSize, dotPixelSize);
             }
 
+            // 繪製紅點 (在黑線之上)
             ctx.fillStyle = '#ff0000';
             for (const p of redPts) {
-                ctx.fillRect(p.x - dSize / 2, p.y - dSize / 2, dSize, dSize);
+                ctx.fillRect(p.x - dotPixelSize / 2, p.y - dotPixelSize / 2, dotPixelSize, dotPixelSize);
             }
             
+            // 繪製中心白點 (在所有點之上)
             ctx.beginPath();
-            ctx.arc(cX, cY, 3 * currScale, 0, Math.PI * 2);
+            ctx.arc(cX, cY, dotPixelSize, 0, Math.PI * 2); // 中心點大小與其他點相同
             ctx.fillStyle = '#fff';
             ctx.fill();
         }
@@ -218,8 +232,8 @@
                 wrapper.id = divId;
                 unitItem.appendChild(wrapper);
                 leftContainer.appendChild(unitItem);
-                // 呼叫 drawMoon 時不再傳遞 baseR
-                drawMoon(divId, scaleFactor, p, false); 
+                // 呼叫 drawMoon 時傳遞新的控制參數
+                drawMoon(divId, scaleFactor, p, false, innerMarginRatio, dotPixelSize, maskLineThickness); 
             }
 
             for (let p = 0; p <= 100; p += 5) {
@@ -241,8 +255,8 @@
                 wrapper.id = divId;
                 unitItem.appendChild(wrapper);
                 rightContainer.appendChild(unitItem);
-                // 呼叫 drawMoon 時不再傳遞 baseR
-                drawMoon(divId, scaleFactor, p, true); 
+                // 呼叫 drawMoon 時傳遞新的控制參數
+                drawMoon(divId, scaleFactor, p, true, innerMarginRatio, dotPixelSize, maskLineThickness); 
             }
         };
 
@@ -273,7 +287,7 @@
                 wrapper.id = divId;
                 unitItem.appendChild(wrapper);
                 leftContainer.appendChild(unitItem);
-                drawMoon(divId, scaleFactor, p, false);
+                drawMoon(divId, scaleFactor, p, false, innerMarginRatio, dotPixelSize, maskLineThickness);
             }
 
             for (let p = 0; p <= 100; p += 5) {
@@ -293,7 +307,7 @@
                 wrapper.id = divId;
                 unitItem.appendChild(wrapper);
                 rightContainer.appendChild(unitItem);
-                drawMoon(divId, scaleFactor, p, true);
+                drawMoon(divId, scaleFactor, p, true, innerMarginRatio, dotPixelSize, maskLineThickness);
             }
         };
     </script>
