@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>圓形弧線水平線填色測試 (V15 - 修正填充顯示問題)</title>
+<title>圓形弧線水平線填色測試 (V17 - 函數化呼叫)</title>
 <style>
   body {
     display: flex;
@@ -46,97 +46,120 @@
     padding: 2px 5px;
     border-radius: 3px;
   }
+  /* 測試用的容器 div 樣式 */
+  .drawing-group-container { /* 使用一個共同的 class */
+      border: 2px dashed #90EE90; 
+      padding: 10px;
+      margin: 20px 0;
+      width: 100%; 
+      box-sizing: border-box;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+      align-items: flex-start;
+  }
 </style>
 </head>
 <body>
 
-<div class="section-title">第一組: 紅線左側塗黑，右側塗白 (0-100)</div>
+<div class="section-title">第一組: 紅線左側塗黑，右側塗白 (0-100) - 由 funcm1() 呼叫</div>
+<div id="group1Div" class="drawing-group-container">
+    </div>
+
+
+<div class="section-title" style="clear: both;">第二組: 紅線左側塗白，右側塗黑 (0-100) - 由 funcm2() 呼叫</div>
+<div id="group2Div" class="drawing-group-container">
+    </div>
+
+<div class="section-title" style="clear: both;">額外測試組: 由 funcm1() 呼叫，不同尺寸</div>
+<div id="extraTestDiv" class="drawing-group-container">
+    </div>
+
 
 <script>
-  const gridSize = 10; // 从 0 到 100，每10为一个增量，所以有 11 个图 (0, 10, ..., 100)
-  const canvasWidth = 200;
-  const canvasHeight = 200;
-  const circleRadius = 80; // 圓形的半徑 (像素)
-  const renderDensity = 1; // 每多少像素渲染一行，值越小越精細，填充越平滑
+  const gridSize = 10; 
+  const renderDensity = 1; // 填充細緻度
 
-  // 辅助函数：绘制单个弧线和填充
-  function drawArcAndFill(canvasId, angleValue, fillLeftBlack) { // fillLeftBlack: true 则左侧黑，false 则右侧黑
+  // 核心繪圖邏輯函數 (內部使用，不直接對外暴露)
+  function _drawInternal(canvasId, angleValue, fillLeftBlack, targetDivId, newCanvasWidth, newCanvasHeight) {
     const container = document.createElement('div');
     container.className = 'canvas-container';
 
     const canvas = document.createElement('canvas');
     canvas.id = canvasId;
-    canvas.width = canvasWidth;
-    canvas.height = canvasHeight;
+    canvas.width = newCanvasWidth;
+    canvas.height = newCanvasHeight;
     container.appendChild(canvas);
 
     const label = document.createElement('div');
     label.className = 'label';
-    label.textContent = `角度值: ${angleValue}`;
+    label.textContent = `角度值: ${angleValue} (${newCanvasWidth}x${newCanvasHeight})`;
     container.appendChild(label);
 
-    // 独立添加版本信息到每个 canvas container
     const versionBox = document.createElement('div');
     versionBox.className = 'version-info-box';
-    versionBox.textContent = 'V15'; // 每次更新版本号
+    versionBox.textContent = 'V17'; 
     container.appendChild(versionBox);
 
-    document.body.appendChild(container);
+    const targetDiv = document.getElementById(targetDivId);
+    if (targetDiv) {
+        targetDiv.appendChild(container);
+    } else {
+        console.error(`找不到 ID 為 "${targetDivId}" 的容器 div。將圖形添加到 body。`);
+        document.body.appendChild(container); 
+    }
 
     const ctx = canvas.getContext('2d');
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
+    const circleRadius = Math.min(canvas.width, canvas.height) / 2 - 5; 
 
-    // 将 0-100 的值映射到 0 到 Math.PI 弧度
     const observationAngleRadians = (angleValue / 100) * Math.PI;
 
     const semiMinorAxis_horizontal = circleRadius * Math.cos(observationAngleRadians);
     const semiMajorAxis_vertical = circleRadius; 
     const currentAbsoluteSemiMinorAxis = Math.abs(semiMinorAxis_horizontal); 
 
+    // 1. 繪製整個圓形背景為白色
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI);
+    ctx.fillStyle = 'white';
+    ctx.fill();
+
     // --- 水平掃描線填充邏輯 ---
-    // 遍歷圓形從上到下的所有 Y 座標
     for (let y = centerY - circleRadius; y <= centerY + circleRadius; y += renderDensity) {
-      // 計算綠圓在當前 Y 座標上的左右 X 邊界
-      const dxGreen = Math.sqrt(Math.pow(circleRadius, 2) - Math.pow(y - centerY, 2));
+      const dy = y - centerY;
+      const dxGreen = Math.sqrt(Math.pow(circleRadius, 2) - Math.pow(dy, 2));
       const greenLeftX = centerX - dxGreen;
       const greenRightX = centerX + dxGreen;
 
-      let redArcX = null; // 紅線在當前 Y 座標上的 X 座標
+      let redArcX = null; 
 
-      // 計算紅線在當前 Y 座標上的 X 座標
-      const discriminant = 1 - Math.pow(y - centerY, 2) / Math.pow(semiMajorAxis_vertical, 2);
+      const discriminant = 1 - Math.pow(dy, 2) / Math.pow(semiMajorAxis_vertical, 2);
       
       if (discriminant >= 0) { 
         const dxRed = currentAbsoluteSemiMinorAxis * Math.sqrt(discriminant);
         
-        // 根據紅線是左半邊還是右半邊的橢圓弧來取 X 值
-        if (semiMinorAxis_horizontal >= 0) { // 紅線在右半邊 (0-50度)，取右側的X值
+        if (semiMinorAxis_horizontal >= 0) { 
             redArcX = centerX + dxRed;
-        } else { // 紅線在左半邊 (50-100度)，取左側的X值
+        } else { 
             redArcX = centerX - dxRed;
         }
       }
       
-      // 確保 redArcX 在綠圓範圍內，並處理邊緣情況
       if (redArcX !== null) {
           redArcX = Math.max(greenLeftX, Math.min(greenRightX, redArcX));
       } else {
-          // 如果紅線在當前 Y 座標上沒有對應的點 (例如紅線是點，或者 Y 超出了紅線的垂直範圍)
-          // 則根據紅線的整體位置（是偏左還是偏右），將 redArcX 設為圓的邊界，以便整個半邊被填充
-          if (semiMinorAxis_horizontal >= 0) { // 紅線偏右，此時應填充左邊整個區域
-              redArcX = greenLeftX; // 或 centerX，取決於期望的直線切割效果
-          } else { // 紅線偏左，此時應填充右邊整個區域
-              redArcX = greenRightX; // 或 centerX
+          if (semiMinorAxis_horizontal >= 0) { 
+              redArcX = greenLeftX; 
+          } else { 
+              redArcX = greenRightX; 
           }
       }
 
-      // 執行填充
-      // 填充「左側」區域
       ctx.fillStyle = fillLeftBlack ? 'black' : 'white';
       ctx.fillRect(greenLeftX, y, redArcX - greenLeftX, renderDensity);
 
-      // 填充「右側」區域
       ctx.fillStyle = fillLeftBlack ? 'white' : 'black';
       ctx.fillRect(redArcX, y, greenRightX - redArcX, renderDensity);
     }
@@ -182,21 +205,46 @@
     ctx.fill();
   }
 
-  // 第一組: 紅線左側塗黑，右側塗白 (0-100)
-  for (let i = 0; i <= gridSize; i++) {
-    const angleValue = i * 10;
-    drawArcAndFill(`canvas_left_black_${angleValue}`, angleValue, true); // true 表示左側黑色
-  }
-</script>
+  // --- 對外暴露的調用函數 ---
 
-<div class="section-title" style="clear: both;">第二組: 紅線左側塗白，右側塗黑 (0-100)</div>
-
-<script>
-  // 第二組: 紅線左側塗白，右側塗黑 (0-100)
-  for (let i = 0; i <= gridSize; i++) {
-    const angleValue = i * 10;
-    drawArcAndFill(`canvas_right_black_${angleValue}`, angleValue, false); // false 表示右側黑色
+  /**
+   * 繪製第一組圖形 (紅線左側塗黑，右側塗白)。
+   * 會生成 11 個從角度值 0 到 100 的圖形。
+   * @param {string} targetDivId - 要將圖形添加到哪個 div 的 ID。
+   * @param {number} size - 每個圖形的寬高 (例如 200 表示 200x200 像素)。
+   */
+  function funcm1(targetDivId, size) {
+      for (let i = 0; i <= gridSize; i++) {
+          const angleValue = i * 10;
+          // 注意：為確保每個 canvas 的 ID 唯一，加上了 targetDivId 和 size 的後綴
+          _drawInternal(`canvas_${targetDivId}_m1_${angleValue}_${size}`, angleValue, true, targetDivId, size, size); 
+      }
   }
+
+  /**
+   * 繪製第二組圖形 (紅線左側塗白，右側塗黑)。
+   * 會生成 11 個從角度值 0 到 100 的圖形。
+   * @param {string} targetDivId - 要將圖形添加到哪個 div 的 ID。
+   * @param {number} size - 每個圖形的寬高 (例如 200 表示 200x200 像素)。
+   */
+  function funcm2(targetDivId, size) {
+      for (let i = 0; i <= gridSize; i++) {
+          const angleValue = i * 10;
+          _drawInternal(`canvas_${targetDivId}_m2_${angleValue}_${size}`, angleValue, false, targetDivId, size, size); 
+      }
+  }
+
+  // --- 頁面加載後調用這些函數來生成圖形 ---
+  // 第一組示例
+  funcm1('group1Div', 200); 
+
+  // 第二組示例
+  funcm2('group2Div', 250); 
+
+  // 額外測試組示例：使用 funcm1 且不同尺寸
+  funcm1('extraTestDiv', 150);
+  funcm1('extraTestDiv', 220); // 同一個 div 內不同尺寸的測試
+
 </script>
 
 </body>
