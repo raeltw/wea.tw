@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>月相盈虧模擬 (最終最終修正：真正的整體同步縮放)</title>
+    <title>月相盈虧模擬 (v2025.07.06.88: 月亮底圖基準 320x320，整體同步縮放)</title>
     <style>
         body {
             margin: 0;
@@ -11,7 +11,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 100vh;
+            min-height: 10vh; /* 調整為更小的視窗高度，方便查看 */
             background-color: #000;
             color: #eee;
             padding: 20px 0;
@@ -77,7 +77,7 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.06.85 (真正的整體同步縮放)</div>
+    <div id="version-info">版本: v2025.07.06.88 (月亮底圖基準 320x320，整體同步縮放)</div>
 
     <div class="section-title">左側為起點往右邊走 (盈月：新月到滿月)</div>
     <div id="left-to-right-container" class="figures-container">
@@ -88,7 +88,7 @@
     </div>
 
     <script>
-        const VERSION = 'v2025.07.06.85 (真正的整體同步縮放)';
+        const VERSION = 'v2025.07.06.88 (月亮底圖基準 320x320，整體同步縮放)';
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
         const moonImage = new Image();
@@ -106,8 +106,8 @@
          * 繪製月相圖的函式：藍點從左半圓開始，紅點往右邊移動，並繪製黑線遮罩。
          *
          * @param {string} targetDivId 目標 div 的 ID，Canvas 將會被創建並放入此 div 中。
-         * @param {number} baseMoonImageRadius 月亮底圖在 overallScaleFactor = 1 時的基準半徑。
-         * @param {number} baseDrawingRadius 繪圖 (洋紅色圓) 在 overallScaleFactor = 1 時的基準半徑。
+         * @param {number} baseMoonImageRadius 月亮底圖在 overallScaleFactor = 1 時的基準半徑 (320x320 的一半是 160)。
+         * @param {number} baseDrawingRadius 繪圖 (洋紅色圓) 在 overallScaleFactor = 1 時的基準半徑 (132)。
          * @param {number} overallScaleFactor 繪圖元素的整體縮放比例 (0.0 - 1.0)。
          * @param {number} maskPercentage 遮罩的百分比 (0-100)。
          */
@@ -130,13 +130,10 @@
             const centerX = canvas.width / 2; 
             const centerY = canvas.height / 2; 
             
-            // Canvas 本身的內切圓半徑 (作為可用的最大空間參考)
-            const canvasEffectiveRadius = Math.min(canvas.width, canvas.height) / 2; 
-
-            // 月亮底圖的繪製半徑：基於其基準半徑，再乘以整體縮放比例
+            // 月亮底圖的實際繪製半徑，基於您指定的 320x320 基準 (160)，再乘以整體縮放比例
             const moonImageDrawRadius = baseMoonImageRadius * overallScaleFactor; 
 
-            // 您繪圖的半徑：基於其基準半徑，再乘以整體縮放比例
+            // 您繪圖的半徑：基於其基準半徑 (132)，再乘以整體縮放比例
             const drawingRadius = baseDrawingRadius * overallScaleFactor;
 
             const dotSize = 2; 
@@ -146,11 +143,12 @@
 
             // --- 所有繪圖操作都在翻譯和旋轉後進行 ---
             ctx.save();
-            ctx.translate(centerX, centerY); // 將原點移到 Canvas 中心
-            ctx.rotate(tiltAngleRadians);     // 應用傾斜旋轉
+            ctx.translate(centerX, centerY); // 1. 將 Canvas 原點移到 Canvas 中心
+            ctx.rotate(tiltAngleRadians);     // 2. 應用傾斜旋轉
 
-            // 繪製月亮底圖：根據計算出的 moonImageDrawRadius 繪製
+            // 3. 在旋轉後的座標系中繪製月亮底圖
             if (moonImage.complete && moonImage.naturalWidth > 0) {
+                // 繪製圖片的左上角座標和寬高
                 ctx.drawImage(moonImage, -moonImageDrawRadius, -moonImageDrawRadius, moonImageDrawRadius * 2, moonImageDrawRadius * 2);
             } else {
                 ctx.fillStyle = '#222';
@@ -268,7 +266,6 @@
             const centerX = canvas.width / 2; 
             const centerY = canvas.height / 2; 
             
-            const canvasEffectiveRadius = Math.min(canvas.width, canvas.height) / 2; 
             const moonImageDrawRadius = baseMoonImageRadius * overallScaleFactor; 
             const drawingRadius = baseDrawingRadius * overallScaleFactor;
 
@@ -371,16 +368,16 @@
             const leftToRightContainer = document.getElementById('left-to-right-container');
             const rightToLeftContainer = document.getElementById('right-to-left-container');
             
-            // 這裡設定月亮底圖在 overallScaleFactor = 1 時的**基準半徑** (這是它「應該看起來」多大的像素值)
-            // 根據 v2025.07.06.80 的截圖，月亮底圖在 Canvas 寬度約 400px 時，差不多是 200px 半徑 (滿版)
-            const baseMoonImageRadius = 200; 
+            // 月亮底圖在 overallScaleFactor = 1 時的基準半徑：
+            // 320x320 圖片的一半是 160。
+            const baseMoonImageRadius = 160; 
             
-            // 這裡設定您希望繪圖 (洋紅色圓) 在 overallScaleFactor = 1 時的「基準半徑」
-            // 這是您在 v2025.07.06.80 版本滿意的那個 132 像素
+            // 您繪圖 (洋紅色圓) 在 overallScaleFactor = 1 時的基準半徑：
+            // 這是您在 v2025.07.06.80 版本滿意的那個 132 像素。
             const baseDrawingRadius = 132; 
 
-            // 設定整體縮放比例。1 為不縮放，0.5 為縮小一半 (面積四分之一)。
-            const overallScaleFactor = 1; // 請您先將此值設定為 1 進行測試
+            // 設定整體縮放比例。1 為不縮放。
+            const overallScaleFactor = 1; // 保持在 1
 
             for (let p = 100; p >= 0; p -= 5) {
                 const moonUnitItem = document.createElement('div');
@@ -430,7 +427,7 @@
             const leftToRightContainer = document.getElementById('left-to-right-container');
             const rightToLeftContainer = document.getElementById('right-to-left-container');
             
-            const baseMoonImageRadius = 200; 
+            const baseMoonImageRadius = 160; 
             const baseDrawingRadius = 132; 
             const overallScaleFactor = 1; 
 
