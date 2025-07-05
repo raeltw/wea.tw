@@ -77,7 +77,7 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.06.881 (月亮底圖基準 320x320，整體同步縮放)</div>
+    <div id="version-info">版本: v2025.07.06.88 (月亮底圖基準 320x320，整體同步縮放)</div>
 
     <div class="section-title">左側為起點往右邊走 (盈月：新月到滿月)</div>
     <div id="left-to-right-container" class="figures-container">
@@ -221,7 +221,7 @@
 
             ctx.fillStyle = '#00aaff'; 
             for (const p of bluePoints) {
-                ctx.fillRect(p.x - (dotSize * overallScaleFactor) / 2, p.y - (dotSize * overallScaleFactor) / 2, dotSize * allScaleFactor, dotSize * overallScaleFactor);
+                ctx.fillRect(p.x - (dotSize * overallScaleFactor) / 2, p.y - (dotSize * overallScaleFactor) / 2, dotSize * overallScaleFactor, dotSize * overallScaleFactor);
             }
 
             ctx.fillStyle = '#ff0000'; 
@@ -428,7 +428,7 @@
             const rightToLeftContainer = document.getElementById('right-to-left-container');
             
             const baseMoonImageRadius = 160; 
-            const baseDrawingRadius = 132; 
+            const baseDrawingRadius = 124; 
             const overallScaleFactor = 1; 
 
             for (let p = 100; p >= 0; p -= 5) {
