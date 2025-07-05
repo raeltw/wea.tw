@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>圓形弧線水平線填色測試 (V25 - 優化繪圖，背景為暗面色)</title>
+<title>圓形弧線水平線填色測試 (V26 - 優化邊緣漏色)</title>
 <style>
   body {
     display: flex;
@@ -10,16 +10,16 @@
     align-items: flex-start;
     padding: 20px;
     font-family: sans-serif;
-    background-color: #333; /* 可以設定整個頁面背景色，與月亮暗面協調 */
+    background-color: #333; 
   }
   .page-version-info { 
     width: 100%;
     text-align: right;
     font-size: 12px;
-    color: #999; /* 調整為在深色背景下可見 */
+    color: #999; 
     margin-bottom: 15px;
     padding-bottom: 5px;
-    border-bottom: 1px dashed #666; /* 調整為在深色背景下可見 */
+    border-bottom: 1px dashed #666; 
   }
   .section-title {
     width: 100%;
@@ -27,27 +27,27 @@
     margin-bottom: 10px;
     font-size: 18px;
     font-weight: bold;
-    color: #eee; /* 調整為在深色背景下可見 */
-    border-bottom: 1px solid #777; /* 調整為在深色背景下可見 */
+    color: #eee; 
+    border-bottom: 1px solid #777; 
     padding-bottom: 5px;
   }
   .canvas-container {
     margin: 10px;
-    border: 1px solid #555; /* 調整邊框顏色 */
-    box-shadow: 2px 2px 5px rgba(0,0,0,0.5); /* 調整陰影 */
+    border: 1px solid #555; 
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.5); 
     position: relative; 
   }
   canvas {
-    background-color: black; /* *** 關鍵修改：Canvas 默認背景色為暗面色 (純黑或 MOON_COLOR_DARK) *** */
+    background-color: black; 
   }
   .label {
     text-align: center;
     font-size: 14px;
     margin-top: 5px;
-    color: #ccc; /* 調整為在深色背景下可見 */
+    color: #ccc; 
   }
   .drawing-group-container { 
-      border: 2px dashed #666; /* 調整邊框顏色 */
+      border: 2px dashed #666; 
       padding: 10px;
       margin: 20px 0;
       width: 100%; 
@@ -61,7 +61,7 @@
 </head>
 <body>
 
-<div class="page-version-info">當前版本: V25</div>
+<div class="page-version-info">當前版本: V26</div>
 
 <div class="section-title">第一組: 顯示所有文字，顯示線條圓心 (無旋轉)</div>
 <div id="group1Div" class="drawing-group-container">
@@ -87,9 +87,10 @@
 <script>
   const gridSize = 10; 
   const renderDensity = 1;
+  const ANTI_ALIASING_OFFSET = 0.5; // 為了抵消抗鋸齒可能造成的邊緣溢出，增加一點點半徑
 
   const MOON_COLOR_LIGHT = '#e0e0e0'; 
-  const MOON_COLOR_DARK = 'black'; // 月亮的暗面，現在與 Canvas 背景色協調
+  const MOON_COLOR_DARK = 'black'; 
 
   function _drawInternal(canvasId, angleValue, fillLeftBlack, targetDivId, newCanvasWidth, newCanvasHeight, hideLabel, hideOutlines, rotationDegrees = 0) {
     const container = document.createElement('div');
@@ -128,20 +129,21 @@
         ctx.translate(-centerX, -centerY); 
     }
 
+    // *** 關鍵優化：先繪製一個完整的、稍大一點的暗色圓 ***
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, circleRadius + ANTI_ALIASING_OFFSET, 0, 2 * Math.PI); // 半徑略增
+    ctx.fillStyle = MOON_COLOR_DARK; 
+    ctx.fill();
+    // ********************************************
+
     const observationAngleRadians = (angleValue / 100) * Math.PI;
 
     const semiMinorAxis_horizontal = circleRadius * Math.cos(observationAngleRadians);
     const semiMajorAxis_vertical = circleRadius; 
     const currentAbsoluteSemiMinorAxis = Math.abs(semiMinorAxis_horizontal); 
 
-    // *** 移除整個圓形的初始白色背景填充。現在由 Canvas 背景色承擔暗面。***
-    // ctx.beginPath();
-    // ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI);
-    // ctx.fillStyle = MOON_COLOR_LIGHT; 
-    // ctx.fill();
-
-    // *** 關鍵優化：只繪製月亮的亮面部分 ***
-    ctx.fillStyle = MOON_COLOR_LIGHT; // 亮面統一使用 MOON_COLOR_LIGHT
+    // 現在只繪製月亮的亮面部分
+    ctx.fillStyle = MOON_COLOR_LIGHT; 
 
     for (let y = centerY - circleRadius; y <= centerY + circleRadius; y += renderDensity) {
       const dy = y - centerY;
@@ -173,15 +175,12 @@
           }
       }
 
-      // 如果 `fillLeftBlack` 為 true，表示左側是暗面，我們只繪製右側的亮面。
-      // 如果 `fillLeftBlack` 為 false，表示左側是亮面，我們只繪製左側的亮面。
-      if (fillLeftBlack) { // 左側是暗面 (由背景色負責)，右側是亮面
+      if (fillLeftBlack) { // 左側是暗面 (由預先繪製的暗色圓負責)，右側是亮面
           ctx.fillRect(redArcX, y, greenRightX - redArcX, renderDensity);
-      } else { // 左側是亮面，右側是暗面 (由背景色負責)
+      } else { // 左側是亮面，右側是暗面 (由預先繪製的暗色圓負責)
           ctx.fillRect(greenLeftX, y, redArcX - greenLeftX, renderDensity);
       }
     }
-    // ********************************************
 
     if (!hideOutlines) {
         ctx.beginPath();
@@ -237,7 +236,7 @@
   function funcm1(targetDivId, size, hideLabel = false, hideOutlines = false, rotationDegrees = 0) {
       for (let i = 0; i <= gridSize; i++) {
           const angleValue = i * 10;
-          // fillLeftBlack = true: 表示紅線左側為暗面 (由背景負責)，右側繪製亮面
+          // fillLeftBlack = true: 表示紅線左側為暗面 (由預繪製的暗色圓負責)，右側繪製亮面
           _drawInternal(`canvas_${targetDivId}_m1_${angleValue}_${size}_${hideLabel}_${hideOutlines}_${rotationDegrees}`, angleValue, true, targetDivId, size, size, hideLabel, hideOutlines, rotationDegrees); 
       }
   }
@@ -253,7 +252,7 @@
   function funcm2(targetDivId, size, hideLabel = false, hideOutlines = false, rotationDegrees = 0) {
       for (let i = 0; i <= gridSize; i++) {
           const angleValue = i * 10;
-          // fillLeftBlack = false: 表示紅線左側繪製亮面，右側為暗面 (由背景負責)
+          // fillLeftBlack = false: 表示紅線左側繪製亮面，右側為暗面 (由預繪製的暗色圓負責)
           _drawInternal(`canvas_${targetDivId}_m2_${angleValue}_${size}_${hideLabel}_${hideOutlines}_${rotationDegrees}`, angleValue, false, targetDivId, size, size, hideLabel, hideOutlines, rotationDegrees); 
       }
   }
