@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>月相盈虧模擬 (完整演示：左右側遮罩變化順序修正)</title>
+    <title>月相盈虧模擬 (完整演示：左右側遮罩變化順序修正 - 診斷版)</title>
     <style>
         body {
             margin: 0;
@@ -15,6 +15,7 @@
             background-color: #000;
             color: #eee;
             font-family: sans-serif;
+            font-size: 14px;
             padding: 20px 0;
         }
         h2 {
@@ -42,6 +43,7 @@
         /* 新增：百分比標籤的樣式 (普通格式) */
         .percentage-label {
             color: #eee;
+            font-size: 14px; /* 普通字體大小 */
             margin-bottom: 5px; /* 標籤與圖框之間的間距 */
             text-align: center;
         }
@@ -59,8 +61,11 @@
             width: 320px;
             height: 320px;
         }
+        /* 原本 h3 在 figure-wrapper 內的樣式，由於標籤移出，這裡可以保留或調整 */
         .figure-wrapper h3 {
-             display: none;
+             /* 由於標籤已移出 figure-wrapper 並改為 div，此 h3 樣式將不再影響每個月相圖的個別標籤 */
+             /* 如果其他地方沒有使用 h3，可以考慮移除此處樣式 */
+             display: none; /* 隱藏原本可能存在的 h3，因為我們改用 div.percentage-label */
         }
         canvas {
             background-color: #222;
@@ -80,7 +85,7 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.05.54</div>
+    <div id="version-info">版本: v2025.07.06.56 (診斷版)</div>
 
     <h2>左側為起點往右邊走 (盈月：新月到滿月)</h2>
     <div id="left-to-right-container" class="figures-container">
@@ -91,7 +96,7 @@
         </div>
 
     <script>
-        const VERSION = 'v2025.07.05.54'; // 版本號已更新
+        const VERSION = 'v2025.07.06.56 (診斷版)'; // 版本號已更新
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
         const moonImage = new Image();
@@ -140,17 +145,36 @@
 
             const centerX = canvas.width / 2; // Canvas 的實際中心 X 座標
             const centerY = canvas.height / 2; // Canvas 的實際中心 Y 座標
-            const horizontalOffset = -5; // 重新設定為 -5
-            const verticalOffset = 1; // 保持為 1
+            const horizontalOffset = 0; // 診斷模式：暫時設為 0
+            const verticalOffset = 0; // 診斷模式：暫時設為 0
 
+            // 定義整個繪圖的有效中心，將偏移量應用於此
+            const effectiveCenterX = centerX + horizontalOffset;
+            const effectiveCenterY = centerY + verticalOffset; 
             const dotSize = 2;
             const numDots = 180;
             const tiltAngleDegrees = 23.4;
             const tiltAngleRadians = tiltAngleDegrees * Math.PI / 180;
 
-            // 定義整個繪圖的有效中心，將偏移量應用於此
-            const effectiveCenterX = centerX + horizontalOffset;
-            const effectiveCenterY = centerY + verticalOffset; 
+            // --- 診斷輔助線條開始 ---
+            // 1. 青色十字線：標示 Canvas 的實際幾何中心
+            ctx.strokeStyle = 'cyan';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(centerX - 15, centerY);
+            ctx.lineTo(centerX + 15, centerY);
+            ctx.moveTo(centerX, centerY - 15);
+            ctx.lineTo(centerX, centerY + 15);
+            ctx.stroke();
+
+            // 2. 洋紅色圓圈：標示藍紅點和白色中心點嘗試居中的位置和半徑
+            ctx.strokeStyle = 'magenta';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(effectiveCenterX, effectiveCenterY, radius, 0, Math.PI * 2);
+            ctx.stroke();
+            // --- 診斷輔助線條結束 ---
+
 
             // 繪製月亮底圖
             if (moonImage.complete && moonImage.naturalWidth > 0) {
@@ -161,6 +185,17 @@
                 // 繪製圖片：現在圖片是相對於新的原點(0,0)繪製的
                 ctx.drawImage(moonImage, -canvasWidth / 2, -canvasHeight / 2, canvasWidth, canvasHeight);
                 ctx.restore(); 
+                
+                // 綠色矩形：標示 moonImage 實際被繪製的區域（在 Canvas 座標系中）
+                // 需要計算旋轉後的包圍盒，這會比較複雜，簡單起見，先畫出未旋轉時的理論邊界
+                // 為了更精確，我們直接在繪製圖片後，透過 transform 逆運算來畫出原始繪圖區域的邊界
+                ctx.save();
+                ctx.translate(effectiveCenterX, effectiveCenterY);
+                ctx.rotate(tiltAngleRadians);
+                ctx.strokeStyle = 'lime';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(-canvasWidth / 2, -canvasHeight / 2, canvasWidth, canvasHeight);
+                ctx.restore();
             } else {
                 ctx.fillStyle = '#222';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -202,7 +237,6 @@
                 redPoints.push(rotatedRedPoint);
             }
 
-            // 無條件繪製遮罩線
             ctx.strokeStyle = '#000';
             ctx.lineWidth = dotSize * 2;
             ctx.lineCap = 'round';
@@ -214,17 +248,15 @@
                 ctx.stroke();
             }
 
-            // 只有在不是全黑月亮時才繪製藍紅點
-            if (maskPercentage !== 100) {
-                ctx.fillStyle = '#00aaff'; // 藍色
-                for (const p of bluePoints) {
-                    ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
-                }
+            // 紅藍點將始終顯示，以便診斷
+            ctx.fillStyle = '#00aaff'; // 藍色
+            for (const p of bluePoints) {
+                ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
+            }
 
-                ctx.fillStyle = '#ff0000'; // 紅色
-                for (const p of redPoints) {
-                    ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
-                }
+            ctx.fillStyle = '#ff0000'; // 紅色
+            for (const p of redPoints) {
+                ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
             }
             
             // 中心白點也繪製在 effectiveCenterX, effectiveCenterY
@@ -268,17 +300,36 @@
 
             const centerX = canvas.width / 2; // Canvas 的實際中心 X 座標
             const centerY = canvas.height / 2; // Canvas 的實際中心 Y 座標
-            const horizontalOffset = -5; // 重新設定為 -5
-            const verticalOffset = 1; // 保持為 1
+            const horizontalOffset = 0; // 診斷模式：暫時設為 0
+            const verticalOffset = 0; // 診斷模式：暫時設為 0
+
+            // 定義整個繪圖的有效中心，將偏移量應用於此
+            const effectiveCenterX = centerX + horizontalOffset;
+            const effectiveCenterY = centerY + verticalOffset; 
 
             const dotSize = 2;
             const numDots = 180; 
             const tiltAngleDegrees = 23.4;
             const tiltAngleRadians = tiltAngleDegrees * Math.PI / 180;
 
-            // 定義整個繪圖的有效中心，將偏移量應用於此
-            const effectiveCenterX = centerX + horizontalOffset;
-            const effectiveCenterY = centerY + verticalOffset; 
+            // --- 診斷輔助線條開始 ---
+            // 1. 青色十字線：標示 Canvas 的實際幾何中心
+            ctx.strokeStyle = 'cyan';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(centerX - 15, centerY);
+            ctx.lineTo(centerX + 15, centerY);
+            ctx.moveTo(centerX, centerY - 15);
+            ctx.lineTo(centerX, centerY + 15);
+            ctx.stroke();
+
+            // 2. 洋紅色圓圈：標示藍紅點和白色中心點嘗試居中的位置和半徑
+            ctx.strokeStyle = 'magenta';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(effectiveCenterX, effectiveCenterY, radius, 0, Math.PI * 2);
+            ctx.stroke();
+            // --- 診斷輔助線條結束 ---
 
             // 繪製月亮底圖
             if (moonImage.complete && moonImage.naturalWidth > 0) {
@@ -289,6 +340,15 @@
                 // 繪製圖片：現在圖片是相對於新的原點(0,0)繪製的
                 ctx.drawImage(moonImage, -canvasWidth / 2, -canvasHeight / 2, canvasWidth, canvasHeight);
                 ctx.restore(); 
+
+                // 綠色矩形：標示 moonImage 實際被繪製的區域（在 Canvas 座標系中）
+                ctx.save();
+                ctx.translate(effectiveCenterX, effectiveCenterY);
+                ctx.rotate(tiltAngleRadians);
+                ctx.strokeStyle = 'lime';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(-canvasWidth / 2, -canvasHeight / 2, canvasWidth, canvasHeight);
+                ctx.restore();
             } else {
                 ctx.fillStyle = '#222';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -330,7 +390,6 @@
                 redPoints.push(rotatedRedPoint);
             }
 
-            // 無條件繪製遮罩線
             ctx.strokeStyle = '#000';
             ctx.lineWidth = dotSize * 2;
             ctx.lineCap = 'round';
@@ -342,17 +401,15 @@
                 ctx.stroke();
             }
 
-            // 只有在不是全黑月亮時才繪製藍紅點
-            if (maskPercentage !== 100) {
-                ctx.fillStyle = '#00aaff'; // 藍色
-                for (const p of bluePoints) {
-                    ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
-                }
+            // 紅藍點將始終顯示，以便診斷
+            ctx.fillStyle = '#00aaff'; // 藍色
+            for (const p of bluePoints) {
+                ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
+            }
 
-                ctx.fillStyle = '#ff0000'; // 紅色
-                for (const p of redPoints) {
-                    ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
-                }
+            ctx.fillStyle = '#ff0000'; // 紅色
+            for (const p of redPoints) {
+                ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
             }
             
             // 中心白點也繪製在 effectiveCenterX, effectiveCenterY
@@ -442,31 +499,4 @@
                 moonUnitItem.appendChild(figureWrapper);
 
                 leftToRightContainer.appendChild(moonUnitItem);
-                maskmoon(uniqueDivId, defaultRadiusForExample, p);
-            }
-
-            // 第二組 (無底圖)
-            for (let p = 0; p <= 100; p += 5) {
-                const moonUnitItem = document.createElement('div');
-                moonUnitItem.className = 'moon-unit-item';
-
-                const percentageLabel = document.createElement('div');
-                percentageLabel.className = 'percentage-label';
-                // 計算 SunCalc 月相數值 (0.50-1.00)
-                const sunCalcPhase = (0.5 + (p * 0.5 / 100)).toFixed(2); 
-                percentageLabel.textContent = `遮罩 ${p}% (${sunCalcPhase}) (無底圖)`; 
-                moonUnitItem.appendChild(percentageLabel);
-
-                const figureWrapper = document.createElement('div');
-                figureWrapper.className = 'figure-wrapper';
-                const uniqueDivId = `rightLeftPhaseWrapper_${p}`;
-                figureWrapper.id = uniqueDivId;
-                moonUnitItem.appendChild(figureWrapper);
-
-                rightToLeftContainer.appendChild(moonUnitItem);
-                drawMoonDotsRightToLeft(uniqueDivId, defaultRadiusForExample, p);
-            }
-        };
-    </script>
-</body>
-</html>
+                mask
