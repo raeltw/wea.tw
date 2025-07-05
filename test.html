@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>月相盈虧模擬 (完整演示：圖框上方顯示百分比)</title>
+    <title>月相盈虧模擬 (圖框上方顯示百分比)</title>
     <style>
         body {
             margin: 0;
@@ -45,13 +45,15 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start; /* 讓標題保持在頂部 */
+            /* h3 不再有固定高度，讓內容決定 */
+            /* justify-content: flex-start; /* 讓標題保持在頂部 */
         }
         h3 {
             color: #fff;
             margin-top: 0;
             margin-bottom: 15px;
-            height: 30px; /* 給標題一個固定高度 */
+            /* 移除固定高度 */
+            /* height: 30px; */ 
             display: flex;
             align-items: center;
             justify-content: center;
@@ -74,7 +76,7 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.05.29</div>
+    <div id="version-info">版本: v2025.07.05.30</div>
 
     <h2>左側為起點往右邊走 (盈月：新月到滿月)</h2>
     <div id="left-to-right-container" class="figures-container">
@@ -85,7 +87,7 @@
         </div>
 
     <script>
-        const VERSION = 'v2025.07.05.29'; // 更新版本號
+        const VERSION = 'v2025.07.05.30'; // 更新版本號
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
         const moonImage = new Image();
@@ -132,19 +134,18 @@
          * @param {string} targetDivId 目標 div 的 ID，Canvas 將會被創建並放入此 div 中。
          * @param {number} radius 月亮圓形（藍點/紅點構成的圓形）的半徑。
          * @param {number} maskPercentage 遮罩的百分比 (0-100)。此值越高，遮罩越廣。
-         * @param {number} correspondingPhase 對應的月相進程 (0-1)。
          */
-        function maskmoon(targetDivId, radius, maskPercentage, correspondingPhase) {
+        function maskmoon(targetDivId, radius, maskPercentage) {
             const targetDiv = document.getElementById(targetDivId);
             if (!targetDiv) {
                 console.error(`找不到 ID 為 ${targetDivId} 的 div 元素。請確認 HTML 中存在該 ID。`);
                 return;
             }
 
-            // Canvas 寬度為 div 的寬度，高度為 div 減去 h3 的高度
             const canvasWidth = targetDiv.clientWidth;
-            const canvasHeight = targetDiv.clientHeight - 30; // 減去 h3 的高度
-            
+            // Canvas 高度不再減去 h3 的高度，因為 h3 已經獨立
+            const canvasHeight = targetDiv.clientHeight - targetDiv.querySelector('h3').offsetHeight - 15; // 減去 h3 實際高度和 margin-bottom
+
             if (canvasWidth === 0 || canvasHeight <= 0) {
                  console.warn(`警告：目標 div (${targetDivId}) 的寬度或高度為 0。Canvas 將無法繪製。請確保該 div 在 CSS 中有明確的尺寸 (例如：width: 320px; height: 320px;)。`);
                  return;
@@ -229,13 +230,7 @@
             ctx.fillStyle = '#fff';
             ctx.fill();
 
-            // --- 在 Canvas 上顯示百分比和 Phase ---
-            const displayText = `遮罩: ${maskPercentage}% (Phase: ${correspondingPhase.toFixed(2)})`;
-
-            ctx.fillStyle = '#FFF'; 
-            ctx.font = '16px Arial'; 
-            ctx.textAlign = 'center'; 
-            ctx.fillText(displayText, centerX, canvas.height - 15); 
+            // --- Canvas 上不再繪製文字 ---
         }
 
 
@@ -246,18 +241,18 @@
          * @param {string} targetDivId 目標 div 的 ID，Canvas 將會被創建並放入此 div 中。
          * @param {number} radius 月亮圓形（藍點/紅點構成的圓形）的半徑。
          * @param {number} maskPercentage 遮罩的百分比 (0-100)。此值越高，遮罩越廣 (月亮越暗)。
-         * @param {number} correspondingPhase 對應的月相進程 (0-1)。
          */
-        function drawMoonDotsRightToLeft(targetDivId, radius, maskPercentage, correspondingPhase) {
+        function drawMoonDotsRightToLeft(targetDivId, radius, maskPercentage) {
             const targetDiv = document.getElementById(targetDivId);
             if (!targetDiv) {
                 console.error(`找不到 ID 為 ${targetDivId} 的 div 元素。請確認 HTML 中存在該 ID。`);
                 return;
             }
 
-            // Canvas 寬度為 div 的寬度，高度為 div 減去 h3 的高度
             const canvasWidth = targetDiv.clientWidth;
-            const canvasHeight = targetDiv.clientHeight - 30; // 減去 h3 的高度
+            // Canvas 高度不再減去 h3 的高度，因為 h3 已經獨立
+            const canvasHeight = targetDiv.clientHeight - targetDiv.querySelector('h3').offsetHeight - 15; // 減去 h3 實際高度和 margin-bottom
+
             if (canvasWidth === 0 || canvasHeight <= 0) {
                  console.warn(`警告：目標 div (${targetDivId}) 的寬度或高度為 0。Canvas 將無法繪製。請確保該 div 在 CSS 中有明確的尺寸 (例如：width: 320px; height: 320px;)。`);
                  return;
@@ -343,13 +338,7 @@
             ctx.fillStyle = '#fff';
             ctx.fill();
 
-            // --- 在 Canvas 上顯示百分比和 Phase ---
-            const displayText = `遮罩: ${maskPercentage}% (Phase: ${correspondingPhase.toFixed(2)})`;
-
-            ctx.fillStyle = '#FFF'; 
-            ctx.font = '16px Arial'; 
-            ctx.textAlign = 'center'; 
-            ctx.fillText(displayText, centerX, canvas.height - 15); 
+            // --- Canvas 上不再繪製文字 ---
         }
 
 
@@ -373,8 +362,7 @@
                 wrapper.appendChild(title);
 
                 leftToRightContainer.appendChild(wrapper);
-                // 傳入 correspondingPhase 給繪圖函式，以便在 Canvas 上繪製
-                maskmoon(uniqueDivId, defaultRadiusForExample, p, correspondingPhase); 
+                maskmoon(uniqueDivId, defaultRadiusForExample, p); 
             }
 
             // 第二組：使用新的 drawMoonDotsRightToLeft 函數 (右側為起點往左邊走 - 虧月)
@@ -391,8 +379,7 @@
                 wrapper.appendChild(title);
 
                 rightToLeftContainer.appendChild(wrapper);
-                // 傳入 correspondingPhase 給繪圖函式，以便在 Canvas 上繪製
-                drawMoonDotsRightToLeft(uniqueDivId, defaultRadiusForExample, p, correspondingPhase); 
+                drawMoonDotsRightToLeft(uniqueDivId, defaultRadiusForExample, p); 
             }
         };
 
@@ -414,7 +401,7 @@
                 title.textContent = `遮罩 ${p}% (Phase ${correspondingPhase.toFixed(2)}) (無底圖)`;
                 wrapper.appendChild(title);
                 leftToRightContainer.appendChild(wrapper);
-                maskmoon(uniqueDivId, defaultRadiusForExample, p, correspondingPhase);
+                maskmoon(uniqueDivId, defaultRadiusForExample, p);
             }
 
             // 第二組 (無底圖)
@@ -428,7 +415,7 @@
                 title.textContent = `遮罩 ${p}% (Phase ${correspondingPhase.toFixed(2)}) (無底圖)`;
                 wrapper.appendChild(title);
                 rightToLeftContainer.appendChild(wrapper);
-                drawMoonDotsRightToLeft(uniqueDivId, defaultRadiusForExample, p, correspondingPhase);
+                drawMoonDotsRightToLeft(uniqueDivId, defaultRadiusForExample, p);
             }
         };
     </script>
