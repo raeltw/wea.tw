@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>切西瓜弧線變化 (修正方向)</title>
+<title>切西瓜弧線變化 (修正方向 V2)</title>
 <style>
   body {
     display: flex;
@@ -25,9 +25,18 @@
     margin-top: 5px;
     color: #555;
   }
+  #version-info {
+    width: 100%;
+    text-align: right;
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 10px;
+  }
 </style>
 </head>
 <body>
+
+<div id="version-info">版本: 20250706.2</div>
 
 <script>
   const gridSize = 10; // 从 0 到 100，每10为一个增量，所以有 11 个图 (0, 10, ..., 100)
@@ -69,22 +78,28 @@
       observationAngleRadians = Math.PI / 2 + ((angleValue - 50) / 50) * (Math.PI / 2);
     }
 
-    const semiMajorAxis = watermelonRadius;
-    const semiMinorAxis = watermelonRadius * Math.cos(observationAngleRadians);
+    // 修正：长轴和短轴的对应关系
+    // 现在，水平方向的轴长为 semiMinorAxis_horizontal
+    // 垂直方向的轴长为 semiMajorAxis_vertical
+    const semiMinorAxis_horizontal = watermelonRadius * Math.cos(observationAngleRadians);
+    const semiMajorAxis_vertical = watermelonRadius; // 垂直方向始终是西瓜半径
 
     ctx.beginPath();
-    // *** 修正：绘制椭圆的上半部分，使其向上凸起 ***
-    const startAngle = 0; // 从椭圆的右侧开始 (t=0, x=a, y=0)
-    const endAngle = Math.PI; // 到椭圆的左侧结束 (t=PI, x=-a, y=0)
+    // 绘制椭圆的左半部分，使其在“角度值：50”时呈现竖直线
+    // 此时 t 的范围应为 -Math.PI / 2 到 Math.PI / 2
+    // 或者从 Math.PI / 2 到 3 * Math.PI / 2 (如果想画右半边)
+    const startAngle = Math.PI / 2; // 从椭圆的上方开始
+    const endAngle = 3 * Math.PI / 2; // 到椭圆的下方结束
 
     // 移动到弧线的起点
-    ctx.moveTo(centerX + semiMajorAxis * Math.cos(startAngle), centerY + semiMinorAxis * Math.sin(startAngle));
+    // x 使用 semiMinorAxis_horizontal，y 使用 semiMajorAxis_vertical
+    ctx.moveTo(centerX + semiMinorAxis_horizontal * Math.cos(startAngle), centerY + semiMajorAxis_vertical * Math.sin(startAngle));
 
     const numSegments = 100;
     for (let i = 0; i <= numSegments; i++) {
       const t = startAngle + (endAngle - startAngle) * (i / numSegments);
-      const x = centerX + semiMajorAxis * Math.cos(t);
-      const y = centerY + semiMinorAxis * Math.sin(t);
+      const x = centerX + semiMinorAxis_horizontal * Math.cos(t);
+      const y = centerY + semiMajorAxis_vertical * Math.sin(t);
       ctx.lineTo(x, y);
     }
 
