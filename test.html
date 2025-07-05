@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>月相盈虧模擬 (標題獨立於圖框)</title>
+    <title>月相盈虧模擬 (半徑可調整)</title>
     <style>
         body {
             margin: 0;
@@ -43,29 +43,28 @@
             display: flex;
             flex-direction: column; /* 讓 h3 和 figure-wrapper 垂直排列 */
             align-items: center;
-            /* 讓這個 wrapper 的高度根據內容自動調整 */
-            width: 320px; /* 保持與 figure-wrapper 相同的寬度 */
+            width: fit-content; /* 讓寬度適應內部內容，或設定一個最大值 */
+            min-width: 200px; /* 至少保持一定寬度，避免過小 */
         }
         h3 {
             color: #fff;
             margin-top: 0;
             margin-bottom: 15px; /* 與 Canvas 保持距離 */
-            /* 保持普通格式，不設定固定高度 */
         }
         .figure-wrapper {
-            /* figure-wrapper 現在只包含 Canvas，保持原始尺寸 */
-            width: 256px; /* Canvas 尺寸 */
-            height: 256px; /* Canvas 尺寸 */
-            /* 移除背景、內邊距、圓角、陰影，這些已移到 .moon-unit-wrapper */
+            /* figure-wrapper 的寬高將由 JavaScript 動態設定 */
+            /* 移除固定的 width: 256px; height: 256px; */
             display: flex; /* 確保 Canvas 居中 */
             justify-content: center;
             align-items: center;
+            overflow: hidden; /* 防止 Canvas 超出其容器 */
         }
         canvas {
             background-color: #222;
             border: 2px solid #555;
             display: block; /* 確保獨佔一行 */
             margin: 0 auto; /* 水平居中 */
+            /* Canvas 的寬高將由 JavaScript 直接設定 */
         }
         #version-info {
             position: fixed;
@@ -79,7 +78,7 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.05.34</div>
+    <div id="version-info">版本: v2025.07.05.35</div>
 
     <h2>左側為起點往右邊走 (盈月：新月到滿月)</h2>
     <div id="left-to-right-container" class="figures-container">
@@ -90,7 +89,7 @@
         </div>
 
     <script>
-        const VERSION = 'v2025.07.05.34'; 
+        const VERSION = 'v2025.07.05.35'; 
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
         const moonImage = new Image();
@@ -108,7 +107,7 @@
         /**
          * 繪製月相圖的函式：藍點從左半圓開始，紅點往右邊移動，並繪製黑線遮罩。
          * 用於顯示遮罩從 0% 遞增到 100% 的效果 (新月到滿月，即盈月)。
-         * 此函式**已完全還原到您原始提供的 v2025.07.05.25 版本**，未動任何繪圖邏輯與參數。
+         * 此函式**已還原到您原始提供的 v2025.07.05.25 版本**的核心繪圖邏輯。
          *
          * @param {string} targetDivId 目標 div 的 ID，Canvas 將會被創建並放入此 div 中。
          * @param {number} radius 月亮圓形（藍點/紅點構成的圓形）的半徑。
@@ -121,17 +120,10 @@
                 return;
             }
 
-            const canvasWidth = targetDiv.clientWidth;
-            const canvasHeight = targetDiv.clientHeight; 
-
-            if (canvasWidth === 0 || canvasHeight === 0) {
-                 console.warn(`警告：目標 div (${targetDivId}) 的寬度或高度為 0。Canvas 將無法繪製。請確保該 div 在 CSS 中有明確的尺寸 (例如：width: 320px; height: 320px;)。`);
-                 return;
-            }
-
+            // Canvas 的寬高直接設定為直徑，而不是取目標 Div 的尺寸
             const canvas = document.createElement('canvas');
-            canvas.width = canvasWidth;
-            canvas.height = canvasHeight;
+            canvas.width = radius * 2;
+            canvas.height = radius * 2;
             
             // 此處的 DOM 操作已還原到原始版本 v2025.07.05.25
             targetDiv.innerHTML = ''; // 清空目標 div 內容
@@ -139,8 +131,9 @@
 
             const ctx = canvas.getContext('2d');
 
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
+            // 中心點直接為半徑，因為 Canvas 寬高就是直徑
+            const centerX = radius;
+            const centerY = radius;
             const dotSize = 2;
             const numDots = 180;
             const tiltAngleDegrees = 23.4;
@@ -203,15 +196,13 @@
             ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
             ctx.fillStyle = '#fff';
             ctx.fill();
-
-            // --- Canvas 上不再繪製文字 ---
         }
 
 
         /**
          * 繪製月相圖的函式：從右半圓找到藍點，紅點往左邊移動，並繪製黑線。
          * 用於顯示遮罩從 0% 遞增到 100% 的效果 (滿月到新月，即虧月)。
-         * 此函式**已完全還原到您原始提供的 v2025.07.05.25 版本**，未動任何繪圖邏輯與參數。
+         * 此函式**已還原到您原始提供的 v2025.07.05.25 版本**的核心繪圖邏輯。
          *
          * @param {string} targetDivId 目標 div 的 ID，Canvas 將會被創建並放入此 div 中。
          * @param {number} radius 月亮圓形（藍點/紅點構成的圓形）的半徑。
@@ -224,17 +215,10 @@
                 return;
             }
 
-            const canvasWidth = targetDiv.clientWidth;
-            const canvasHeight = targetDiv.clientHeight;
-
-            if (canvasWidth === 0 || canvasHeight === 0) {
-                 console.warn(`警告：目標 div (${targetDivId}) 的寬度或高度為 0。Canvas 將無法繪製。請確保該 div 在 CSS 中有明確的尺寸 (例如：width: 320px; height: 320px;)。`);
-                 return;
-            }
-
+            // Canvas 的寬高直接設定為直徑，而不是取目標 Div 的尺寸
             const canvas = document.createElement('canvas');
-            canvas.width = canvasWidth;
-            canvas.height = canvasHeight;
+            canvas.width = radius * 2;
+            canvas.height = radius * 2;
             
             // 此處的 DOM 操作已還原到原始版本 v2025.07.05.25
             targetDiv.innerHTML = ''; 
@@ -242,8 +226,9 @@
 
             const ctx = canvas.getContext('2d');
 
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
+            // 中心點直接為半徑，因為 Canvas 寬高就是直徑
+            const centerX = radius;
+            const centerY = radius;
             const dotSize = 2;
             const numDots = 180; 
             const tiltAngleDegrees = 23.4;
@@ -308,8 +293,6 @@
             ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
             ctx.fillStyle = '#fff';
             ctx.fill();
-
-            // --- Canvas 上不再繪製文字 ---
         }
 
 
@@ -317,7 +300,7 @@
         moonImage.onload = () => {
             const leftToRightContainer = document.getElementById('left-to-right-container');
             const rightToLeftContainer = document.getElementById('right-to-left-container');
-            const defaultRadiusForExample = 114; // 將半徑從 124 改為 114
+            const defaultRadiusForExample = 114; // 半徑已是 114
 
             // 第一組：左側為起點往右邊走 (遮罩遞減：100% 遮罩到 0% 遮罩 - 盈月)
             // phase 0 (新月) -> 0.5 (滿月)
@@ -325,13 +308,17 @@
                 const moonUnitWrapper = document.createElement('div');
                 moonUnitWrapper.className = 'moon-unit-wrapper';
 
-                const phaseValue = ((100 - p) / 200.0).toFixed(2); // 計算 phase 值
+                const phaseValue = ((100 - p) / 200.0).toFixed(2);
                 const title = document.createElement('h3');
-                title.textContent = `遮罩 ${p}% Phase: ${phaseValue}`; // 顯示計算後的 phase 值
+                title.textContent = `遮罩 ${p}% Phase: ${phaseValue}`;
                 moonUnitWrapper.appendChild(title);
 
                 const figureWrapper = document.createElement('div');
                 figureWrapper.className = 'figure-wrapper';
+                // 動態設定 figure-wrapper 的寬高以匹配月亮直徑
+                figureWrapper.style.width = `${defaultRadiusForExample * 2}px`;
+                figureWrapper.style.height = `${defaultRadiusForExample * 2}px`;
+
                 const uniqueDivId = `leftRightPhaseWrapper_${p}`;
                 figureWrapper.id = uniqueDivId;
                 moonUnitWrapper.appendChild(figureWrapper);
@@ -346,13 +333,17 @@
                 const moonUnitWrapper = document.createElement('div');
                 moonUnitWrapper.className = 'moon-unit-wrapper';
 
-                const phaseValue = (0.5 + (p / 200.0)).toFixed(2); // 計算 phase 值
+                const phaseValue = (0.5 + (p / 200.0)).toFixed(2);
                 const title = document.createElement('h3');
-                title.textContent = `遮罩 ${p}% Phase: ${phaseValue}`; // 顯示計算後的 phase 值
+                title.textContent = `遮罩 ${p}% Phase: ${phaseValue}`;
                 moonUnitWrapper.appendChild(title);
 
                 const figureWrapper = document.createElement('div');
                 figureWrapper.className = 'figure-wrapper';
+                // 動態設定 figure-wrapper 的寬高以匹配月亮直徑
+                figureWrapper.style.width = `${defaultRadiusForExample * 2}px`;
+                figureWrapper.style.height = `${defaultRadiusForExample * 2}px`;
+
                 const uniqueDivId = `rightLeftPhaseWrapper_${p}`;
                 figureWrapper.id = uniqueDivId;
                 moonUnitWrapper.appendChild(figureWrapper);
@@ -367,7 +358,7 @@
             alert('無法載入月亮底圖，請檢查圖片網址或網路連線。所有月相圖將顯示為預設背景。');
             const leftToRightContainer = document.getElementById('left-to-right-container');
             const rightToLeftContainer = document.getElementById('right-to-left-container');
-            const defaultRadiusForExample = 114; // 將半徑從 124 改為 114
+            const defaultRadiusForExample = 114;
 
             // 第一組 (無底圖)
             for (let p = 100; p >= 0; p -= 5) {
@@ -379,6 +370,8 @@
                 moonUnitWrapper.appendChild(title);
                 const figureWrapper = document.createElement('div');
                 figureWrapper.className = 'figure-wrapper';
+                figureWrapper.style.width = `${defaultRadiusForExample * 2}px`;
+                figureWrapper.style.height = `${defaultRadiusForExample * 2}px`;
                 const uniqueDivId = `leftRightPhaseWrapper_${p}`;
                 figureWrapper.id = uniqueDivId;
                 moonUnitWrapper.appendChild(figureWrapper);
@@ -396,6 +389,8 @@
                 moonUnitWrapper.appendChild(title);
                 const figureWrapper = document.createElement('div');
                 figureWrapper.className = 'figure-wrapper';
+                figureWrapper.style.width = `${defaultRadiusForExample * 2}px`;
+                figureWrapper.style.height = `${defaultRadiusForExample * 2}px`;
                 const uniqueDivId = `rightLeftPhaseWrapper_${p}`;
                 figureWrapper.id = uniqueDivId;
                 moonUnitWrapper.appendChild(figureWrapper);
