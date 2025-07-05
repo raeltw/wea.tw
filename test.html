@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>切西瓜弧線填色測試 (V5)</title>
+<title>切西瓜弧線填色測試 (V7 - 修正左右填充邏輯)</title>
 <style>
   body {
     display: flex;
@@ -50,7 +50,7 @@
 </head>
 <body>
 
-<div class="section-title">第一組: 红线左侧涂黑 (0-100)</div>
+<div class="section-title">第一組: 红线左侧涂黑，右侧涂白 (0-100)</div>
 
 <script>
   const gridSize = 10; // 从 0 到 100，每10为一个增量，所以有 11 个图 (0, 10, ..., 100)
@@ -77,7 +77,7 @@
     // 独立添加版本信息到每个 canvas container
     const versionBox = document.createElement('div');
     versionBox.className = 'version-info-box';
-    versionBox.textContent = 'V5'; // 每次更新版本号
+    versionBox.textContent = 'V7'; // 每次更新版本号
     container.appendChild(versionBox);
 
     document.body.appendChild(container);
@@ -87,162 +87,36 @@
     const centerY = canvas.height / 2;
 
     // 将 0-100 的值映射到 0 到 Math.PI 弧度
-    // 0 (正東) -> 0 弧度 (正視，看到右側圓形)
-    // 50 (正南) -> Math.PI / 2 弧度 (側視，看到豎直線)
-    // 100 (正西) -> Math.PI 弧度 (反向正視，看到左側圓形)
     const observationAngleRadians = (angleValue / 100) * Math.PI;
 
-    // 水平方向的轴长会因为倾斜而缩短
     const semiMinorAxis_horizontal = watermelonRadius * Math.cos(observationAngleRadians);
-    // 垂直方向的轴长保持不变 (西瓜半径)
     const semiMajorAxis_vertical = watermelonRadius;
+    const currentAbsoluteSemiMinorAxis = Math.abs(semiMinorAxis_horizontal); // 用于绘制椭圆的实际轴长
 
-    // 确定绘制椭圆的哪半部分以及填充方向
-    let arcStart, arcEnd;
-    let fillPathStartPoint, fillPathEndPoint; // 用于连接到圆弧边界的点
-
-    // 注意：这里的 currentSemiMinorAxis 是带正负的，用于判断是面对还是背对
-    const currentSemiMinorAxis = semiMinorAxis_horizontal; // 沿用之前计算的带符号的半短轴
-
-    if (currentSemiMinorAxis >= 0) { // 面对我们（右半边）
-        arcStart = -Math.PI / 2;
-        arcEnd = Math.PI / 2;
-        // 填充时需要连接到圆的左侧边缘
-        fillPathStartPoint = { x: centerX + watermelonRadius * Math.cos(arcEnd), y: centerY + watermelonRadius * Math.sin(arcEnd) };
-        fillPathEndPoint = { x: centerX + watermelonRadius * Math.cos(arcStart), y: centerY + watermelonRadius * Math.sin(arcStart) };
-
-    } else { // 背向我们（左半边）
-        arcStart = Math.PI / 2;
-        arcEnd = 3 * Math.PI / 2;
-        // 填充时需要连接到圆的右侧边缘
-        fillPathStartPoint = { x: centerX + watermelonRadius * Math.cos(arcEnd), y: centerY + watermelonRadius * Math.sin(arcEnd) };
-        fillPathEndPoint = { x: centerX + watermelonRadius * Math.cos(arcStart), y: centerY + watermelonRadius * Math.sin(arcStart) };
-    }
-
-    // *** 填充区域绘制逻辑 ***
+    // 1. 绘制西瓜的整个圆形背景为白色 (确保没有被填充的部分是白色)
     ctx.beginPath();
+    ctx.arc(centerX, centerY, watermelonRadius, 0, 2 * Math.PI);
+    ctx.fillStyle = 'white';
+    ctx.fill();
 
-    // 1. 移动到弧线的起点
-    const initialT = arcStart;
-    const initialX = centerX + Math.abs(currentSemiMinorAxis) * Math.cos(initialT);
-    const initialY = centerY + semiMajorAxis_vertical * Math.sin(initialT);
-    ctx.moveTo(initialX, initialY);
-
-    // 2. 绘制红色弧线
-    const numSegments = 100;
-    for (let i = 0; i <= numSegments; i++) {
-      const t = arcStart + (arcEnd - arcStart) * (i / numSegments);
-      const x = centerX + Math.abs(currentSemiMinorAxis) * Math.cos(t);
-      const y = centerY + semiMajorAxis_vertical * Math.sin(t);
-      ctx.lineTo(x, y);
-    }
-    // 当前路径的终点是弧线的终点
-
-    // 3. 连接到西瓜轮廓的边缘并填充
-    if (fillSide === 'left') { // 填充红色弧线的左侧 (也就是切面内部，更靠近中心的那一半)
-        // 从弧线终点连接到圆的左边缘
-        // 这里的逻辑需要根据 currentSemiMinorAxis 的正负来判断“左侧”
-        if (currentSemiMinorAxis >= 0) { // 面对我们，右半圆，其“左侧”是沿着圆弧向内
-             // 连接到西瓜圆的左边点 (圆心左侧 watermelonRadius 距离)
-             ctx.lineTo(centerX - watermelonRadius, centerY); // 连接到最左侧点
-             ctx.arc(centerX, centerY, watermelonRadius, Math.PI, Math.PI / 2, true); // 沿圆弧到上边缘 (逆时针)
-             ctx.lineTo(initialX, initialY); // 再连回弧线起点
-        } else { // 背向我们，左半圆，其“左侧”是沿着圆弧向外
-             // 连接到西瓜圆的左边点 (圆心左侧 watermelonRadius 距离)
-             ctx.lineTo(centerX - watermelonRadius, centerY); // 连接到最左侧点
-             ctx.arc(centerX, centerY, watermelonRadius, Math.PI, 3 * Math.PI / 2, true); // 沿圆弧到下边缘 (逆时针)
-             ctx.lineTo(initialX, initialY); // 再连回弧线起点
-        }
-    } else if (fillSide === 'right') { // 填充红色弧线的右侧 (也就是切面外部，远离中心的那一半)
-        // 这里的逻辑需要根据 currentSemiMinorAxis 的正负来判断“右侧”
-        if (currentSemiMinorAxis >= 0) { // 面对我们，右半圆，其“右侧”是沿着圆弧向外
-            // 连接到西瓜圆的右边点 (圆心右侧 watermelonRadius 距离)
-            ctx.lineTo(centerX + watermelonRadius, centerY); // 连接到最右侧点
-            ctx.arc(centerX, centerY, watermelonRadius, 0, Math.PI / 2, false); // 沿圆弧到上边缘 (顺时针)
-            ctx.lineTo(initialX, initialY); // 再连回弧线起点
-        } else { // 背向我们，左半圆，其“右侧”是沿着圆弧向内
-            // 连接到西瓜圆的右边点 (圆心右侧 watermelonRadius 距离)
-            ctx.lineTo(centerX + watermelonRadius, centerY); // 连接到最右侧点
-            ctx.arc(centerX, centerY, watermelonRadius, 0, 3 * Math.PI / 2, true); // 沿圆弧到下边缘 (逆时针)
-            ctx.lineTo(initialX, initialY); // 再连回弧线起点
-        }
-    }
-
-    // 重新思考填充逻辑
-    // 最简单且一致的填充方法是始终填充“刀痕”与“西瓜边缘”之间的区域
-    // 也就是将椭圆弧和西瓜外圆弧连接起来形成一个闭合路径。
-    // 但是要区分左右侧，则需要更精细的路径控制。
-    // 简化方案：画出半个西瓜，然后填充它的左侧或右侧。
-
-    // 绘制填充区域的通用逻辑
-    ctx.beginPath();
-    // 1. 从弧线的起点开始
-    const startPointX = centerX + Math.abs(currentSemiMinorAxis) * Math.cos(arcStart);
-    const startPointY = centerY + semiMajorAxis_vertical * Math.sin(arcStart);
-    ctx.moveTo(startPointX, startPointY);
-
-    // 2. 绘制弧线
-    for (let i = 0; i <= numSegments; i++) {
-        const t = arcStart + (arcEnd - arcStart) * (i / numSegments);
-        const x = centerX + Math.abs(currentSemiMinorAxis) * Math.cos(t);
-        const y = centerY + semiMajorAxis_vertical * Math.sin(t);
-        ctx.lineTo(x, y);
-    }
-    const endPointX = centerX + Math.abs(currentSemiMinorAxis) * Math.cos(arcEnd);
-    const endPointY = centerY + semiMajorAxis_vertical * Math.sin(arcEnd);
-
-    // 3. 连接到西瓜的外部圆周
-    // 假设弧线的两个端点在 Y 轴方向上的位置是 (x1, y1) 和 (x2, y2)
-    // 我们需要沿着绿色的圆弧连接这两个点。
-    // 获取弧线端点相对于圆心的角度
-    const angleStartOnCircle = Math.atan2(startPointY - centerY, startPointX - centerX);
-    const angleEndOnCircle = Math.atan2(endPointY - centerY, endPointX - centerX);
-
-    if (fillSide === 'left') { // 填充弧线左侧（西瓜的内部，靠近中心的部分）
-        // 路径应该从弧线终点，沿直线到圆心，再沿直线到弧线起点。
-        // 或者，从弧线终点，沿西瓜圆周的“内侧”到弧线起点。
-        // 但这里为了模拟切面，更像是填充被切开的半边。
-
-        // 更好的理解：填充的是切面形成的半个西瓜。
-        // 我们可以直接画一个半圆，然后填充。
-        // 而“红色弧线”是这个半圆的“可視邊界”。
-
-        // 绘制一个“扇形”区域
-        ctx.lineTo(centerX, centerY); // 连接到圆心
-        ctx.closePath(); // 闭合路径，形成一个三角形或扇形
-        // ctx.arc(centerX, centerY, watermelonRadius, angleStartOnCircle, angleEndOnCircle, true); // 沿圆弧连接
-
-    } else if (fillSide === 'right') { // 填充弧线右侧 (另一半)
-        // 类似地，填充另一半扇形
-        ctx.lineTo(centerX, centerY); // 连接到圆心
-        ctx.closePath(); // 闭合路径
-    }
-
-
-    // --- 最终填充逻辑调整 ---
-    // 为了实现左右填充，我们需要绘制半个西瓜的形状，然后填充它。
-    // “红色弧线”是分割线。
-
-    // 首先绘制整个西瓜轮廓 (绿色)
+    // 2. 绘制西瓜轮廓 (绿色)
     ctx.beginPath();
     ctx.arc(centerX, centerY, watermelonRadius, 0, 2 * Math.PI);
     ctx.strokeStyle = 'green';
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    // 然后绘制红色弧线
-    ctx.beginPath();
-    const currentAbsoluteSemiMinorAxis = Math.abs(semiMinorAxis_horizontal);
-
-    // 计算实际的弧线起始和结束角度
+    // --- 准备红色弧线及填充区域 ---
     let redArcStartAngle, redArcEndAngle;
-    if (currentSemiMinorAxis >= 0) { // 右半边
+    if (semiMinorAxis_horizontal >= 0) { // 右半边（0到50）
         redArcStartAngle = -Math.PI / 2;
         redArcEndAngle = Math.PI / 2;
-    } else { // 左半边
+    } else { // 左半边（50到100）
         redArcStartAngle = Math.PI / 2;
         redArcEndAngle = 3 * Math.PI / 2;
     }
+
+    const numSegments = 100;
 
     // 获取红色弧线的两端点
     const redArcPoint1X = centerX + currentAbsoluteSemiMinorAxis * Math.cos(redArcStartAngle);
@@ -250,66 +124,41 @@
     const redArcPoint2X = centerX + currentAbsoluteSemiMinorAxis * Math.cos(redArcEndAngle);
     const redArcPoint2Y = centerY + semiMajorAxis_vertical * Math.sin(redArcEndAngle);
 
-
-    // --- 填色逻辑 ---
-    // 为了填充“左侧”或“右侧”，我们需要构建一个由红色弧线和绿色圆弧组成的闭合路径。
+    // --- 填充逻辑 ---
+    // 构建填充区域的路径
     ctx.beginPath();
+    ctx.fillStyle = 'black'; // 始终用黑色填充
 
-    if (fillSide === 'left') { // 填充左侧（也就是弧线和圆圈左侧边缘之间的区域）
-        if (currentSemiMinorAxis >= 0) { // 右半椭圆可见，填充其左边区域
-            // 从红线左下角开始，沿红线到右上角
-            ctx.moveTo(redArcPoint1X, redArcPoint1Y);
-            for (let i = 0; i <= numSegments; i++) {
-                const t = redArcStartAngle + (redArcEndAngle - redArcStartAngle) * (i / numSegments);
-                const x = centerX + currentAbsoluteSemiMinorAxis * Math.cos(t);
-                const y = centerY + semiMajorAxis_vertical * Math.sin(t);
-                ctx.lineTo(x, y);
-            }
-            // 从红线上方终点沿外圆逆时针到红线下方起点
-            ctx.arc(centerX, centerY, watermelonRadius, redArcEndAngle, redArcStartAngle, true);
-        } else { // 左半椭圆可见，填充其左边区域
-            // 从红线右下角开始，沿红线到左上角
-            ctx.moveTo(redArcPoint1X, redArcPoint1Y);
-            for (let i = 0; i <= numSegments; i++) {
-                const t = redArcStartAngle + (redArcEndAngle - redArcStartAngle) * (i / numSegments);
-                const x = centerX + currentAbsoluteSemiMinorAxis * Math.cos(t);
-                const y = centerY + semiMajorAxis_vertical * Math.sin(t);
-                ctx.lineTo(x, y);
-            }
-            // 从红线上方终点沿外圆逆时针到红线下方起点
-            ctx.arc(centerX, centerY, watermelonRadius, redArcEndAngle, redArcStartAngle, true);
+    if (fillSide === 'left') { // 填充红色弧线的“左侧”（靠近西瓜中心的那一側）
+        // 路径：从 redArcPoint1 -> 沿红线到 redArcPoint2 -> 沿绿圆逆时针回到 redArcPoint1
+        ctx.moveTo(redArcPoint1X, redArcPoint1Y);
+        // 绘制红色弧线
+        for (let i = 0; i <= numSegments; i++) {
+            const t = redArcStartAngle + (redArcEndAngle - redArcStartAngle) * (i / numSegments);
+            const x = centerX + currentAbsoluteSemiMinorAxis * Math.cos(t);
+            const y = centerY + semiMajorAxis_vertical * Math.sin(t);
+            ctx.lineTo(x, y);
         }
-        ctx.fillStyle = 'black'; // 左侧涂黑
-    } else if (fillSide === 'right') { // 填充右侧（也就是弧线和圆圈右侧边缘之间的区域）
-        if (currentSemiMinorAxis >= 0) { // 右半椭圆可见，填充其右边区域
-            // 从红线右下角开始，沿外圆顺时针到红线上方起点
-            ctx.moveTo(redArcPoint1X, redArcPoint1Y);
-            ctx.arc(centerX, centerY, watermelonRadius, redArcStartAngle, redArcEndAngle, false);
-            // 沿红线从右上方终点到右下方起点
-            for (let i = numSegments; i >= 0; i--) { // 反向绘制弧线
-                const t = redArcStartAngle + (redArcEndAngle - redArcStartAngle) * (i / numSegments);
-                const x = centerX + currentAbsoluteSemiMinorAxis * Math.cos(t);
-                const y = centerY + semiMajorAxis_vertical * Math.sin(t);
-                ctx.lineTo(x, y);
-            }
-        } else { // 左半椭圆可见，填充其右边区域
-            // 从红线左下角开始，沿外圆顺时针到红线上方起点 (此时实际是向内侧绕)
-            ctx.moveTo(redArcPoint1X, redArcPoint1Y);
-            ctx.arc(centerX, centerY, watermelonRadius, redArcStartAngle, redArcEndAngle, false); // 沿外圆顺时针
-            // 沿红线从左上方终点到左下方起点
-            for (let i = numSegments; i >= 0; i--) { // 反向绘制弧线
-                const t = redArcStartAngle + (redArcEndAngle - redArcStartAngle) * (i / numSegments);
-                const x = centerX + currentAbsoluteSemiMinorAxis * Math.cos(t);
-                const y = centerY + semiMajorAxis_vertical * Math.sin(t);
-                ctx.lineTo(x, y);
-            }
+        // 沿绿圆逆时针回到起点
+        ctx.arc(centerX, centerY, watermelonRadius, redArcEndAngle, redArcStartAngle, true);
+        
+    } else if (fillSide === 'right') { // 填充红色弧线的“右侧”（远离西瓜中心的那一側）
+        // 路径：从 redArcPoint1 -> 沿绿圆顺时针到 redArcPoint2 -> 沿红线反向回到 redArcPoint1
+        ctx.moveTo(redArcPoint1X, redArcPoint1Y);
+        // 沿绿圆顺时针到终点
+        ctx.arc(centerX, centerY, watermelonRadius, redArcStartAngle, redArcEndAngle, false);
+        // 沿红色弧线反向绘制到起点
+        for (let i = numSegments; i >= 0; i--) {
+            const t = redArcStartAngle + (redArcEndAngle - redArcStartAngle) * (i / numSegments);
+            const x = centerX + currentAbsoluteSemiMinorAxis * Math.cos(t);
+            const y = centerY + semiMajorAxis_vertical * Math.sin(t);
+            ctx.lineTo(x, y);
         }
-        ctx.fillStyle = 'black'; // 右侧涂黑
     }
-    ctx.closePath();
-    ctx.fill();
+    ctx.closePath(); // 闭合路径
+    ctx.fill(); // 填充
 
-    // 重新绘制红色弧线，确保它在填充之上
+    // 3. 重新绘制红色弧线，确保它在填充之上
     ctx.beginPath();
     ctx.moveTo(redArcPoint1X, redArcPoint1Y);
     for (let i = 0; i <= numSegments; i++) {
@@ -329,17 +178,17 @@
     ctx.fill();
   }
 
-  // 第一組: 红线左侧涂黑 (0-100)
+  // 第一組: 红线左侧涂黑，右侧涂白 (0-100)
   for (let i = 0; i <= gridSize; i++) {
     const angleValue = i * 10;
     drawArcAndFill(`canvas_left_fill_${angleValue}`, angleValue, 'left');
   }
 </script>
 
-<div class="section-title" style="clear: both;">第二組: 红线右侧涂黑 (0-100)</div>
+<div class="section-title" style="clear: both;">第二組: 红线左侧涂白，右侧涂黑 (0-100)</div>
 
 <script>
-  // 第二組: 红线右侧涂黑 (0-100) - 使用相同的函数，但传入 'right'
+  // 第二組: 红线左侧涂白，右侧涂黑 (0-100)
   for (let i = 0; i <= gridSize; i++) {
     const angleValue = i * 10;
     drawArcAndFill(`canvas_right_fill_${angleValue}`, angleValue, 'right');
