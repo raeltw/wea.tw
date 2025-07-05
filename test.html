@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>切西瓜弧線變化 (修正方向 V2)</title>
+<title>切西瓜弧線變化 (修正方向 V3)</title>
 <style>
   body {
     display: flex;
@@ -36,7 +36,7 @@
 </head>
 <body>
 
-<div id="version-info">版本: 20250706.2</div>
+<div id="version-info">版本: 20250706.3</div>
 
 <script>
   const gridSize = 10; // 从 0 到 100，每10为一个增量，所以有 11 个图 (0, 10, ..., 100)
@@ -78,18 +78,16 @@
       observationAngleRadians = Math.PI / 2 + ((angleValue - 50) / 50) * (Math.PI / 2);
     }
 
-    // 修正：长轴和短轴的对应关系
-    // 现在，水平方向的轴长为 semiMinorAxis_horizontal
-    // 垂直方向的轴长为 semiMajorAxis_vertical
+    // 水平方向的轴长会因为倾斜而缩短
     const semiMinorAxis_horizontal = watermelonRadius * Math.cos(observationAngleRadians);
-    const semiMajorAxis_vertical = watermelonRadius; // 垂直方向始终是西瓜半径
+    // 垂直方向的轴长保持不变 (西瓜半径)
+    const semiMajorAxis_vertical = watermelonRadius;
 
     ctx.beginPath();
-    // 绘制椭圆的左半部分，使其在“角度值：50”时呈现竖直线
-    // 此时 t 的范围应为 -Math.PI / 2 到 Math.PI / 2
-    // 或者从 Math.PI / 2 到 3 * Math.PI / 2 (如果想画右半边)
-    const startAngle = Math.PI / 2; // 从椭圆的上方开始
-    const endAngle = 3 * Math.PI / 2; // 到椭圆的下方结束
+    // *** 修正：绘制椭圆的右半部分，使其在“角度值：0”时呈现右侧半圆 ***
+    // t 从 -Math.PI / 2 到 Math.PI / 2 会绘制右半边
+    const startAngle = -Math.PI / 2;
+    const endAngle = Math.PI / 2;
 
     // 移动到弧线的起点
     // x 使用 semiMinorAxis_horizontal，y 使用 semiMajorAxis_vertical
