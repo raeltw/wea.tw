@@ -3,27 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>圓形左半邊點繪製 (點保留版)</title>
+    <title>圓形點移動進度 (10% - 100%)</title>
     <style>
         body {
             margin: 0;
-            overflow: hidden;
+            overflow-x: hidden; /* 允許垂直滾動，水平隱藏 */
             display: flex;
-            justify-content: center;
+            flex-direction: column; /* 垂直排列圖形 */
             align-items: center;
             min-height: 100vh;
-            background-color: #333; /* 深灰色背景 */
+            background-color: #000; /* 純黑色背景 */
             color: #eee;
             font-family: sans-serif;
             font-size: 14px;
+            padding: 20px 0; /* 上下留白 */
+        }
+        .figure-wrapper {
+            margin-bottom: 40px; /* 每個圖形之間間距 */
+            background-color: #1a1a1a; /* 每個圖形區塊的背景色 */
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+        h3 {
+            color: #fff;
+            margin-top: 0;
+            margin-bottom: 15px;
         }
         canvas {
             background-color: #222; /* Canvas 背景色 */
             border: 2px solid #555;
             display: block;
+            margin: 0 auto; /* 讓 canvas 在其容器中居中 */
         }
         #version-info {
-            position: absolute;
+            position: fixed; /* 固定在視窗左上角 */
             top: 10px;
             left: 10px;
             background: rgba(0, 0, 0, 0.5);
@@ -34,51 +49,96 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.05.10</div>
-    <canvas id="dotCanvas" width="400" height="400"></canvas>
+    <div id="version-info">版本: v2025.07.05.11</div>
+
+    <div class="figures-container">
+        </div>
 
     <script>
         // --- 設定版本號 ---
-        const VERSION = 'v2025.07.05.10';
+        const VERSION = 'v2025.07.05.11';
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
-        const canvas = document.getElementById('dotCanvas');
-        const ctx = canvas.getContext('2d');
-
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2;
+        const commonCanvasWidth = 400;
+        const commonCanvasHeight = 400;
+        const centerX = commonCanvasWidth / 2;
+        const centerY = commonCanvasHeight / 2;
         const radius = 150; // 圓的半徑
         const dotSize = 2; // 每個點的大小 (像素)
-        const numDots = 180; // 繪製點的數量 (決定密度，角度為 90 到 270 度共 180 度，每度一個點)
+        const numDots = 180; // 繪製點的數量 (從 90 到 270 度，每度一個點)
 
-        function drawLeftHalfCircle() {
-            // 根據你的指示，移除清空畫布的指令，讓點保留在畫布上
-            // ctx.clearRect(0, 0, canvas.width, canvas.height); // 已註解或移除此行
+        // 繪製單一畫布的函數
+        function drawFigure(canvasId, percentage) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
 
-            // 繪製圓心 (可選)
+            // 清空畫布為背景色
+            ctx.fillStyle = '#222'; 
+            ctx.fillRect(0, 0, commonCanvasWidth, commonCanvasHeight);
+
+            // 繪製圓心 (白色，顯示在最上層)
             ctx.beginPath();
             ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
-            ctx.fillStyle = '#fff';
+            ctx.fillStyle = '#fff'; 
             ctx.fill();
 
-            // 繪製左半圓周上的點
-            // 角度從 90 度 (圓上方) 到 270 度 (圓下方)，代表左半圓
+            // 繪製原始的藍色左半圓周上的點 (基礎點，保持不變)
             for (let i = 0; i <= numDots; i++) {
-                const angleDegrees = 90 + i; // 從 90 度開始，到 270 度結束
-                const angleRadians = angleDegrees * Math.PI / 180; // 轉換為弧度
+                const angleDegrees = 90 + i;
+                const angleRadians = angleDegrees * Math.PI / 180;
 
-                // 計算點的 X, Y 座標
                 const x = centerX + radius * Math.cos(angleRadians);
                 const y = centerY + radius * Math.sin(angleRadians);
 
-                // 繪製點 (使用小方塊來表示)
-                ctx.fillStyle = '#00aaff'; // 點的顏色
+                ctx.fillStyle = '#00aaff'; // 藍色
                 ctx.fillRect(x - dotSize / 2, y - dotSize / 2, dotSize, dotSize);
+            }
+
+            // 繪製變換後的紅色點
+            for (let i = 0; i <= numDots; i++) {
+                const angleDegrees = 90 + i;
+                const angleRadians = angleDegrees * Math.PI / 180;
+
+                const originalX = centerX + radius * Math.cos(angleRadians);
+                const originalY = centerY + radius * Math.sin(angleRadians);
+
+                // 計算原始點到中心線的距離 D0
+                const D0 = centerX - originalX; // 因為是左半圓，originalX <= centerX
+
+                // 計算移動的距離 (根據百分比 N%)
+                // N% 的總路程 = (percentage / 100) * (2 * D0)
+                const moveDistance = (percentage / 100) * (2 * D0);
+
+                // 新點的 X 座標
+                const newX = originalX + moveDistance;
+                const newY = originalY; // Y 座標不變
+
+                ctx.fillStyle = '#ff0000'; // 紅色
+                ctx.fillRect(newX - dotSize / 2, newY - dotSize / 2, dotSize, dotSize);
             }
         }
 
-        // 首次繪製
-        drawLeftHalfCircle();
+        // 動態生成和繪製所有畫布
+        const figuresContainer = document.querySelector('.figures-container');
+        for (let p = 10; p <= 100; p += 10) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'figure-wrapper';
+
+            const title = document.createElement('h3');
+            title.textContent = `走到 ${p}% 的圖形`;
+            wrapper.appendChild(title);
+
+            const canvas = document.createElement('canvas');
+            canvas.id = `canvas${p}`;
+            canvas.width = commonCanvasWidth;
+            canvas.height = commonCanvasHeight;
+            wrapper.appendChild(canvas);
+
+            figuresContainer.appendChild(wrapper);
+
+            // 繪製內容
+            drawFigure(canvas.id, p);
+        }
     </script>
 </body>
 </html>
