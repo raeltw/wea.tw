@@ -79,7 +79,7 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.05.33</div>
+    <div id="version-info">版本: v2025.07.05.34</div>
 
     <h2>左側為起點往右邊走 (盈月：新月到滿月)</h2>
     <div id="left-to-right-container" class="figures-container">
@@ -90,7 +90,7 @@
         </div>
 
     <script>
-        const VERSION = 'v2025.07.05.33'; 
+        const VERSION = 'v2025.07.05.34'; 
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
         const moonImage = new Image();
@@ -317,41 +317,45 @@
         moonImage.onload = () => {
             const leftToRightContainer = document.getElementById('left-to-right-container');
             const rightToLeftContainer = document.getElementById('right-to-left-container');
-            const defaultRadiusForExample = 124; // 將半徑從 128 改為 124
+            const defaultRadiusForExample = 114; // 將半徑從 124 改為 114
 
             // 第一組：左側為起點往右邊走 (遮罩遞減：100% 遮罩到 0% 遮罩 - 盈月)
+            // phase 0 (新月) -> 0.5 (滿月)
             for (let p = 100; p >= 0; p -= 5) {
                 const moonUnitWrapper = document.createElement('div');
                 moonUnitWrapper.className = 'moon-unit-wrapper';
 
+                const phaseValue = ((100 - p) / 200.0).toFixed(2); // 計算 phase 值
                 const title = document.createElement('h3');
-                title.textContent = `遮罩 ${p}% Phase`; // 在標示後面加上 "Phase"
-                moonUnitWrapper.appendChild(title); // 將 h3 加入新的外層容器
+                title.textContent = `遮罩 ${p}% Phase: ${phaseValue}`; // 顯示計算後的 phase 值
+                moonUnitWrapper.appendChild(title);
 
                 const figureWrapper = document.createElement('div');
                 figureWrapper.className = 'figure-wrapper';
                 const uniqueDivId = `leftRightPhaseWrapper_${p}`;
                 figureWrapper.id = uniqueDivId;
-                moonUnitWrapper.appendChild(figureWrapper); // 將 figure-wrapper 加入新的外層容器
+                moonUnitWrapper.appendChild(figureWrapper);
 
                 leftToRightContainer.appendChild(moonUnitWrapper);
                 maskmoon(uniqueDivId, defaultRadiusForExample, p); 
             }
 
             // 第二組：右側為起點往左邊走 (遮罩遞增：0% 遮罩到 100% 遮罩 - 虧月)
+            // phase 0.5 (滿月) -> 1 (新月)
             for (let p = 0; p <= 100; p += 5) {
                 const moonUnitWrapper = document.createElement('div');
                 moonUnitWrapper.className = 'moon-unit-wrapper';
 
+                const phaseValue = (0.5 + (p / 200.0)).toFixed(2); // 計算 phase 值
                 const title = document.createElement('h3');
-                title.textContent = `遮罩 ${p}% Phase`; // 在標示後面加上 "Phase"
-                moonUnitWrapper.appendChild(title); // 將 h3 加入新的外層容器
+                title.textContent = `遮罩 ${p}% Phase: ${phaseValue}`; // 顯示計算後的 phase 值
+                moonUnitWrapper.appendChild(title);
 
                 const figureWrapper = document.createElement('div');
                 figureWrapper.className = 'figure-wrapper';
                 const uniqueDivId = `rightLeftPhaseWrapper_${p}`;
                 figureWrapper.id = uniqueDivId;
-                moonUnitWrapper.appendChild(figureWrapper); // 將 figure-wrapper 加入新的外層容器
+                moonUnitWrapper.appendChild(figureWrapper);
 
                 rightToLeftContainer.appendChild(moonUnitWrapper);
                 drawMoonDotsRightToLeft(uniqueDivId, defaultRadiusForExample, p); 
@@ -363,14 +367,15 @@
             alert('無法載入月亮底圖，請檢查圖片網址或網路連線。所有月相圖將顯示為預設背景。');
             const leftToRightContainer = document.getElementById('left-to-right-container');
             const rightToLeftContainer = document.getElementById('right-to-left-container');
-            const defaultRadiusForExample = 124; // 將半徑從 128 改為 124
+            const defaultRadiusForExample = 114; // 將半徑從 124 改為 114
 
             // 第一組 (無底圖)
             for (let p = 100; p >= 0; p -= 5) {
                 const moonUnitWrapper = document.createElement('div');
                 moonUnitWrapper.className = 'moon-unit-wrapper';
+                const phaseValue = ((100 - p) / 200.0).toFixed(2);
                 const title = document.createElement('h3');
-                title.textContent = `遮罩 ${p}% Phase (無底圖)`; // 在標示後面加上 "Phase"
+                title.textContent = `遮罩 ${p}% Phase: ${phaseValue} (無底圖)`;
                 moonUnitWrapper.appendChild(title);
                 const figureWrapper = document.createElement('div');
                 figureWrapper.className = 'figure-wrapper';
@@ -385,8 +390,9 @@
             for (let p = 0; p <= 100; p += 5) {
                 const moonUnitWrapper = document.createElement('div');
                 moonUnitWrapper.className = 'moon-unit-wrapper';
+                const phaseValue = (0.5 + (p / 200.0)).toFixed(2);
                 const title = document.createElement('h3');
-                title.textContent = `遮罩 ${p}% Phase (無底圖)`; // 在標示後面加上 "Phase"
+                title.textContent = `遮罩 ${p}% Phase: ${phaseValue} (無底圖)`;
                 moonUnitWrapper.appendChild(title);
                 const figureWrapper = document.createElement('div');
                 figureWrapper.className = 'figure-wrapper';
