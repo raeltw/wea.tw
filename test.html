@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>切西瓜弧線變化</title>
+<title>切西瓜弧線變化 (修正方向)</title>
 <style>
   body {
     display: flex;
@@ -58,7 +58,7 @@
     const centerY = canvas.height / 2;
 
     // 将 0-100 的值映射到 0 到 Math.PI 弧度
-    // 0 (正東) -> 0 弧度 (正視)
+    // 0 (正東) -> 0 弧度 (正視，看到圓形)
     // 50 (正南) -> Math.PI / 2 弧度 (側視，刀痕近似直線)
     // 100 (正西) -> Math.PI 弧度 (反向正視，再次看到圓形)
     let observationAngleRadians;
@@ -69,16 +69,13 @@
       observationAngleRadians = Math.PI / 2 + ((angleValue - 50) / 50) * (Math.PI / 2);
     }
 
-
     const semiMajorAxis = watermelonRadius;
     const semiMinorAxis = watermelonRadius * Math.cos(observationAngleRadians);
 
     ctx.beginPath();
-    // 绘制弧线，我们画椭圆的上半部分，模拟从侧面看切开的半个西瓜
-    // 注意：这里的 startAngle 和 endAngle 可能需要根据您的观察方向调整
-    // 假设我们总是绘制“凸向观察者”的半边弧，所以我们画上半部分椭圆弧。
-    const startAngle = Math.PI; // 从椭圆的左侧开始
-    const endAngle = 2 * Math.PI; // 到椭圆的右侧结束
+    // *** 修正：绘制椭圆的上半部分，使其向上凸起 ***
+    const startAngle = 0; // 从椭圆的右侧开始 (t=0, x=a, y=0)
+    const endAngle = Math.PI; // 到椭圆的左侧结束 (t=PI, x=-a, y=0)
 
     // 移动到弧线的起点
     ctx.moveTo(centerX + semiMajorAxis * Math.cos(startAngle), centerY + semiMinorAxis * Math.sin(startAngle));
