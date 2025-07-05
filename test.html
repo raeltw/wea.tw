@@ -85,7 +85,7 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.05.40</div>
+    <div id="version-info">版本: v2025.07.05.41</div>
 
     <h2>左側為起點往右邊走 (盈月：新月到滿月)</h2>
     <div id="left-to-right-container" class="figures-container">
@@ -96,7 +96,7 @@
         </div>
 
     <script>
-        const VERSION = 'v2025.07.05.40'; // 更新版本號
+        const VERSION = 'v2025.07.05.41'; // 更新版本號
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
         const moonImage = new Image();
@@ -126,7 +126,6 @@
                 return;
             }
 
-            // Canvas 寬高從其父容器的客戶端寬高獲取 (v2025.07.05.25 版本邏輯)
             const canvasWidth = targetDiv.clientWidth;
             const canvasHeight = targetDiv.clientHeight;
 
@@ -144,19 +143,21 @@
 
             const ctx = canvas.getContext('2d');
 
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const dotSize = 2;
-            const numDots = 180;
-            const tiltAngleDegrees = 23.4;
-            const tiltAngleRadians = tiltAngleDegrees * Math.PI / 180;
+            // **** 修改點 1/4：定義視覺中心點，包含水平偏移量 ****
+            const trueCanvasCenterX = canvas.width / 2;
+            const trueCanvasCenterY = canvas.height / 2;
+            const horizontalOffset = -5; // 向左偏移 5 像素
+
+            const visualCenterX = trueCanvasCenterX + horizontalOffset;
+            const visualCenterY = trueCanvasCenterY; // Y軸不變
 
             if (moonImage.complete && moonImage.naturalWidth > 0) {
                 ctx.save();
-                ctx.translate(centerX, centerY);
+                // **** 修改點 2/4：將 context 翻譯到新的視覺中心點 ****
+                ctx.translate(visualCenterX, visualCenterY);
                 ctx.rotate(tiltAngleRadians);
-                // **** 修改點：調整圖片繪製的X座標，使其向左偏移 5 像素 ****
-                ctx.drawImage(moonImage, -canvasWidth / 2 - 5, -canvasHeight / 2, canvasWidth, canvasHeight);
+                // 繪製圖片時，現在是相對於已翻譯的中心點 (0,0) 來繪製
+                ctx.drawImage(moonImage, -canvasWidth / 2, -canvasHeight / 2, canvasWidth, canvasHeight);
                 ctx.restore();
             } else {
                 ctx.fillStyle = '#222';
@@ -171,21 +172,22 @@
                 const angleDegrees = 90 + i; // 左半圓
                 const angleRadians = angleDegrees * Math.PI / 180;
 
-                const originalX = centerX + radius * Math.cos(angleRadians);
-                const originalY = centerY + radius * Math.sin(angleRadians);
+                // **** 修改點 3/4：所有點的計算都基於視覺中心點 ****
+                const originalX = visualCenterX + radius * Math.cos(angleRadians);
+                const originalY = visualCenterY + radius * Math.sin(angleRadians);
 
-                const rotatedBluePoint = rotatePoint(originalX, originalY, centerX, centerY, tiltAngleRadians);
+                // 旋轉點也以視覺中心點為基準
+                const rotatedBluePoint = rotatePoint(originalX, originalY, visualCenterX, visualCenterY, tiltAngleRadians);
                 bluePoints.push(rotatedBluePoint);
 
-                const D0 = centerX - originalX;
-                // maskPercentage 越高，遮罩越廣 
+                // 遮罩線段計算也基於視覺中心點
+                const D0 = visualCenterX - originalX;
                 const newXBeforeTilt = originalX + (maskPercentage / 100) * (2 * D0);
                 const newYBeforeTilt = originalY;
-                const rotatedRedPoint = rotatePoint(newXBeforeTilt, newYBeforeTilt, centerX, centerY, tiltAngleRadians);
+                const rotatedRedPoint = rotatePoint(newXBeforeTilt, newYBeforeTilt, visualCenterX, visualCenterY, tiltAngleRadians);
                 redPoints.push(rotatedRedPoint);
             }
 
-            // 2. 在藍點和紅點之間繪製黑線 (覆蓋效果)
             ctx.strokeStyle = '#000';
             ctx.lineWidth = dotSize * 2;
             ctx.lineCap = 'round';
@@ -197,21 +199,19 @@
                 ctx.stroke();
             }
 
-            // 3. 繪製藍點
             ctx.fillStyle = '#00aaff'; // 藍色
             for (const p of bluePoints) {
                 ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
             }
 
-            // 4. 繪製紅點
             ctx.fillStyle = '#ff0000'; // 紅色
             for (const p of redPoints) {
                 ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
             }
             
-            // 5. 繪製圓心 (白色)
+            // **** 修改點 4/4：中心白點也繪製在視覺中心點 ****
             ctx.beginPath();
-            ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
+            ctx.arc(visualCenterX, visualCenterY, 3, 0, Math.PI * 2);
             ctx.fillStyle = '#fff';
             ctx.fill();
         }
@@ -248,19 +248,21 @@
 
             const ctx = canvas.getContext('2d');
 
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const dotSize = 2;
-            const numDots = 180; 
-            const tiltAngleDegrees = 23.4;
-            const tiltAngleRadians = tiltAngleDegrees * Math.PI / 180;
+            // **** 修改點 1/4：定義視覺中心點，包含水平偏移量 ****
+            const trueCanvasCenterX = canvas.width / 2;
+            const trueCanvasCenterY = canvas.height / 2;
+            const horizontalOffset = -5; // 向左偏移 5 像素
+
+            const visualCenterX = trueCanvasCenterX + horizontalOffset;
+            const visualCenterY = trueCanvasCenterY; // Y軸不變
 
             if (moonImage.complete && moonImage.naturalWidth > 0) {
                 ctx.save();
-                ctx.translate(centerX, centerY);
+                // **** 修改點 2/4：將 context 翻譯到新的視覺中心點 ****
+                ctx.translate(visualCenterX, visualCenterY);
                 ctx.rotate(tiltAngleRadians);
-                // **** 修改點：調整圖片繪製的X座標，使其向左偏移 5 像素 ****
-                ctx.drawImage(moonImage, -canvasWidth / 2 - 5, -canvasHeight / 2, canvasWidth, canvasHeight);
+                // 繪製圖片時，現在是相對於已翻譯的中心點 (0,0) 來繪製
+                ctx.drawImage(moonImage, -canvasWidth / 2, -canvasHeight / 2, canvasWidth, canvasHeight);
                 ctx.restore();
             } else {
                 ctx.fillStyle = '#222';
@@ -271,28 +273,26 @@
             const bluePoints = [];
             const redPoints = [];
 
-            // 找到右半圓的藍點
             for (let i = 0; i <= numDots; i++) {
                 const angleDegrees = -90 + i; // 從 -90 度 (圓下方) 到 90 度 (圓上方)，代表右半圓
                 const angleRadians = angleDegrees * Math.PI / 180;
 
-                const originalX = centerX + radius * Math.cos(angleRadians);
-                const originalY = centerY + radius * Math.sin(angleRadians);
+                // **** 修改點 3/4：所有點的計算都基於視覺中心點 ****
+                const originalX = visualCenterX + radius * Math.cos(angleRadians);
+                const originalY = visualCenterY + radius * Math.sin(angleRadians);
 
-                const rotatedBluePoint = rotatePoint(originalX, originalY, centerX, centerY, tiltAngleRadians);
+                // 旋轉點也以視覺中心點為基準
+                const rotatedBluePoint = rotatePoint(originalX, originalY, visualCenterX, visualCenterY, tiltAngleRadians);
                 bluePoints.push(rotatedBluePoint);
 
-                // 計算紅點，使其向左移動
-                // D0 現在對於右半圓的點會是負值 (centerX - originalX)
-                // 因此 (maskPercentage / 100) * (2 * D0) 會是負值，使 newXBeforeTilt 往左移動
-                const D0 = centerX - originalX; 
+                // 遮罩線段計算也基於視覺中心點
+                const D0 = visualCenterX - originalX; 
                 const newXBeforeTilt = originalX + (maskPercentage / 100) * (2 * D0);
                 const newYBeforeTilt = originalY;
-                const rotatedRedPoint = rotatePoint(newXBeforeTilt, newYBeforeTilt, centerX, centerY, tiltAngleRadians);
+                const rotatedRedPoint = rotatePoint(newXBeforeTilt, newYBeforeTilt, visualCenterX, visualCenterY, tiltAngleRadians);
                 redPoints.push(rotatedRedPoint);
             }
 
-            // 重新啟用黑線繪製
             ctx.strokeStyle = '#000';
             ctx.lineWidth = dotSize * 2;
             ctx.lineCap = 'round';
@@ -304,21 +304,19 @@
                 ctx.stroke();
             }
 
-            // 繪製藍點
             ctx.fillStyle = '#00aaff'; // 藍色
             for (const p of bluePoints) {
                 ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
             }
 
-            // 繪製紅點
             ctx.fillStyle = '#ff0000'; // 紅色
             for (const p of redPoints) {
                 ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
             }
             
-            // 繪製圓心 (白色)
+            // **** 修改點 4/4：中心白點也繪製在視覺中心點 ****
             ctx.beginPath();
-            ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
+            ctx.arc(visualCenterX, visualCenterY, 3, 0, Math.PI * 2);
             ctx.fillStyle = '#fff';
             ctx.fill();
         }
@@ -332,48 +330,42 @@
 
             // 第一組：左側為起點往右邊走 (遮罩遞減：100% 遮罩到 0% 遮罩 - 盈月)
             for (let p = 100; p >= 0; p -= 5) {
-                // 創建一個新的父容器，包含百分比標籤和圖框
                 const moonUnitItem = document.createElement('div');
                 moonUnitItem.className = 'moon-unit-item';
 
-                // 創建百分比標籤 (普通格式)
                 const percentageLabel = document.createElement('div');
                 percentageLabel.className = 'percentage-label';
-                percentageLabel.textContent = `遮罩 ${p}%`; // 直接顯示百分比
+                percentageLabel.textContent = `遮罩 ${p}%`;
                 moonUnitItem.appendChild(percentageLabel);
 
-                // 創建原有的圖框
                 const figureWrapper = document.createElement('div');
                 figureWrapper.className = 'figure-wrapper';
                 const uniqueDivId = `leftRightPhaseWrapper_${p}`;
                 figureWrapper.id = uniqueDivId;
-                moonUnitItem.appendChild(figureWrapper); // 將圖框加入到 moonUnitItem
+                moonUnitItem.appendChild(figureWrapper);
 
-                leftToRightContainer.appendChild(moonUnitItem); // 將整個單元加入到主容器
+                leftToRightContainer.appendChild(moonUnitItem);
 
                 maskmoon(uniqueDivId, defaultRadiusForExample, p); 
             }
 
             // 第二組：右側為起點往左邊走 (遮罩遞增：0% 遮罩到 100% 遮罩 - 虧月)
             for (let p = 0; p <= 100; p += 5) {
-                // 創建一個新的父容器，包含百分比標籤和圖框
                 const moonUnitItem = document.createElement('div');
                 moonUnitItem.className = 'moon-unit-item';
 
-                // 創建百分比標籤 (普通格式)
                 const percentageLabel = document.createElement('div');
                 percentageLabel.className = 'percentage-label';
-                percentageLabel.textContent = `遮罩 ${p}%`; // 直接顯示百分比
+                percentageLabel.textContent = `遮罩 ${p}%`;
                 moonUnitItem.appendChild(percentageLabel);
 
-                // 創建原有的圖框
                 const figureWrapper = document.createElement('div');
                 figureWrapper.className = 'figure-wrapper';
                 const uniqueDivId = `rightLeftPhaseWrapper_${p}`;
                 figureWrapper.id = uniqueDivId;
-                moonUnitItem.appendChild(figureWrapper); // 將圖框加入到 moonUnitItem
+                moonUnitItem.appendChild(figureWrapper);
 
-                rightToLeftContainer.appendChild(moonUnitItem); // 將整個單元加入到主容器
+                rightToLeftContainer.appendChild(moonUnitItem);
 
                 drawMoonDotsRightToLeft(uniqueDivId, defaultRadiusForExample, p); 
             }
@@ -384,7 +376,7 @@
             alert('無法載入月亮底圖，請檢查圖片網址或網路連線。所有月相圖將顯示為預設背景。');
             const leftToRightContainer = document.getElementById('left-to-right-container');
             const rightToLeftContainer = document.getElementById('right-to-left-container');
-            const defaultRadiusForExample = 160; // 此處半徑保持為 160，與您提供的 .25 版一致
+            const defaultRadiusForExample = 160;
 
             // 第一組 (無底圖)
             for (let p = 100; p >= 0; p -= 5) {
