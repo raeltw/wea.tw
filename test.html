@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>圓形弧線水平線填色測試 (V22 - 版本號單獨顯示)</title>
+<title>圓形弧線水平線填色測試 (V25 - 優化繪圖，背景為暗面色)</title>
 <style>
   body {
     display: flex;
@@ -10,15 +10,16 @@
     align-items: flex-start;
     padding: 20px;
     font-family: sans-serif;
+    background-color: #333; /* 可以設定整個頁面背景色，與月亮暗面協調 */
   }
-  .page-version-info { /* 新增的頁面頂部版本資訊樣式 */
+  .page-version-info { 
     width: 100%;
     text-align: right;
     font-size: 12px;
-    color: #666;
+    color: #999; /* 調整為在深色背景下可見 */
     margin-bottom: 15px;
     padding-bottom: 5px;
-    border-bottom: 1px dashed #eee;
+    border-bottom: 1px dashed #666; /* 調整為在深色背景下可見 */
   }
   .section-title {
     width: 100%;
@@ -26,40 +27,27 @@
     margin-bottom: 10px;
     font-size: 18px;
     font-weight: bold;
-    color: #333;
-    border-bottom: 1px solid #ccc;
+    color: #eee; /* 調整為在深色背景下可見 */
+    border-bottom: 1px solid #777; /* 調整為在深色背景下可見 */
     padding-bottom: 5px;
   }
   .canvas-container {
     margin: 10px;
-    border: 1px solid #ccc;
-    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
-    position: relative; /* 保持 relative，以防未來需要內部定位 */
+    border: 1px solid #555; /* 調整邊框顏色 */
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.5); /* 調整陰影 */
+    position: relative; 
   }
   canvas {
-    background-color: #f9f9f9;
+    background-color: black; /* *** 關鍵修改：Canvas 默認背景色為暗面色 (純黑或 MOON_COLOR_DARK) *** */
   }
   .label {
     text-align: center;
     font-size: 14px;
     margin-top: 5px;
-    color: #555;
+    color: #ccc; /* 調整為在深色背景下可見 */
   }
-  /* .version-info-box 這個樣式將不再使用，因為元素被移除了 */
-  /*
-  .version-info-box {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    font-size: 10px;
-    color: #999;
-    background-color: rgba(255, 255, 255, 0.7);
-    padding: 2px 5px;
-    border-radius: 3px;
-  }
-  */
   .drawing-group-container { 
-      border: 2px dashed #90EE90; 
+      border: 2px dashed #666; /* 調整邊框顏色 */
       padding: 10px;
       margin: 20px 0;
       width: 100%; 
@@ -73,21 +61,26 @@
 </head>
 <body>
 
-<div class="page-version-info">當前版本: V22</div> <div class="section-title">第一組: 紅線左側塗黑，右側塗白 (顯示所有文字)</div>
+<div class="page-version-info">當前版本: V25</div>
+
+<div class="section-title">第一組: 顯示所有文字，顯示線條圓心 (無旋轉)</div>
 <div id="group1Div" class="drawing-group-container">
     </div>
 
-
-<div class="section-title" style="clear: both;">第二組: 紅線左側塗白，右側塗黑 (隱藏所有文字，顯示線條圓心)</div>
+<div class="section-title" style="clear: both;">第二組: 隱藏所有文字，顯示線條圓心 (旋轉 24.5 度)</div>
 <div id="group2Div" class="drawing-group-container">
     </div>
 
-<div class="section-title" style="clear: both;">第三組: 紅線左側塗黑，右側塗白 (隱藏所有文字，隱藏所有線條圓心)</div>
+<div class="section-title" style="clear: both;">第三組: 隱藏所有文字，隱藏所有線條圓心 (旋轉 24.5 度) - 優化後只繪製亮面</div>
 <div id="group3Div" class="drawing-group-container">
     </div>
 
-<div class="section-title" style="clear: both;">第四組: 紅線左側塗白，右側塗黑 (顯示所有文字，隱藏所有線條圓心)</div>
+<div class="section-title" style="clear: both;">第四組: 顯示所有文字，隱藏所有線條圓心 (無旋轉) - 優化後只繪製亮面</div>
 <div id="group4Div" class="drawing-group-container">
+    </div>
+
+<div class="section-title" style="clear: both;">第五組: 隱藏所有文字，隱藏所有線條圓心 (旋轉 -24.5 度) - 優化後只繪製亮面</div>
+<div id="group5Div" class="drawing-group-container">
     </div>
 
 
@@ -95,8 +88,10 @@
   const gridSize = 10; 
   const renderDensity = 1;
 
-  // 核心繪圖邏輯函數 (內部使用，不直接對外暴露)
-  function _drawInternal(canvasId, angleValue, fillLeftBlack, targetDivId, newCanvasWidth, newCanvasHeight, hideLabel, hideOutlines) {
+  const MOON_COLOR_LIGHT = '#e0e0e0'; 
+  const MOON_COLOR_DARK = 'black'; // 月亮的暗面，現在與 Canvas 背景色協調
+
+  function _drawInternal(canvasId, angleValue, fillLeftBlack, targetDivId, newCanvasWidth, newCanvasHeight, hideLabel, hideOutlines, rotationDegrees = 0) {
     const container = document.createElement('div');
     container.className = 'canvas-container';
 
@@ -111,12 +106,6 @@
         label.className = 'label';
         label.textContent = `角度值: ${angleValue} (${newCanvasWidth}x${newCanvasHeight})`;
         container.appendChild(label);
-
-        // *** 移除此處的 versionBox 創建和附加，因為版本號將在頁面頂部統一顯示 ***
-        // const versionBox = document.createElement('div');
-        // versionBox.className = 'version-info-box';
-        // versionBox.textContent = 'V21'; 
-        // container.appendChild(versionBox);
     }
 
     const targetDiv = document.getElementById(targetDivId);
@@ -132,16 +121,27 @@
     const centerY = canvas.height / 2;
     const circleRadius = Math.min(canvas.width, canvas.height) / 2 - 5; 
 
+    if (rotationDegrees !== 0) {
+        ctx.save(); 
+        ctx.translate(centerX, centerY); 
+        ctx.rotate(rotationDegrees * Math.PI / 180); 
+        ctx.translate(-centerX, -centerY); 
+    }
+
     const observationAngleRadians = (angleValue / 100) * Math.PI;
 
     const semiMinorAxis_horizontal = circleRadius * Math.cos(observationAngleRadians);
     const semiMajorAxis_vertical = circleRadius; 
     const currentAbsoluteSemiMinorAxis = Math.abs(semiMinorAxis_horizontal); 
 
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI);
-    ctx.fillStyle = 'white';
-    ctx.fill();
+    // *** 移除整個圓形的初始白色背景填充。現在由 Canvas 背景色承擔暗面。***
+    // ctx.beginPath();
+    // ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI);
+    // ctx.fillStyle = MOON_COLOR_LIGHT; 
+    // ctx.fill();
+
+    // *** 關鍵優化：只繪製月亮的亮面部分 ***
+    ctx.fillStyle = MOON_COLOR_LIGHT; // 亮面統一使用 MOON_COLOR_LIGHT
 
     for (let y = centerY - circleRadius; y <= centerY + circleRadius; y += renderDensity) {
       const dy = y - centerY;
@@ -173,17 +173,20 @@
           }
       }
 
-      ctx.fillStyle = fillLeftBlack ? 'black' : 'white';
-      ctx.fillRect(greenLeftX, y, redArcX - greenLeftX, renderDensity);
-
-      ctx.fillStyle = fillLeftBlack ? 'white' : 'black';
-      ctx.fillRect(redArcX, y, greenRightX - redArcX, renderDensity);
+      // 如果 `fillLeftBlack` 為 true，表示左側是暗面，我們只繪製右側的亮面。
+      // 如果 `fillLeftBlack` 為 false，表示左側是亮面，我們只繪製左側的亮面。
+      if (fillLeftBlack) { // 左側是暗面 (由背景色負責)，右側是亮面
+          ctx.fillRect(redArcX, y, greenRightX - redArcX, renderDensity);
+      } else { // 左側是亮面，右側是暗面 (由背景色負責)
+          ctx.fillRect(greenLeftX, y, redArcX - greenLeftX, renderDensity);
+      }
     }
+    // ********************************************
 
     if (!hideOutlines) {
         ctx.beginPath();
         ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI);
-        ctx.strokeStyle = 'green';
+        ctx.strokeStyle = 'green'; 
         ctx.lineWidth = 1;
         ctx.stroke();
 
@@ -208,59 +211,68 @@
             const y = centerY + semiMajorAxis_vertical * Math.sin(t);
             ctx.lineTo(x, y);
         }
-        ctx.strokeStyle = 'red';
+        ctx.strokeStyle = 'red'; 
         ctx.lineWidth = 3;
         ctx.stroke();
 
         ctx.beginPath();
         ctx.arc(centerX, centerY, 2, 0, 2 * Math.PI);
-        ctx.fillStyle = 'blue';
+        ctx.fillStyle = 'blue'; 
         ctx.fill();
+    }
+
+    if (rotationDegrees !== 0) {
+        ctx.restore(); 
     }
   }
 
   /**
-   * 繪製第一組圖形 (紅線左側塗黑，右側塗白)。
-   * 會生成 11 個從角度值 0 到 100 的圖形。
+   * 繪製第一組圖形 (紅線左側為月亮暗面，右側為亮面)。
    * @param {string} targetDivId - 要將圖形添加到哪個 div 的 ID。
    * @param {number} size - 每個圖形的寬高 (例如 200 表示 200x200 像素)。
    * @param {boolean} [hideLabel=false] - (可選) 是否隱藏圖形下方的文字標示。預設為 false (顯示)。
    * @param {boolean} [hideOutlines=false] - (可選) 是否隱藏紅/綠線邊框及中心圓點。預設為 false (顯示)。
+   * @param {number} [rotationDegrees=0] - (可選) 圖形整體旋轉的角度 (度)。正值為順時針，負值為逆時針。預設為 0。
    */
-  function funcm1(targetDivId, size, hideLabel = false, hideOutlines = false) {
+  function funcm1(targetDivId, size, hideLabel = false, hideOutlines = false, rotationDegrees = 0) {
       for (let i = 0; i <= gridSize; i++) {
           const angleValue = i * 10;
-          _drawInternal(`canvas_${targetDivId}_m1_${angleValue}_${size}_${hideLabel}_${hideOutlines}`, angleValue, true, targetDivId, size, size, hideLabel, hideOutlines); 
+          // fillLeftBlack = true: 表示紅線左側為暗面 (由背景負責)，右側繪製亮面
+          _drawInternal(`canvas_${targetDivId}_m1_${angleValue}_${size}_${hideLabel}_${hideOutlines}_${rotationDegrees}`, angleValue, true, targetDivId, size, size, hideLabel, hideOutlines, rotationDegrees); 
       }
   }
 
   /**
-   * 繪製第二組圖形 (紅線左側塗白，右側塗黑)。
-   * 會生成 11 個從角度值 0 到 100 的圖形。
+   * 繪製第二組圖形 (紅線左側為月亮亮面，右側為暗面)。
    * @param {string} targetDivId - 要將圖形添加到哪個 div 的 ID。
    * @param {number} size - 每個圖形的寬高 (例如 200 表示 200x200 像素)。
    * @param {boolean} [hideLabel=false] - (可選) 是否隱藏圖形下方的文字標示。預設為 false (顯示)。
    * @param {boolean} [hideOutlines=false] - (可選) 是否隱藏紅/綠線邊框及中心圓點。預設為 false (顯示)。
+   * @param {number} [rotationDegrees=0] - (可選) 圖形整體旋轉的角度 (度)。正值為順時針，負值為逆時針。預設為 0。
    */
-  function funcm2(targetDivId, size, hideLabel = false, hideOutlines = false) {
+  function funcm2(targetDivId, size, hideLabel = false, hideOutlines = false, rotationDegrees = 0) {
       for (let i = 0; i <= gridSize; i++) {
           const angleValue = i * 10;
-          _drawInternal(`canvas_${targetDivId}_m2_${angleValue}_${size}_${hideLabel}_${hideOutlines}`, angleValue, false, targetDivId, size, size, hideLabel, hideOutlines); 
+          // fillLeftBlack = false: 表示紅線左側繪製亮面，右側為暗面 (由背景負責)
+          _drawInternal(`canvas_${targetDivId}_m2_${angleValue}_${size}_${hideLabel}_${hideOutlines}_${rotationDegrees}`, angleValue, false, targetDivId, size, size, hideLabel, hideOutlines, rotationDegrees); 
       }
   }
 
   // --- 頁面加載後調用這些函數來生成圖形 ---
-  // 第一組示例：完全預設，顯示所有文字 (角度值+尺寸)，顯示所有線條與圓心
+  // 第一組：顯示所有文字，顯示線條圓心 (無旋轉)
   funcm1('group1Div', 200); 
 
-  // 第二組示例：隱藏所有文字 (角度值+尺寸)，顯示所有線條與圓心
-  funcm2('group2Div', 250, true, false); 
+  // 第二組：隱藏所有文字，顯示線條圓心 (旋轉 24.5 度)
+  funcm2('group2Div', 250, true, false, 24.5); 
 
-  // 第三組示例：隱藏所有文字 (角度值+尺寸)，隱藏所有線條與圓心 (只剩下黑白填充)
-  funcm1('group3Div', 180, true, true); 
+  // 第三組：隱藏所有文字，隱藏所有線條圓心 (旋轉 24.5 度) - 優化後只繪製亮面
+  funcm1('group3Div', 180, true, true, 24.5); 
 
-  // 第四組示例：顯示所有文字 (角度值+尺寸)，隱藏所有線條與圓心
+  // 第四組：顯示所有文字，隱藏所有線條圓心 (無旋轉) - 優化後只繪製亮面
   funcm2('group4Div', 220, false, true); 
+
+  // 第五組：隱藏所有文字，隱藏所有線條圓心 (旋轉 -24.5 度) - 優化後只繪製亮面
+  funcm1('group5Div', 150, true, true, -24.5);
 
 </script>
 
