@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>切西瓜弧線變化 (修正方向 V3)</title>
+<title>切西瓜弧線變化 (完整一圈 V4)</title>
 <style>
   body {
     display: flex;
@@ -36,10 +36,10 @@
 </head>
 <body>
 
-<div id="version-info">版本: 20250706.3</div>
+<div id="version-info">版本: 20250706.4</div>
 
 <script>
-  const gridSize = 10; // 从 0 到 100，每10为一个增量，所以有 11 个图 (0, 10, ..., 100)
+  const gridSize = 20; // 从 0 到 200，每10为一个增量，所以有 21 个图 (0, 10, ..., 200)
   const canvasWidth = 200;
   const canvasHeight = 200;
   const watermelonRadius = 80; // 西瓜的半徑 (像素)
@@ -66,39 +66,107 @@
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
 
-    // 将 0-100 的值映射到 0 到 Math.PI 弧度
-    // 0 (正東) -> 0 弧度 (正視，看到圓形)
-    // 50 (正南) -> Math.PI / 2 弧度 (側視，刀痕近似直線)
-    // 100 (正西) -> Math.PI 弧度 (反向正視，再次看到圓形)
-    let observationAngleRadians;
-    if (angleValue <= 50) {
-      observationAngleRadians = (angleValue / 50) * (Math.PI / 2);
-    } else {
-      // 从 50 到 100，角度从 Math.PI / 2 增加到 Math.PI
-      observationAngleRadians = Math.PI / 2 + ((angleValue - 50) / 50) * (Math.PI / 2);
-    }
+    // *** 修正：将 0-200 的值映射到 0 到 2*Math.PI 弧度 ***
+    // 0 -> 0
+    // 50 -> PI/2
+    // 100 -> PI
+    // 150 -> 3*PI/2
+    // 200 -> 2*PI
+    const observationAngleRadians = (angleValue / 100) * Math.PI; // 将 0-100 映射到 0-PI
 
     // 水平方向的轴长会因为倾斜而缩短
-    const semiMinorAxis_horizontal = watermelonRadius * Math.cos(observationAngleRadians);
-    // 垂直方向的轴长保持不变 (西瓜半径)
+    // 我们需要考虑观察者“绕着”西瓜移动，而切面保持不动。
+    // observationAngleRadians 此时代表了观察者相对于切面法线的角度
+    const semiMinorAxis_horizontal = watermelonRadius * Math.abs(Math.cos(observationAngleRadians)); // 使用绝对值确保轴长非负
     const semiMajorAxis_vertical = watermelonRadius;
 
-    ctx.beginPath();
-    // *** 修正：绘制椭圆的右半部分，使其在“角度值：0”时呈现右侧半圆 ***
-    // t 从 -Math.PI / 2 到 Math.PI / 2 会绘制右半边
-    const startAngle = -Math.PI / 2;
-    const endAngle = Math.PI / 2;
+    // 根据 observationAngleRadians 确定绘制椭圆的哪半部分
+    let startArcAngle, endArcAngle;
+    let arcDirection = false; // false for clockwise, true for counter-clockwise
 
+    if (angleValue >= 0 && angleValue <= 50) { // 从正东到正南 (右半边逐渐变窄)
+        startArcAngle = -Math.PI / 2;
+        endArcAngle = Math.PI / 2;
+    } else if (angleValue > 50 && angleValue <= 150) { // 从正南到正北 (从竖线到左半边，再到竖线)
+        // 这段的弧线方向可能需要更精细的控制
+        // 当 angleValue > 50 且 <= 100 时，显示左半边
+        // 当 angleValue > 100 且 <= 150 时，显示左半边，但逐渐变窄
+        // 实际上 semiMinorAxis_horizontal = watermelonRadius * Math.abs(Math.cos(observationAngleRadians))
+        // 已经处理了对称性，所以我们只需要根据 angleValue 决定画哪边
+        if (angleValue <= 100) { // 从正南到正西 (右半边变细到竖线，再到左半边变粗)
+             // 此时 cos 变为负值，Math.abs 使得 semiMinorAxis_horizontal 依然是正值
+             // 我们需要切换到绘制左侧
+             startArcAngle = Math.PI / 2;
+             endArcAngle = 3 * Math.PI / 2;
+        } else { // 从正西到正北 (左半边变粗到竖线)
+             startArcAngle = Math.PI / 2;
+             endArcAngle = 3 * Math.PI / 2;
+        }
+    } else { // 从正北到正东 (左半边逐渐变窄到右半边)
+        startArcAngle = -Math.PI / 2;
+        endArcAngle = Math.PI / 2;
+    }
+
+    // 重新思考 0-200 映射到 0-2PI 的观察角度和绘制半圆的逻辑
+    // 为了简化，我们可以让绘制的半圆始终是“靠近观察者”的半圆
+    // 并且让 observationAngleRadians 连续变化。
+    // 但是，由于椭圆的 cos 函數是偶函數 (cos(x) = cos(-x))，並且我們使用了 Math.abs，
+    // 這使得 semiMinorAxis_horizontal 在觀察角度為 alpha 和 PI - alpha 時是一樣的。
+    // 這就導致了 0-100 和 100-200 之間的視覺對稱性，而不會像您期望的那樣繞一圈。
+
+    // 为了实现完整的绕一圈，我们需要区分“正面”和“背面”的视角。
+    // 这通常需要一个 3D 渲染库，或者更复杂的 2D 投影逻辑。
+    // 在纯 2D 椭圆投影中，Math.cos(angle) 是对称的，所以直接用 semiMinorAxis_horizontal = watermelonRadius * Math.cos(observationAngleRadians)
+    // 会导致在 Math.PI/2 到 3*Math.PI/2 的时候，cos 是负值，需要处理。
+
+    // 更直接的实现 "绕一圈" 的方法：
+    // 我们需要一个变量来控制切面的“可见面”。
+    // 当 angleValue 从 0 到 100，我们看到“前面”。
+    // 当 angleValue 从 100 到 200，我们看到“后面”。
+    // 并且当我们在背面时，应该看到切面边缘是反向的。
+
+    // 考虑到 2D 椭圆的限制，如果我们希望模拟 3D 绕圈
+    // 最简单的方法是控制绘制的弧线是左半边还是右半边，以及“深度”感。
+    // 我们可以让 semiMinorAxis_horizontal 的计算不使用 Math.abs
+    // 并且根据 cos 值的正負來判斷。
+
+    // 重新定义 observationAngleRadians 映射到 0 到 2*PI
+    const fullRotationRadians = (angleValue / 200) * (2 * Math.PI); // 将 0-200 映射到 0-2PI
+
+    // 这里 semiMinorAxis 应该是一个可以为负值的值，表示深度或方向
+    const currentSemiMinorAxis = watermelonRadius * Math.cos(fullRotationRadians);
+
+    // 根据 currentSemiMinorAxis 的正负来决定绘制哪半边，模拟透视
+    // 如果 currentSemiMinorAxis > 0，表示面向我们，画右半边
+    // 如果 currentSemiMinorAxis <= 0，表示背向我们，画左半边 (或透明化)
+    // 并且为了避免反向绘制，我们将使用 Math.abs(currentSemiMinorAxis) 作为实际的轴长
+
+    const actualSemiMinorAxis = Math.abs(currentSemiMinorAxis);
+    const actualSemiMajorAxis = watermelonRadius; // 垂直方向总是半径
+
+    let arcStart, arcEnd;
+    let clockwise = false; // 控制绘制方向
+
+    if (currentSemiMinorAxis >= 0) { // 面对我们（右半边）
+        arcStart = -Math.PI / 2;
+        arcEnd = Math.PI / 2;
+        clockwise = false; // 逆时针绘制
+    } else { // 背向我们（左半边）
+        arcStart = Math.PI / 2;
+        arcEnd = 3 * Math.PI / 2;
+        clockwise = false; // 逆时针绘制
+    }
+
+    ctx.beginPath();
     // 移动到弧线的起点
-    // x 使用 semiMinorAxis_horizontal，y 使用 semiMajorAxis_vertical
-    ctx.moveTo(centerX + semiMinorAxis_horizontal * Math.cos(startAngle), centerY + semiMajorAxis_vertical * Math.sin(startAngle));
+    ctx.moveTo(centerX + actualSemiMinorAxis * Math.cos(arcStart), centerY + actualSemiMajorAxis * Math.sin(arcStart));
 
     const numSegments = 100;
     for (let i = 0; i <= numSegments; i++) {
-      const t = startAngle + (endAngle - startAngle) * (i / numSegments);
-      const x = centerX + semiMinorAxis_horizontal * Math.cos(t);
-      const y = centerY + semiMajorAxis_vertical * Math.sin(t);
-      ctx.lineTo(x, y);
+        const t = arcStart + (arcEnd - arcStart) * (i / numSegments);
+        const x = centerX + actualSemiMinorAxis * Math.cos(t);
+        const y = centerY + actualSemiMajorAxis * Math.sin(t);
+        ctx.lineTo(x, y);
     }
 
     ctx.strokeStyle = 'red';
