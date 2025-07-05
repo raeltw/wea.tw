@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>圓形左半邊點移動到50%</title>
+    <title>圓形左半邊點移動到50% (修正版)</title>
     <style>
         body {
             margin: 0;
@@ -34,12 +34,12 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.05.7</div>
+    <div id="version-info">版本: v2025.07.05.8</div>
     <canvas id="lineCanvas" width="400" height="400"></canvas>
 
     <script>
         // --- 設定版本號 ---
-        const VERSION = 'v2025.07.05.7';
+        const VERSION = 'v2025.07.05.8';
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
         const canvas = document.getElementById('lineCanvas');
@@ -52,10 +52,10 @@
         const numDots = 180; // 繪製點的數量 (從 90 到 270 度，每度一個點)
 
         function drawTransformedPoints() {
-            // 清空畫布
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // 不再清空畫布，這樣圓心點會保留
+            // ctx.clearRect(0, 0, canvas.width, canvas.height); 
 
-            // 繪製圓心 (可選)
+            // 繪製圓心 (原點) - 這次確保它會被畫出來
             ctx.beginPath();
             ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
             ctx.fillStyle = '#fff';
@@ -71,12 +71,8 @@
                 const originalX = centerX + radius * Math.cos(angleRadians);
                 const originalY = centerY + radius * Math.sin(angleRadians);
 
-                // 計算原始點到中心垂直線的距離
-                // D0 = centerX - originalX;
-
-                // 新點的 X 座標：從原始點的 X 座標，加上 D0 的距離，即移動到 centerX
-                // newX = originalX + D0 = originalX + (centerX - originalX) = centerX;
-                const newX = centerX; // 所有點的 X 座標都變成圓心的 X 座標
+                // 新點的 X 座標：所有點的 X 座標都變成圓心的 X 座標 (centerX)
+                const newX = centerX; 
                 const newY = originalY; // Y 座標不變
 
                 // 繪製點 (使用小方塊來表示)
