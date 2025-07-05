@@ -15,7 +15,7 @@
             background-color: #000;
             color: #eee;
             font-family: sans-serif;
-            font-size: 14px;
+            /* font-size: 14px; // 已移除 */
             padding: 20px 0;
         }
         h2 {
@@ -43,7 +43,7 @@
         /* 新增：百分比標籤的樣式 (普通格式) */
         .percentage-label {
             color: #eee;
-            font-size: 14px; /* 普通字體大小 */
+            /* font-size: 14px; // 已移除 */
             margin-bottom: 5px; /* 標籤與圖框之間的間距 */
             text-align: center;
         }
@@ -85,7 +85,7 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.05.47</div>
+    <div id="version-info">版本: v2025.07.05.48</div>
 
     <h2>左側為起點往右邊走 (盈月：新月到滿月)</h2>
     <div id="left-to-right-container" class="figures-container">
@@ -96,7 +96,7 @@
         </div>
 
     <script>
-        const VERSION = 'v2025.07.05.47'; // 更新版本號
+        const VERSION = 'v2025.07.05.48'; // 版本號已更新
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
         const moonImage = new Image();
@@ -145,8 +145,6 @@
 
             const centerX = canvas.width / 2; // Canvas 的實際中心 X 座標
             const centerY = canvas.height / 2; // Canvas 的實際中心 Y 座標
-            // const horizontalOffset = -5; // 已移除
-            // const verticalOffset = 1; // 已移除
 
             const dotSize = 2;
             const numDots = 180;
@@ -255,8 +253,6 @@
 
             const centerX = canvas.width / 2; // Canvas 的實際中心 X 座標
             const centerY = canvas.height / 2; // Canvas 的實際中心 Y 座標
-            // const horizontalOffset = -5; // 已移除
-            // const verticalOffset = 1; // 已移除
 
             const dotSize = 2;
             const numDots = 180; 
