@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>月相盈虧模擬 (完整演示：左右側遮罩變化順序修正)</title>
+    <title>月相盈虧模擬 (方框外面顯示百分比)</title>
     <style>
         body {
             margin: 0;
@@ -40,6 +40,7 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
             text-align: center;
             
+            /* 保持原有尺寸，Canvas 將在其中繪製，H3 將在 Canvas 上方 */
             width: 320px; 
             height: 320px; 
             display: flex;
@@ -51,6 +52,7 @@
             color: #fff;
             margin-top: 0;
             margin-bottom: 15px;
+            /* 移除之前為 H3 標籤設定的固定高度，使用普通格式 */
         }
         canvas {
             background-color: #222;
@@ -70,18 +72,18 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.05.25</div>
+    <div id="version-info">版本: v2025.07.05.31</div>
 
-    <h2>左側為起點往右邊走 (遮罩遞減：100% 遮罩到 0% 遮罩 - 新月到滿月)</h2>
+    <h2>左側為起點往右邊走 (盈月：新月到滿月)</h2>
     <div id="left-to-right-container" class="figures-container">
         </div>
 
-    <h2>右側為起點往左邊走 (遮罩遞增：0% 遮罩到 100% 遮罩 - 滿月到新月)</h2>
+    <h2>右側為起點往左邊走 (虧月：滿月到新月)</h2>
     <div id="right-to-left-container" class="figures-container">
         </div>
 
     <script>
-        const VERSION = 'v2025.07.05.25';
+        const VERSION = 'v2025.07.05.31'; // 更新版本號
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
         const moonImage = new Image();
@@ -97,8 +99,9 @@
         }
 
         /**
-         * v2025.07.05.18 版本中的原始 maskmoon 函式，完全保持不變。
          * 繪製月相圖的函式：藍點從左半圓開始，紅點往右邊移動，並繪製黑線遮罩。
+         * 用於顯示遮罩從 0% 遞增到 100% 的效果 (新月到滿月，即盈月)。
+         * 此函式保持與 v2025.07.05.25 版本核心繪圖邏輯不變。
          *
          * @param {string} targetDivId 目標 div 的 ID，Canvas 將會被創建並放入此 div 中。
          * @param {number} radius 月亮圓形（藍點/紅點構成的圓形）的半徑。
@@ -111,8 +114,12 @@
                 return;
             }
 
+            // 取得對 h3 標籤的參考，因為它已經由主迴圈加入
+            const titleElement = targetDiv.querySelector('h3');
+
+            // Canvas 尺寸計算保持與 v2025.07.05.25 版本一致
             const canvasWidth = targetDiv.clientWidth;
-            const canvasHeight = targetDiv.clientHeight;
+            const canvasHeight = targetDiv.clientHeight; 
 
             if (canvasWidth === 0 || canvasHeight === 0) {
                  console.warn(`警告：目標 div (${targetDivId}) 的寬度或高度為 0。Canvas 將無法繪製。請確保該 div 在 CSS 中有明確的尺寸 (例如：width: 320px; height: 320px;)。`);
@@ -123,8 +130,13 @@
             canvas.width = canvasWidth;
             canvas.height = canvasHeight;
             
+            // 清空除 h3 之外的所有內容，然後重新加入 h3 和 canvas
+            // 這是為了確保 h3 在 canvas 上方且不被繪圖函式覆蓋
             targetDiv.innerHTML = ''; 
-            targetDiv.appendChild(canvas);
+            if (titleElement) {
+                targetDiv.appendChild(titleElement); // 重新加入 h3
+            }
+            targetDiv.appendChild(canvas); // 將 canvas 加入到 h3 後面
 
             const ctx = canvas.getContext('2d');
 
@@ -139,7 +151,8 @@
                 ctx.save();
                 ctx.translate(centerX, centerY);
                 ctx.rotate(tiltAngleRadians);
-                ctx.drawImage(moonImage, -canvasWidth / 2, -canvasHeight / 2, canvasWidth, canvasHeight);
+                // 調整繪製位置，讓月亮居中於 Canvas
+                ctx.drawImage(moonImage, -radius, -radius, radius * 2, radius * 2);
                 ctx.restore();
             } else {
                 ctx.fillStyle = '#222';
@@ -161,14 +174,12 @@
                 bluePoints.push(rotatedBluePoint);
 
                 const D0 = centerX - originalX;
-                // maskPercentage 越高，遮罩越廣 
                 const newXBeforeTilt = originalX + (maskPercentage / 100) * (2 * D0);
                 const newYBeforeTilt = originalY;
                 const rotatedRedPoint = rotatePoint(newXBeforeTilt, newYBeforeTilt, centerX, centerY, tiltAngleRadians);
                 redPoints.push(rotatedRedPoint);
             }
 
-            // 2. 在藍點和紅點之間繪製黑線 (覆蓋效果)
             ctx.strokeStyle = '#000';
             ctx.lineWidth = dotSize * 2;
             ctx.lineCap = 'round';
@@ -180,28 +191,29 @@
                 ctx.stroke();
             }
 
-            // 3. 繪製藍點
             ctx.fillStyle = '#00aaff'; // 藍色
             for (const p of bluePoints) {
                 ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
             }
 
-            // 4. 繪製紅點
             ctx.fillStyle = '#ff0000'; // 紅色
             for (const p of redPoints) {
                 ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
             }
             
-            // 5. 繪製圓心 (白色)
             ctx.beginPath();
             ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
             ctx.fillStyle = '#fff';
             ctx.fill();
+
+            // --- Canvas 上不再繪製文字 ---
         }
 
 
         /**
-         * 新增的函式：從右半圓找到藍點，紅點往左邊移動，並繪製黑線。
+         * 繪製月相圖的函式：從右半圓找到藍點，紅點往左邊移動，並繪製黑線。
+         * 用於顯示遮罩從 0% 遞增到 100% 的效果 (滿月到新月，即虧月)。
+         * 此函式保持與 v2025.07.05.25 版本核心繪圖邏輯不變。
          *
          * @param {string} targetDivId 目標 div 的 ID，Canvas 將會被創建並放入此 div 中。
          * @param {number} radius 月亮圓形（藍點/紅點構成的圓形）的半徑。
@@ -213,7 +225,11 @@
                 console.error(`找不到 ID 為 ${targetDivId} 的 div 元素。請確認 HTML 中存在該 ID。`);
                 return;
             }
+            
+            // 取得對 h3 標籤的參考，因為它已經由主迴圈加入
+            const titleElement = targetDiv.querySelector('h3');
 
+            // Canvas 尺寸計算保持與 v2025.07.05.25 版本一致
             const canvasWidth = targetDiv.clientWidth;
             const canvasHeight = targetDiv.clientHeight;
 
@@ -226,8 +242,12 @@
             canvas.width = canvasWidth;
             canvas.height = canvasHeight;
             
+            // 清空除 h3 之外的所有內容，然後重新加入 h3 和 canvas
             targetDiv.innerHTML = ''; 
-            targetDiv.appendChild(canvas);
+            if (titleElement) {
+                targetDiv.appendChild(titleElement); // 重新加入 h3
+            }
+            targetDiv.appendChild(canvas); // 將 canvas 加入到 h3 後面
 
             const ctx = canvas.getContext('2d');
 
@@ -242,7 +262,8 @@
                 ctx.save();
                 ctx.translate(centerX, centerY);
                 ctx.rotate(tiltAngleRadians);
-                ctx.drawImage(moonImage, -canvasWidth / 2, -canvasHeight / 2, canvasWidth, canvasHeight);
+                // 調整繪製位置，讓月亮居中於 Canvas
+                ctx.drawImage(moonImage, -radius, -radius, radius * 2, radius * 2);
                 ctx.restore();
             } else {
                 ctx.fillStyle = '#222';
@@ -265,8 +286,6 @@
                 bluePoints.push(rotatedBluePoint);
 
                 // 計算紅點，使其向左移動
-                // D0 現在對於右半圓的點會是負值 (centerX - originalX)
-                // 因此 (maskPercentage / 100) * (2 * D0) 會是負值，使 newXBeforeTilt 往左移動
                 const D0 = centerX - originalX; 
                 const newXBeforeTilt = originalX + (maskPercentage / 100) * (2 * D0);
                 const newYBeforeTilt = originalY;
@@ -274,7 +293,6 @@
                 redPoints.push(rotatedRedPoint);
             }
 
-            // 重新啟用黑線繪製
             ctx.strokeStyle = '#000';
             ctx.lineWidth = dotSize * 2;
             ctx.lineCap = 'round';
@@ -286,23 +304,22 @@
                 ctx.stroke();
             }
 
-            // 繪製藍點
             ctx.fillStyle = '#00aaff'; // 藍色
             for (const p of bluePoints) {
                 ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
             }
 
-            // 繪製紅點
             ctx.fillStyle = '#ff0000'; // 紅色
             for (const p of redPoints) {
                 ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
             }
             
-            // 繪製圓心 (白色)
             ctx.beginPath();
             ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
             ctx.fillStyle = '#fff';
             ctx.fill();
+
+            // --- Canvas 上不再繪製文字 ---
         }
 
 
@@ -312,7 +329,7 @@
             const rightToLeftContainer = document.getElementById('right-to-left-container');
             const defaultRadiusForExample = 160; 
 
-            // 第一組：使用原 maskmoon 函數 (左側為起點往右邊走 - 遮罩遞減：100% 遮罩到 0% 遮罩)
+            // 第一組：左側為起點往右邊走 (遮罩遞減：100% 遮罩到 0% 遮罩 - 盈月)
             // p 代表遮罩百分比，從 100 遞減到 0
             for (let p = 100; p >= 0; p -= 5) {
                 const wrapper = document.createElement('div');
@@ -321,14 +338,14 @@
                 wrapper.id = uniqueDivId;
 
                 const title = document.createElement('h3');
-                title.textContent = `遮罩 ${p}%`; // 直接顯示 p (遮罩百分比)
-                wrapper.appendChild(title);
+                title.textContent = `遮罩 ${p}%`; // 只顯示遮罩百分比
+                wrapper.appendChild(title); // 先將 h3 加入 wrapper
 
                 leftToRightContainer.appendChild(wrapper);
                 maskmoon(uniqueDivId, defaultRadiusForExample, p); 
             }
 
-            // 第二組：使用新的 drawMoonDotsRightToLeft 函數 (右側為起點往左邊走 - 遮罩遞增：0% 遮罩到 100% 遮罩)
+            // 第二組：右側為起點往左邊走 (遮罩遞增：0% 遮罩到 100% 遮罩 - 虧月)
             // p 代表遮罩百分比，從 0 遞增到 100
             for (let p = 0; p <= 100; p += 5) {
                 const wrapper = document.createElement('div');
@@ -337,15 +354,15 @@
                 wrapper.id = uniqueDivId;
 
                 const title = document.createElement('h3');
-                title.textContent = `遮罩 ${p}%`; // 直接顯示 p (遮罩百分比)
-                wrapper.appendChild(title);
+                title.textContent = `遮罩 ${p}%`; // 只顯示遮罩百分比
+                wrapper.appendChild(title); // 先將 h3 加入 wrapper
 
                 rightToLeftContainer.appendChild(wrapper);
                 drawMoonDotsRightToLeft(uniqueDivId, defaultRadiusForExample, p); 
             }
         };
 
-        // 處理月亮底圖圖片載入失敗的情況
+        // 處理月亮底圖圖片載入失敗的情況 (邏輯與 onload 類似)
         moonImage.onerror = () => {
             alert('無法載入月亮底圖，請檢查圖片網址或網路連線。所有月相圖將顯示為預設背景。');
             const leftToRightContainer = document.getElementById('left-to-right-container');
