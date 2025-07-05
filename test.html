@@ -3,32 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>球體弧形切割動畫</title>
+    <title>球體弧形切割動畫 (黑底白球版)</title>
     <style>
-        /* 讓頁面內容填滿整個視窗，移除預設邊距 */
+        /* 確保 body 和 canvas 都填滿整個視窗，且背景為黑色 */
         body {
             margin: 0;
             overflow: hidden; /* 避免滾動條 */
-            display: flex; /* 使用 Flexbox 讓 canvas 居中 */
+            background-color: #000; /* 純黑色背景 */
+            display: flex; /* 使用 Flexbox 確保 canvas 居中 */
             justify-content: center;
             align-items: center;
             min-height: 100vh; /* 確保 body 至少有視窗高度 */
-            background-color: #222; /* 深色背景更凸顯球體 */
             color: #eee; /* 文字顏色 */
             font-family: sans-serif;
             font-size: 14px;
         }
-        /* 讓 Three.js 創建的 canvas 元素填滿其容器 */
         canvas {
             display: block; /* 移除圖片底部預設的空白 */
-            width: 100vw; /* 寬度佔滿視窗 */
-            height: 100vh; /* 高度佔滿視窗 */
+            /* 讓 canvas 填滿視窗，確保沒有邊緣被切掉 */
+            width: 100vw;
+            height: 100vh;
         }
         #version-info {
             position: absolute;
             top: 10px;
             left: 10px;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.5); /* 半透明黑色背景 */
             padding: 5px 10px;
             border-radius: 5px;
             z-index: 100; /* 確保在 canvas 上方 */
@@ -36,98 +36,83 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.05.1</div>
+    <div id="version-info">版本: v2025.07.05.2</div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.165.0/three.min.js"></script>
 
     <script>
         // --- 設定版本號 ---
-        // 每次修改程式碼，這裡的版本號會自動加一
-        const VERSION = 'v2025.07.05.1';
+        const VERSION = 'v2025.07.05.2'; // **版本號已更新**
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
         // --- 設定 Three.js 場景 ---
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true }); // antialias 讓邊緣更平滑
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); // alpha: true 讓背景透明，與 body 背景融合
         renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement); // 將 canvas 加入到網頁中
+        document.body.appendChild(renderer.domElement);
 
-        // **關鍵修正點：確保渲染器的局部裁剪功能已啟用**
-        // 沒有這行，clippingPlanes 將不起作用
+        // 關鍵：啟用渲染器的局部裁剪功能
         renderer.localClippingEnabled = true;
 
-        // --- 建立一個球體 ---
-        // 參數: 半徑, 水平分段數, 垂直分段數 (分段數越高，球體越圓滑)
+        // --- 建立一個**純白色球體** ---
         const sphereRadius = 2;
         const sphereGeometry = new THREE.SphereGeometry(sphereRadius, 64, 64);
         const sphereMaterial = new THREE.MeshLambertMaterial({
-            color: 0x00aaff, // 亮藍色
-            side: THREE.DoubleSide // 讓材質在兩面都可見，防止切割後內部變透明
+            color: 0xffffff, // **純白色**
+            side: THREE.DoubleSide // 讓材質在兩面都可見
         });
         const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
         scene.add(sphere);
 
         // 調整相機位置，以便看到整個球體
-        camera.position.set(0, 0, 5); // x, y, z 座標
+        camera.position.set(0, 0, 5);
 
-        // --- 設定光源 ---
-        // 環境光：提供基本亮度，讓物體所有部分都可見
+        // --- 設定光源 (讓白色球體看得見陰影和立體感) ---
+        // 環境光：提供基本亮度
         const ambientLight = new THREE.AmbientLight(0x404040, 2); // 顏色，強度
         scene.add(ambientLight);
 
-        // 定向光：模擬太陽光，提供方向性照明和陰影效果
+        // 定向光：模擬主要光源方向
         const directionalLight = new THREE.DirectionalLight(0xffffff, 2); // 顏色，強度
         directionalLight.position.set(1, 1, 1).normalize(); // 從 (1,1,1) 方向照射
         scene.add(directionalLight);
 
         // --- 核心：設定裁剪平面來模擬切割 ---
-        // 創建一個裁剪平面：這就像一把無限大的刀
-        // new THREE.Plane(normal: Vector3, constant: Number)
-        // normal (法向量): 決定平面的方向。Vector3(1, 0, 0) 表示平面垂直於 X 軸，面向正 X 方向。
-        // constant (常數): 決定平面與原點的距離。
-        //                 這裡我們用 (1,0,0) 的法向量和負的 constant，表示它會從右邊 (正 X) 開始切除。
-        const clippingPlane = new THREE.Plane(new THREE.Vector3(1, 0, 0), -sphereRadius); // 初始位置在球體最右側
-
-        // 將裁剪平面應用到球體的材質上
+        const clippingPlane = new THREE.Plane(new THREE.Vector3(1, 0, 0), -sphereRadius);
         sphereMaterial.clippingPlanes = [clippingPlane];
-        // 讓材質知道它的裁剪設定可能需要更新
         sphereMaterial.needsUpdate = true;
 
         // --- 動畫迴圈 ---
-        let currentCutPosition = -sphereRadius; // 從球體最右邊開始切割
-        const cutSpeed = 0.01; // 切割速度
+        let currentCutPosition = -sphereRadius;
+        const cutSpeed = 0.01;
 
         function animate() {
-            requestAnimationFrame(animate); // 請求瀏覽器在下一幀時調用 animate
+            requestAnimationFrame(animate);
 
-            // 讓球體緩慢轉動，增加視覺效果
             sphere.rotation.y += 0.005;
 
-            // 模擬從右到左的切割過程
-            // 當 currentCutPosition 小於等於球體半徑時 (即切割平面還沒穿過整個球體)
             if (currentCutPosition <= sphereRadius) {
-                currentCutPosition += cutSpeed; // 每次動畫循環向左移動切割平面
-                clippingPlane.constant = -currentCutPosition; // 更新裁剪平面的位置
+                currentCutPosition += cutSpeed;
+                clippingPlane.constant = -currentCutPosition;
 
-                // 如果切割完成 (currentCutPosition 超過球體半徑)，可以停止動畫或重置
                 if (currentCutPosition > sphereRadius) {
                     console.log("球體已完全切割消失！");
-                    // 這裡可以選擇停止動畫，例如取消 requestAnimationFrame
-                    // 或設置為從頭開始：currentCutPosition = -sphereRadius;
+                    // 這裡可以選擇重置動畫
+                    // currentCutPosition = -sphereRadius;
                 }
             }
 
-            renderer.render(scene, camera); // 渲染場景
+            renderer.render(scene, camera);
         }
 
-        animate(); // 開始動畫
+        animate();
 
         // --- 處理視窗大小改變 ---
         window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight; // 更新相機的長寬比
-            camera.updateProjectionMatrix(); // 更新相機的投影矩陣
-            renderer.setSize(window.innerWidth, window.innerHeight); // 更新渲染器大小
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
         });
     </script>
 </body>
