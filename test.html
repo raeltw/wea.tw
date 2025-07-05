@@ -80,7 +80,7 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.05.51</div>
+    <div id="version-info">版本: v2025.07.05.52</div>
 
     <h2>左側為起點往右邊走 (盈月：新月到滿月)</h2>
     <div id="left-to-right-container" class="figures-container">
@@ -91,7 +91,7 @@
         </div>
 
     <script>
-        const VERSION = 'v2025.07.05.51'; // 版本號已更新
+        const VERSION = 'v2025.07.05.52'; // 版本號已更新
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
         const moonImage = new Image();
@@ -140,6 +140,8 @@
 
             const centerX = canvas.width / 2; // Canvas 的實際中心 X 座標
             const centerY = canvas.height / 2; // Canvas 的實際中心 Y 座標
+            const horizontalOffset = -5; // 重新引入固定偏移量
+            const verticalOffset = 1; // 重新引入固定偏移量
 
             const dotSize = 2;
             const numDots = 180;
@@ -148,10 +150,10 @@
 
             if (moonImage.complete && moonImage.naturalWidth > 0) {
                 ctx.save();
-                // 將繪圖原點直接移到 Canvas 中心，不考慮額外偏移
-                ctx.translate(centerX, centerY); 
+                // 將繪圖原點移到 Canvas 中心，並應用固定偏移量
+                ctx.translate(centerX + horizontalOffset, centerY + verticalOffset); 
                 ctx.rotate(tiltAngleRadians); // 旋轉整個繪圖環境
-                // 繪製圖片：直接在旋轉後的中心點繪製，不帶額外偏移
+                // 繪製圖片：在旋轉後的中心點繪製，並應用固定偏移量
                 ctx.drawImage(moonImage, -canvasWidth / 2, -canvasHeight / 2, canvasWidth, canvasHeight);
                 ctx.restore(); // 恢復到未翻譯和未旋轉的狀態
             } else {
@@ -163,9 +165,9 @@
             const bluePoints = [];
             const redPoints = [];
 
-            // 定義點和遮罩計算的實際中心，直接使用畫布中心
-            const effectiveCenterX = centerX;
-            const effectiveCenterY = centerY; 
+            // 定義點和遮罩計算的實際中心，應用固定偏移量
+            const effectiveCenterX = centerX + horizontalOffset;
+            const effectiveCenterY = centerY + verticalOffset; 
 
             for (let i = 0; i <= numDots; i++) {
                 const angleDegrees = 90 + i; // 左半圓
@@ -187,18 +189,16 @@
                 redPoints.push(rotatedRedPoint);
             }
 
-            // 只有當遮罩百分比不在 0% 或 100% 時才繪製遮罩線
-            if (maskPercentage > 0 && maskPercentage < 100) {
-                ctx.strokeStyle = '#000';
-                ctx.lineWidth = dotSize * 2;
-                ctx.lineCap = 'round';
+            // 無條件繪製遮罩線
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = dotSize * 2;
+            ctx.lineCap = 'round';
 
-                for (let i = 0; i < bluePoints.length; i++) {
-                    ctx.beginPath();
-                    ctx.moveTo(bluePoints[i].x, bluePoints[i].y);
-                    ctx.lineTo(redPoints[i].x, redPoints[i].y);
-                    ctx.stroke();
-                }
+            for (let i = 0; i < bluePoints.length; i++) {
+                ctx.beginPath();
+                ctx.moveTo(bluePoints[i].x, bluePoints[i].y);
+                ctx.lineTo(redPoints[i].x, redPoints[i].y);
+                ctx.stroke();
             }
 
             ctx.fillStyle = '#00aaff'; // 藍色
@@ -252,6 +252,8 @@
 
             const centerX = canvas.width / 2; // Canvas 的實際中心 X 座標
             const centerY = canvas.height / 2; // Canvas 的實際中心 Y 座標
+            const horizontalOffset = -5; // 重新引入固定偏移量
+            const verticalOffset = 1; // 重新引入固定偏移量
 
             const dotSize = 2;
             const numDots = 180; 
@@ -260,10 +262,10 @@
 
             if (moonImage.complete && moonImage.naturalWidth > 0) {
                 ctx.save();
-                // 將繪圖原點直接移到 Canvas 中心，不考慮額外偏移
-                ctx.translate(centerX, centerY);
+                // 將繪圖原點移到 Canvas 中心，並應用固定偏移量
+                ctx.translate(centerX + horizontalOffset, centerY + verticalOffset);
                 ctx.rotate(tiltAngleRadians); // 旋轉整個繪圖環境
-                // 繪製圖片：直接在旋轉後的中心點繪製，不帶額外偏移
+                // 繪製圖片：在旋轉後的中心點繪製，並應用固定偏移量
                 ctx.drawImage(moonImage, -canvasWidth / 2, -canvasHeight / 2, canvasWidth, canvasHeight);
                 ctx.restore(); // 恢復到未翻譯和未旋轉的狀態
             } else {
@@ -275,9 +277,9 @@
             const bluePoints = [];
             const redPoints = [];
 
-            // 定義點和遮罩計算的實際中心，直接使用畫布中心
-            const effectiveCenterX = centerX;
-            const effectiveCenterY = centerY; 
+            // 定義點和遮罩計算的實際中心，應用固定偏移量
+            const effectiveCenterX = centerX + horizontalOffset;
+            const effectiveCenterY = centerY + verticalOffset; 
 
             for (let i = 0; i <= numDots; i++) {
                 const angleDegrees = -90 + i; // 從 -90 度 (圓下方) 到 90 度 (圓上方)，代表右半圓
@@ -299,18 +301,16 @@
                 redPoints.push(rotatedRedPoint);
             }
 
-            // 只有當遮罩百分比不在 0% 或 100% 時才繪製遮罩線
-            if (maskPercentage > 0 && maskPercentage < 100) {
-                ctx.strokeStyle = '#000';
-                ctx.lineWidth = dotSize * 2;
-                ctx.lineCap = 'round';
+            // 無條件繪製遮罩線
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = dotSize * 2;
+            ctx.lineCap = 'round';
 
-                for (let i = 0; i < bluePoints.length; i++) {
-                    ctx.beginPath();
-                    ctx.moveTo(bluePoints[i].x, bluePoints[i].y);
-                    ctx.lineTo(redPoints[i].x, redPoints[i].y);
-                    ctx.stroke();
-                }
+            for (let i = 0; i < bluePoints.length; i++) {
+                ctx.beginPath();
+                ctx.moveTo(bluePoints[i].x, bluePoints[i].y);
+                ctx.lineTo(redPoints[i].x, redPoints[i].y);
+                ctx.stroke();
             }
 
             ctx.fillStyle = '#00aaff'; // 藍色
