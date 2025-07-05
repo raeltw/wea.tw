@@ -85,7 +85,7 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.05.42</div>
+    <div id="version-info">版本: v2025.07.05.43</div>
 
     <h2>左側為起點往右邊走 (盈月：新月到滿月)</h2>
     <div id="left-to-right-container" class="figures-container">
@@ -96,7 +96,7 @@
         </div>
 
     <script>
-        const VERSION = 'v2025.07.05.42'; // 更新版本號
+        const VERSION = 'v2025.07.05.43'; // 更新版本號
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
         const moonImage = new Image();
@@ -146,6 +146,7 @@
             const centerX = canvas.width / 2; // Canvas 的實際中心 X 座標
             const centerY = canvas.height / 2; // Canvas 的實際中心 Y 座標
             const horizontalOffset = -5; // 向左偏移的像素量
+            const verticalOffset = 1; // 向下偏移的像素量 (新調整)
 
             const dotSize = 2;
             const numDots = 180;
@@ -156,8 +157,8 @@
                 ctx.save();
                 ctx.translate(centerX, centerY); // 將繪圖原點移到 Canvas 中心
                 ctx.rotate(tiltAngleRadians); // 旋轉整個繪圖環境
-                // 繪製圖片，並加上水平偏移量 (圖片中心點將在原始 Canvas 中心-5px 處)
-                ctx.drawImage(moonImage, -canvasWidth / 2 + horizontalOffset, -canvasHeight / 2, canvasWidth, canvasHeight);
+                // 繪製圖片，並加上水平偏移量 和 垂直偏移量
+                ctx.drawImage(moonImage, -canvasWidth / 2 + horizontalOffset, -canvasHeight / 2 + verticalOffset, canvasWidth, canvasHeight);
                 ctx.restore(); // 恢復到未翻譯和未旋轉的狀態
             } else {
                 ctx.fillStyle = '#222';
@@ -168,19 +169,19 @@
             const bluePoints = [];
             const redPoints = [];
 
-            // 定義點和遮罩計算的實際中心，它包含水平偏移
+            // 定義點和遮罩計算的實際中心，它包含水平和垂直偏移
             const effectiveCenterX = centerX + horizontalOffset;
-            const effectiveCenterY = centerY;
+            const effectiveCenterY = centerY + verticalOffset; // 新增垂直偏移
 
             for (let i = 0; i <= numDots; i++) {
                 const angleDegrees = 90 + i; // 左半圓
                 const angleRadians = angleDegrees * Math.PI / 180;
 
-                // 點的原始位置計算基於新的 effectiveCenterX
+                // 點的原始位置計算基於新的 effectiveCenterX, effectiveCenterY
                 const originalX = effectiveCenterX + radius * Math.cos(angleRadians);
                 const originalY = effectiveCenterY + radius * Math.sin(angleRadians);
 
-                // 旋轉點也以 effectiveCenterX 為基準
+                // 旋轉點也以 effectiveCenterX, effectiveCenterY 為基準
                 const rotatedBluePoint = rotatePoint(originalX, originalY, effectiveCenterX, effectiveCenterY, tiltAngleRadians);
                 bluePoints.push(rotatedBluePoint);
 
@@ -213,7 +214,7 @@
                 ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
             }
             
-            // 中心白點也繪製在 effectiveCenterX
+            // 中心白點也繪製在 effectiveCenterX, effectiveCenterY
             ctx.beginPath();
             ctx.arc(effectiveCenterX, effectiveCenterY, 3, 0, Math.PI * 2);
             ctx.fillStyle = '#fff';
@@ -255,6 +256,7 @@
             const centerX = canvas.width / 2; // Canvas 的實際中心 X 座標
             const centerY = canvas.height / 2; // Canvas 的實際中心 Y 座標
             const horizontalOffset = -5; // 向左偏移的像素量
+            const verticalOffset = 1; // 向下偏移的像素量 (新調整)
 
             const dotSize = 2;
             const numDots = 180; 
@@ -265,8 +267,8 @@
                 ctx.save();
                 ctx.translate(centerX, centerY); // 將繪圖原點移到 Canvas 中心
                 ctx.rotate(tiltAngleRadians); // 旋轉整個繪圖環境
-                // 繪製圖片，並加上水平偏移量 (圖片中心點將在原始 Canvas 中心-5px 處)
-                ctx.drawImage(moonImage, -canvasWidth / 2 + horizontalOffset, -canvasHeight / 2, canvasWidth, canvasHeight);
+                // 繪製圖片，並加上水平偏移量 和 垂直偏移量
+                ctx.drawImage(moonImage, -canvasWidth / 2 + horizontalOffset, -canvasHeight / 2 + verticalOffset, canvasWidth, canvasHeight);
                 ctx.restore(); // 恢復到未翻譯和未旋轉的狀態
             } else {
                 ctx.fillStyle = '#222';
@@ -277,19 +279,19 @@
             const bluePoints = [];
             const redPoints = [];
 
-            // 定義點和遮罩計算的實際中心，它包含水平偏移
+            // 定義點和遮罩計算的實際中心，它包含水平和垂直偏移
             const effectiveCenterX = centerX + horizontalOffset;
-            const effectiveCenterY = centerY;
+            const effectiveCenterY = centerY + verticalOffset; // 新增垂直偏移
 
             for (let i = 0; i <= numDots; i++) {
                 const angleDegrees = -90 + i; // 從 -90 度 (圓下方) 到 90 度 (圓上方)，代表右半圓
                 const angleRadians = angleDegrees * Math.PI / 180;
 
-                // 點的原始位置計算基於新的 effectiveCenterX
+                // 點的原始位置計算基於新的 effectiveCenterX, effectiveCenterY
                 const originalX = effectiveCenterX + radius * Math.cos(angleRadians);
                 const originalY = effectiveCenterY + radius * Math.sin(angleRadians);
 
-                // 旋轉點也以 effectiveCenterX 為基準
+                // 旋轉點也以 effectiveCenterX, effectiveCenterY 為基準
                 const rotatedBluePoint = rotatePoint(originalX, originalY, effectiveCenterX, effectiveCenterY, tiltAngleRadians);
                 bluePoints.push(rotatedBluePoint);
 
@@ -322,7 +324,7 @@
                 ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
             }
             
-            // 中心白點也繪製在 effectiveCenterX
+            // 中心白點也繪製在 effectiveCenterX, effectiveCenterY
             ctx.beginPath();
             ctx.arc(effectiveCenterX, effectiveCenterY, 3, 0, Math.PI * 2);
             ctx.fillStyle = '#fff';
