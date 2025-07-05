@@ -85,7 +85,7 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.05.39</div>
+    <div id="version-info">版本: v2025.07.05.40</div>
 
     <h2>左側為起點往右邊走 (盈月：新月到滿月)</h2>
     <div id="left-to-right-container" class="figures-container">
@@ -96,7 +96,7 @@
         </div>
 
     <script>
-        const VERSION = 'v2025.07.05.39'; // 更新版本號
+        const VERSION = 'v2025.07.05.40'; // 更新版本號
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
         const moonImage = new Image();
@@ -155,7 +155,8 @@
                 ctx.save();
                 ctx.translate(centerX, centerY);
                 ctx.rotate(tiltAngleRadians);
-                ctx.drawImage(moonImage, -canvasWidth / 2, -canvasHeight / 2, canvasWidth, canvasHeight);
+                // **** 修改點：調整圖片繪製的X座標，使其向左偏移 5 像素 ****
+                ctx.drawImage(moonImage, -canvasWidth / 2 - 5, -canvasHeight / 2, canvasWidth, canvasHeight);
                 ctx.restore();
             } else {
                 ctx.fillStyle = '#222';
@@ -258,7 +259,8 @@
                 ctx.save();
                 ctx.translate(centerX, centerY);
                 ctx.rotate(tiltAngleRadians);
-                ctx.drawImage(moonImage, -canvasWidth / 2, -canvasHeight / 2, canvasWidth, canvasHeight);
+                // **** 修改點：調整圖片繪製的X座標，使其向左偏移 5 像素 ****
+                ctx.drawImage(moonImage, -canvasWidth / 2 - 5, -canvasHeight / 2, canvasWidth, canvasHeight);
                 ctx.restore();
             } else {
                 ctx.fillStyle = '#222';
