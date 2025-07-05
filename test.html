@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>月相盈虧模擬 (半徑可調整)</title>
+    <title>月相盈虧模擬 (半徑可調整 - 偵錯版)</title>
     <style>
         body {
             margin: 0;
@@ -78,7 +78,7 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.05.35</div>
+    <div id="version-info">版本: v2025.07.05.36</div>
 
     <h2>左側為起點往右邊走 (盈月：新月到滿月)</h2>
     <div id="left-to-right-container" class="figures-container">
@@ -89,7 +89,7 @@
         </div>
 
     <script>
-        const VERSION = 'v2025.07.05.35'; 
+        const VERSION = 'v2025.07.05.36'; 
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
         const moonImage = new Image();
@@ -125,6 +125,8 @@
             canvas.width = radius * 2;
             canvas.height = radius * 2;
             
+            console.log(`Inside maskmoon: Canvas (ID: ${targetDivId}) set to ${canvas.width}x${canvas.height}`); // 偵錯訊息
+
             // 此處的 DOM 操作已還原到原始版本 v2025.07.05.25
             targetDiv.innerHTML = ''; // 清空目標 div 內容
             targetDiv.appendChild(canvas); // 將 canvas 加入目標 div
@@ -165,12 +167,14 @@
                 bluePoints.push(rotatedBluePoint);
 
                 const D0 = centerX - originalX;
+                // maskPercentage 越高，遮罩越廣 
                 const newXBeforeTilt = originalX + (maskPercentage / 100) * (2 * D0);
                 const newYBeforeTilt = originalY;
                 const rotatedRedPoint = rotatePoint(newXBeforeTilt, newYBeforeTilt, centerX, centerY, tiltAngleRadians);
                 redPoints.push(rotatedRedPoint);
             }
 
+            // 2. 在藍點和紅點之間繪製黑線 (覆蓋效果)
             ctx.strokeStyle = '#000';
             ctx.lineWidth = dotSize * 2;
             ctx.lineCap = 'round';
@@ -182,16 +186,19 @@
                 ctx.stroke();
             }
 
+            // 3. 繪製藍點
             ctx.fillStyle = '#00aaff'; // 藍色
             for (const p of bluePoints) {
                 ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
             }
 
+            // 4. 繪製紅點
             ctx.fillStyle = '#ff0000'; // 紅色
             for (const p of redPoints) {
                 ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
             }
             
+            // 5. 繪製圓心 (白色)
             ctx.beginPath();
             ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
             ctx.fillStyle = '#fff';
@@ -200,9 +207,7 @@
 
 
         /**
-         * 繪製月相圖的函式：從右半圓找到藍點，紅點往左邊移動，並繪製黑線。
-         * 用於顯示遮罩從 0% 遞增到 100% 的效果 (滿月到新月，即虧月)。
-         * 此函式**已還原到您原始提供的 v2025.07.05.25 版本**的核心繪圖邏輯。
+         * 新增的函式：從右半圓找到藍點，紅點往左邊移動，並繪製黑線。
          *
          * @param {string} targetDivId 目標 div 的 ID，Canvas 將會被創建並放入此 div 中。
          * @param {number} radius 月亮圓形（藍點/紅點構成的圓形）的半徑。
@@ -220,6 +225,8 @@
             canvas.width = radius * 2;
             canvas.height = radius * 2;
             
+            console.log(`Inside drawMoonDotsRightToLeft: Canvas (ID: ${targetDivId}) set to ${canvas.width}x${canvas.height}`); // 偵錯訊息
+
             // 此處的 DOM 操作已還原到原始版本 v2025.07.05.25
             targetDiv.innerHTML = ''; 
             targetDiv.appendChild(canvas);
@@ -261,6 +268,8 @@
                 bluePoints.push(rotatedBluePoint);
 
                 // 計算紅點，使其向左移動
+                // D0 現在對於右半圓的點會是負值 (centerX - originalX)
+                // 因此 (maskPercentage / 100) * (2 * D0) 會是負值，使 newXBeforeTilt 往左移動
                 const D0 = centerX - originalX; 
                 const newXBeforeTilt = originalX + (maskPercentage / 100) * (2 * D0);
                 const newYBeforeTilt = originalY;
@@ -268,6 +277,7 @@
                 redPoints.push(rotatedRedPoint);
             }
 
+            // 重新啟用黑線繪製
             ctx.strokeStyle = '#000';
             ctx.lineWidth = dotSize * 2;
             ctx.lineCap = 'round';
@@ -279,16 +289,19 @@
                 ctx.stroke();
             }
 
+            // 繪製藍點
             ctx.fillStyle = '#00aaff'; // 藍色
             for (const p of bluePoints) {
                 ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
             }
 
+            // 繪製紅點
             ctx.fillStyle = '#ff0000'; // 紅色
             for (const p of redPoints) {
                 ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
             }
             
+            // 繪製圓心 (白色)
             ctx.beginPath();
             ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
             ctx.fillStyle = '#fff';
@@ -318,6 +331,7 @@
                 // 動態設定 figure-wrapper 的寬高以匹配月亮直徑
                 figureWrapper.style.width = `${defaultRadiusForExample * 2}px`;
                 figureWrapper.style.height = `${defaultRadiusForExample * 2}px`;
+                console.log(`Setting figureWrapper (ID: ${figureWrapper.id || 'N/A'}) dimensions to: ${figureWrapper.style.width} x ${figureWrapper.style.height}`); // 偵錯訊息
 
                 const uniqueDivId = `leftRightPhaseWrapper_${p}`;
                 figureWrapper.id = uniqueDivId;
@@ -343,6 +357,7 @@
                 // 動態設定 figure-wrapper 的寬高以匹配月亮直徑
                 figureWrapper.style.width = `${defaultRadiusForExample * 2}px`;
                 figureWrapper.style.height = `${defaultRadiusForExample * 2}px`;
+                console.log(`Setting figureWrapper (ID: ${figureWrapper.id || 'N/A'}) dimensions to: ${figureWrapper.style.width} x ${figureWrapper.style.height}`); // 偵錯訊息
 
                 const uniqueDivId = `rightLeftPhaseWrapper_${p}`;
                 figureWrapper.id = uniqueDivId;
@@ -372,6 +387,7 @@
                 figureWrapper.className = 'figure-wrapper';
                 figureWrapper.style.width = `${defaultRadiusForExample * 2}px`;
                 figureWrapper.style.height = `${defaultRadiusForExample * 2}px`;
+                console.log(`Setting figureWrapper (ID: ${figureWrapper.id || 'N/A'}) dimensions to: ${figureWrapper.style.width} x ${figureWrapper.style.height} (Error Path)`); // 偵錯訊息
                 const uniqueDivId = `leftRightPhaseWrapper_${p}`;
                 figureWrapper.id = uniqueDivId;
                 moonUnitWrapper.appendChild(figureWrapper);
@@ -391,6 +407,7 @@
                 figureWrapper.className = 'figure-wrapper';
                 figureWrapper.style.width = `${defaultRadiusForExample * 2}px`;
                 figureWrapper.style.height = `${defaultRadiusForExample * 2}px`;
+                console.log(`Setting figureWrapper (ID: ${figureWrapper.id || 'N/A'}) dimensions to: ${figureWrapper.style.width} x ${figureWrapper.style.height} (Error Path)`); // 偵錯訊息
                 const uniqueDivId = `rightLeftPhaseWrapper_${p}`;
                 figureWrapper.id = uniqueDivId;
                 moonUnitWrapper.appendChild(figureWrapper);
