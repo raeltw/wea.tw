@@ -3,24 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>月相盈虧模擬 (疊圖與覆蓋方式 - 全圖傾斜)</title>
+    <title>月相盈虧模擬 (疊圖與覆蓋方式 - 全圖傾斜 - 黑線覆蓋)</title>
     <style>
         body {
             margin: 0;
-            overflow-x: hidden; /* 允許垂直滾動，水平隱藏 */
+            overflow-x: hidden;
             display: flex;
-            flex-direction: column; /* 垂直排列圖形 */
+            flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            background-color: #000; /* 純黑色背景 */
+            background-color: #000;
             color: #eee;
             font-family: sans-serif;
             font-size: 14px;
-            padding: 20px 0; /* 上下留白 */
+            padding: 20px 0;
         }
         .figure-wrapper {
-            margin-bottom: 40px; /* 每個圖形之間間距 */
-            background-color: #1a1a1a; /* 每個圖形區塊的背景色 */
+            margin-bottom: 40px;
+            background-color: #1a1a1a;
             padding: 15px;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
@@ -32,13 +32,13 @@
             margin-bottom: 15px;
         }
         canvas {
-            background-color: #222; /* Canvas 背景色，在圖片載入失敗時可見 */
+            background-color: #222;
             border: 2px solid #555;
             display: block;
-            margin: 0 auto; /* 讓 canvas 在其容器中居中 */
+            margin: 0 auto;
         }
         #version-info {
-            position: fixed; /* 固定在視窗左上角 */
+            position: fixed;
             top: 10px;
             left: 10px;
             background: rgba(0, 0, 0, 0.5);
@@ -49,7 +49,7 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.05.14</div>
+    <div id="version-info">版本: v2025.07.05.151</div>
 
     <div class="figures-container">
         </div>
@@ -59,13 +59,13 @@
         const VERSION = 'v2025.07.05.15';
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
-        const commonCanvasWidth = 320;
-        const commonCanvasHeight = 320;
+        const commonCanvasWidth = 320; // 畫布寬度調整為 320
+        const commonCanvasHeight = 320; // 畫布高度調整為 320
         const centerX = commonCanvasWidth / 2;
         const centerY = commonCanvasHeight / 2;
-        const radius = 150; // 圓的半徑
+        const radius = 150; // 圓的半徑保持 150
         const dotSize = 2; // 每個點的大小 (像素)
-        const numDots = 180; // 繪製點的數量 (從 90 到 270 度，每度一個點)
+        const numDots = 180; // 繪製點的數量
         const tiltAngleDegrees = 23.4; // 月亮的傾斜角度
         const tiltAngleRadians = tiltAngleDegrees * Math.PI / 180; // 轉換為弧度
 
@@ -77,88 +77,85 @@
         function rotatePoint(px, py, cx, cy, angle) {
             const tempX = px - cx;
             const tempY = py - cy;
-
             const rotatedX = tempX * Math.cos(angle) - tempY * Math.sin(angle);
             const rotatedY = tempX * Math.sin(angle) + tempY * Math.cos(angle);
-
-            return {
-                x: rotatedX + cx,
-                y: rotatedY + cy
-            };
+            return { x: rotatedX + cx, y: rotatedY + cy };
         }
 
         // 繪製單一 Canvas 圖形的函數
         function drawFigure(canvas, illuminatedPercentage, backgroundImage) {
             const ctx = canvas.getContext('2d');
-
-            // 1. 清空 Canvas
             ctx.clearRect(0, 0, commonCanvasWidth, commonCanvasHeight);
-            
-            // 2. 繪製背景圖片 (現在會跟著傾斜)
+
+            // 1. 繪製背景圖片 (傾斜)
             if (backgroundImage) {
                 ctx.save(); // 保存當前 Canvas 狀態
-
-                // 將原點移動到 Canvas 中心，以便繞中心旋轉
-                ctx.translate(centerX, centerY);
-                // 旋轉 Canvas
-                ctx.rotate(tiltAngleRadians);
-                // 繪製圖片，現在圖片的中心點位於新的原點 (0,0)
+                ctx.translate(centerX, centerY); // 將原點移動到 Canvas 中心
+                ctx.rotate(tiltAngleRadians); // 旋轉 Canvas
+                // 繪製圖片，圖片的中心點位於新的原點 (0,0)
                 ctx.drawImage(backgroundImage, -commonCanvasWidth / 2, -commonCanvasHeight / 2, commonCanvasWidth, commonCanvasHeight);
-                
-                ctx.restore(); // 恢復之前保存的 Canvas 狀態，這樣接下來的繪圖就不會再傾斜了
+                ctx.restore(); // 恢復之前保存的 Canvas 狀態
             } else {
                 // 如果圖片載入失敗，則使用預設的 Canvas 背景色
                 ctx.fillStyle = '#222';
                 ctx.fillRect(0, 0, commonCanvasWidth, commonCanvasHeight);
             }
 
+            // 儲存所有計算後的藍點和紅點座標
+            const bluePoints = [];
+            const redPoints = [];
 
-            // 3. 繪製圓心 (白色，作為旋轉的原點，因此不會移動)
-            // 圓心點會繪製在未傾斜的座標系中，所以它的位置不變
+            for (let i = 0; i <= numDots; i++) {
+                const angleDegrees = 90 + i;
+                const angleRadians = angleDegrees * Math.PI / 180;
+
+                const originalX = centerX + radius * Math.cos(angleRadians); // 原始藍點的 X 座標（未傾斜前）
+                const originalY = centerY + radius * Math.sin(angleRadians); // 原始藍點的 Y 座標（未傾斜前）
+
+                // 計算藍點（月亮左側邊界）
+                const rotatedBluePoint = rotatePoint(originalX, originalY, centerX, centerY, tiltAngleRadians);
+                bluePoints.push(rotatedBluePoint);
+
+                // 計算紅點（亮暗分界線）
+                const D0 = centerX - originalX; // 從原始藍點到圓心 X 的距離
+                // illuminatedPercentage 從 100 (全月) 到 0 (新月)
+                // newX 的計算方式與之前的 'walk_percentage' 邏輯相同
+                const currentWalkPercentage = illuminatedPercentage;
+                const newXBeforeTilt = originalX + (currentWalkPercentage / 100) * (2 * D0);
+                const newYBeforeTilt = originalY;
+                const rotatedRedPoint = rotatePoint(newXBeforeTilt, newYBeforeTilt, centerX, centerY, tiltAngleRadians);
+                redPoints.push(rotatedRedPoint);
+            }
+
+            // 2. 在藍點和紅點之間繪製黑線 (覆蓋效果)
+            ctx.strokeStyle = '#000'; // 線條顏色為黑色
+            ctx.lineWidth = dotSize * 2; // 線條粗細為點的兩倍，以便更明顯地「覆蓋」
+            ctx.lineCap = 'round'; // 線條末端圓潤
+
+            for (let i = 0; i < bluePoints.length; i++) {
+                ctx.beginPath();
+                ctx.moveTo(bluePoints[i].x, bluePoints[i].y);
+                ctx.lineTo(redPoints[i].x, redPoints[i].y);
+                ctx.stroke();
+            }
+
+            // 3. 繪製藍點（在黑線上方，如果黑線不完全覆蓋）
+            ctx.fillStyle = '#00aaff'; // 藍色
+            for (const p of bluePoints) {
+                ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
+            }
+
+            // 4. 繪製紅點（在黑線上方，如果黑線不完全覆蓋）
+            ctx.fillStyle = '#ff0000'; // 紅色
+            for (const p of redPoints) {
+                ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
+            }
+            
+            // 5. 繪製圓心 (白色，作為旋轉的原點，因此不會移動)
             ctx.beginPath();
             ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
             ctx.fillStyle = '#fff';
             ctx.fill();
-
-            // 4. 繪製原始的藍色左半圓周上的點 (基礎點，現在整體會被傾斜的背景和點覆蓋)
-            // 由於整個畫布已經傾斜，點的座標計算仍然在原來的座標系中，但繪製時會自動傾斜
-            for (let i = 0; i <= numDots; i++) {
-                const angleDegrees = 90 + i;
-                const angleRadians = angleDegrees * Math.PI / 180;
-
-                const x = centerX + radius * Math.cos(angleRadians);
-                const y = centerY + radius * Math.sin(angleRadians);
-
-                // 應用傾斜旋轉 - 這裡的旋轉是為了讓點的邏輯位置和旋轉後的底圖匹配
-                const rotatedBluePoint = rotatePoint(x, y, centerX, centerY, tiltAngleRadians);
-
-                ctx.fillStyle = '#00aaff'; // 藍色
-                ctx.fillRect(rotatedBluePoint.x - dotSize / 2, rotatedBluePoint.y - dotSize / 2, dotSize, dotSize);
-            }
-
-            // 5. 繪製變換後的紅色點 (代表亮暗分界線，整體也會傾斜)
-            const currentWalkPercentage = illuminatedPercentage; // 亮度百分比直接映射到點的水平位移
-
-            for (let i = 0; i <= numDots; i++) {
-                const angleDegrees = 90 + i;
-                const angleRadians = angleDegrees * Math.PI / 180;
-
-                const originalX = centerX + radius * Math.cos(angleRadians);
-                const originalY = centerY + radius * Math.sin(angleRadians);
-
-                const D0 = centerX - originalX;
-
-                const moveDistance = (currentWalkPercentage / 100) * (2 * D0);
-
-                const newXBeforeTilt = originalX + moveDistance;
-                const newYBeforeTilt = originalY;
-
-                // 應用傾斜旋轉 - 讓紅點跟藍點和背景圖一起傾斜
-                const rotatedRedPoint = rotatePoint(newXBeforeTilt, newYBeforeTilt, centerX, centerY, tiltAngleRadians);
-
-                ctx.fillStyle = '#ff0000'; // 紅色
-                ctx.fillRect(rotatedRedPoint.x - dotSize / 2, rotatedRedPoint.y - dotSize / 2, dotSize, dotSize);
-            }
         }
 
         // 當圖片載入完成後，才開始動態生成並繪製所有 Canvas
@@ -168,19 +165,15 @@
             for (let p = 100; p >= 0; p -= 5) {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'figure-wrapper';
-
                 const title = document.createElement('h3');
                 title.textContent = `月相模擬：亮度 ${p}%`;
                 wrapper.appendChild(title);
-
                 const canvas = document.createElement('canvas');
                 canvas.id = `canvas${p}`;
                 canvas.width = commonCanvasWidth;
                 canvas.height = commonCanvasHeight;
                 wrapper.appendChild(canvas);
-
                 figuresContainer.appendChild(wrapper);
-
                 // 繪製內容，傳入加載好的圖片
                 drawFigure(canvas, p, moonImage);
             }
