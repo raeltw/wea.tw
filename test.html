@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>月相盈虧模擬 (兩階段點與線條移動展示)</title>
+    <title>月相盈虧模擬 (兩階段點與線條移動展示 - 亮度順序修正)</title>
     <style>
         body {
             margin: 0;
@@ -70,18 +70,18 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.05.22</div>
+    <div id="version-info">版本: v2025.07.05.23</div>
 
-    <h2>左側為起點往右邊走 (原 maskmoon 函數 - 亮度遞減)</h2>
+    <h2>左側為起點往右邊走 (原 maskmoon 函數 - 亮度遞減：滿月到新月)</h2>
     <div id="left-to-right-container" class="figures-container">
         </div>
 
-    <h2>右側為起點往左邊走 (新函數 - 亮度遞減，含黑線)</h2>
+    <h2>右側為起點往左邊走 (新函數 - 亮度遞增：新月到滿月)</h2>
     <div id="right-to-left-container" class="figures-container">
         </div>
 
     <script>
-        const VERSION = 'v2025.07.05.22';
+        const VERSION = 'v2025.07.05.23';
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
         const moonImage = new Image();
@@ -161,6 +161,7 @@
                 bluePoints.push(rotatedBluePoint);
 
                 const D0 = centerX - originalX;
+                // illuminatedPercentage 越高，遮罩越廣 (亮度越低)
                 const newXBeforeTilt = originalX + (illuminatedPercentage / 100) * (2 * D0);
                 const newYBeforeTilt = originalY;
                 const rotatedRedPoint = rotatePoint(newXBeforeTilt, newYBeforeTilt, centerX, centerY, tiltAngleRadians);
@@ -205,6 +206,7 @@
          * @param {string} targetDivId 目標 div 的 ID，Canvas 將會被創建並放入此 div 中。
          * @param {number} radius 月亮圓形（藍點/紅點構成的圓形）的半徑。
          * @param {number} illuminatedPercentage 月亮的亮度百分比 (0-100)，決定紅色分界線位置。
+         * 此值越高，遮罩越廣 (月亮越暗)。
          */
         function drawMoonDotsRightToLeft(targetDivId, radius, illuminatedPercentage) {
             const targetDiv = document.getElementById(targetDivId);
@@ -273,7 +275,7 @@
                 redPoints.push(rotatedRedPoint);
             }
 
-            // ***** 修改點：重新啟用黑線繪製 *****
+            // 重新啟用黑線繪製
             ctx.strokeStyle = '#000';
             ctx.lineWidth = dotSize * 2;
             ctx.lineCap = 'round';
@@ -311,8 +313,8 @@
             const rightToLeftContainer = document.getElementById('right-to-left-container');
             const defaultRadiusForExample = 160; 
 
-            // 第一組：使用原 maskmoon 函數 (左側為起點往右邊走 - 亮度遞減)
-            // illuminatedPercentage 從 100 (全亮，無遮罩) 遞減到 0 (全遮罩，全暗)
+            // 第一組：使用原 maskmoon 函數 (左側為起點往右邊走 - 亮度遞減：滿月到新月)
+            // p 代表顯示的亮度百分比，從 100 遞減到 0
             for (let p = 100; p >= 0; p -= 5) {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'figure-wrapper';
@@ -320,15 +322,17 @@
                 wrapper.id = uniqueDivId;
 
                 const title = document.createElement('h3');
-                title.textContent = `亮度 ${p}%`;
+                title.textContent = `亮度 ${p}%`; // 直接顯示 p (亮度)
                 wrapper.appendChild(title);
 
                 leftToRightContainer.appendChild(wrapper);
-                maskmoon(uniqueDivId, defaultRadiusForExample, 100 - p); // 傳入 100-p 來表示遮罩程度 (0%亮 -> 100%遮罩)
+                // maskmoon 函式中的 illuminatedPercentage 參數代表「遮罩程度」
+                // 亮度 p% 等於 (100-p)% 的遮罩
+                maskmoon(uniqueDivId, defaultRadiusForExample, 100 - p); 
             }
 
-            // 第二組：使用新的 drawMoonDotsRightToLeft 函數 (右側為起點往左邊走 - 亮度遞減，含黑線)
-            // illuminatedPercentage 從 0 (全亮，無遮罩) 遞增到 100 (全遮罩，全暗)
+            // 第二組：使用新的 drawMoonDotsRightToLeft 函數 (右側為起點往左邊走 - 亮度遞增：新月到滿月)
+            // p 代表顯示的亮度百分比，從 0 遞增到 100
             for (let p = 0; p <= 100; p += 5) {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'figure-wrapper';
@@ -336,11 +340,13 @@
                 wrapper.id = uniqueDivId;
 
                 const title = document.createElement('h3');
-                title.textContent = `亮度 ${100 - p}%`; // 顯示亮度，所以是 100-p
+                title.textContent = `亮度 ${p}%`; // 直接顯示 p (亮度)
                 wrapper.appendChild(title);
 
                 rightToLeftContainer.appendChild(wrapper);
-                drawMoonDotsRightToLeft(uniqueDivId, defaultRadiusForExample, p); // p 表示遮罩程度
+                // drawMoonDotsRightToLeft 函式中的 illuminatedPercentage 參數代表「遮罩程度」
+                // 亮度 p% 等於 (100-p)% 的遮罩
+                drawMoonDotsRightToLeft(uniqueDivId, defaultRadiusForExample, 100 - p); 
             }
         };
 
@@ -371,10 +377,10 @@
                 const uniqueDivId = `rightLeftPhaseWrapper_${p}`;
                 wrapper.id = uniqueDivId;
                 const title = document.createElement('h3');
-                title.textContent = `亮度 ${100 - p}% (無底圖)`;
+                title.textContent = `亮度 ${p}% (無底圖)`;
                 wrapper.appendChild(title);
                 rightToLeftContainer.appendChild(wrapper);
-                drawMoonDotsRightToLeft(uniqueDivId, defaultRadiusForExample, p);
+                drawMoonDotsRightToLeft(uniqueDivId, defaultRadiusForExample, 100 - p);
             }
         };
     </script>
