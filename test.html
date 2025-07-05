@@ -338,14 +338,16 @@
             const rightToLeftContainer = document.getElementById('right-to-left-container');
             const defaultRadiusForExample = 160;
 
-            // 第一組：左側為起點往右邊走 (遮罩遞減：100% 遮罩到 0% 遮罩 - 盈月)
+            // 第一組：左側為起點往右邊走 (盈月：新月到滿月)
             for (let p = 100; p >= 0; p -= 5) {
                 const moonUnitItem = document.createElement('div');
                 moonUnitItem.className = 'moon-unit-item';
 
                 const percentageLabel = document.createElement('div');
                 percentageLabel.className = 'percentage-label';
-                percentageLabel.textContent = `遮罩 ${p}%`;
+                // 計算 SunCalc 月相數值 (0.00-0.50)
+                const sunCalcPhase = ((100 - p) * 0.5 / 100).toFixed(2); 
+                percentageLabel.textContent = `遮罩 ${p}% (SunCalc: ${sunCalcPhase})`;
                 moonUnitItem.appendChild(percentageLabel);
 
                 const figureWrapper = document.createElement('div');
@@ -359,14 +361,16 @@
                 maskmoon(uniqueDivId, defaultRadiusForExample, p); 
             }
 
-            // 第二組：右側為起點往左邊走 (遮罩遞增：0% 遮罩到 100% 遮罩 - 虧月)
+            // 第二組：右側為起點往左邊走 (虧月：滿月到新月)
             for (let p = 0; p <= 100; p += 5) {
                 const moonUnitItem = document.createElement('div');
                 moonUnitItem.className = 'moon-unit-item';
 
                 const percentageLabel = document.createElement('div');
                 percentageLabel.className = 'percentage-label';
-                percentageLabel.textContent = `遮罩 ${p}%`;
+                // 計算 SunCalc 月相數值 (0.50-1.00)
+                const sunCalcPhase = (0.5 + (p * 0.5 / 100)).toFixed(2); 
+                percentageLabel.textContent = `遮罩 ${p}% (SunCalc: ${sunCalcPhase})`;
                 moonUnitItem.appendChild(percentageLabel);
 
                 const figureWrapper = document.createElement('div');
@@ -395,7 +399,9 @@
 
                 const percentageLabel = document.createElement('div');
                 percentageLabel.className = 'percentage-label';
-                percentageLabel.textContent = `遮罩 ${p}% (無底圖)`;
+                // 計算 SunCalc 月相數值 (0.00-0.50)
+                const sunCalcPhase = ((100 - p) * 0.5 / 100).toFixed(2); 
+                percentageLabel.textContent = `遮罩 ${p}% (SunCalc: ${sunCalcPhase}) (無底圖)`;
                 moonUnitItem.appendChild(percentageLabel);
 
                 const figureWrapper = document.createElement('div');
@@ -415,7 +421,9 @@
 
                 const percentageLabel = document.createElement('div');
                 percentageLabel.className = 'percentage-label';
-                percentageLabel.textContent = `遮罩 ${p}% (無底圖)`;
+                // 計算 SunCalc 月相數值 (0.50-1.00)
+                const sunCalcPhase = (0.5 + (p * 0.5 / 100)).toFixed(2); 
+                percentageLabel.textContent = `遮罩 ${p}% (SunCalc: ${sunCalcPhase}) (無底圖)`;
                 moonUnitItem.appendChild(percentageLabel);
 
                 const figureWrapper = document.createElement('div');
