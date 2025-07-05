@@ -85,7 +85,7 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.05.41</div>
+    <div id="version-info">版本: v2025.07.05.42</div>
 
     <h2>左側為起點往右邊走 (盈月：新月到滿月)</h2>
     <div id="left-to-right-container" class="figures-container">
@@ -96,7 +96,7 @@
         </div>
 
     <script>
-        const VERSION = 'v2025.07.05.41'; // 更新版本號
+        const VERSION = 'v2025.07.05.42'; // 更新版本號
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
         const moonImage = new Image();
@@ -143,22 +143,22 @@
 
             const ctx = canvas.getContext('2d');
 
-            // **** 修改點 1/4：定義視覺中心點，包含水平偏移量 ****
-            const trueCanvasCenterX = canvas.width / 2;
-            const trueCanvasCenterY = canvas.height / 2;
-            const horizontalOffset = -5; // 向左偏移 5 像素
+            const centerX = canvas.width / 2; // Canvas 的實際中心 X 座標
+            const centerY = canvas.height / 2; // Canvas 的實際中心 Y 座標
+            const horizontalOffset = -5; // 向左偏移的像素量
 
-            const visualCenterX = trueCanvasCenterX + horizontalOffset;
-            const visualCenterY = trueCanvasCenterY; // Y軸不變
+            const dotSize = 2;
+            const numDots = 180;
+            const tiltAngleDegrees = 23.4;
+            const tiltAngleRadians = tiltAngleDegrees * Math.PI / 180;
 
             if (moonImage.complete && moonImage.naturalWidth > 0) {
                 ctx.save();
-                // **** 修改點 2/4：將 context 翻譯到新的視覺中心點 ****
-                ctx.translate(visualCenterX, visualCenterY);
-                ctx.rotate(tiltAngleRadians);
-                // 繪製圖片時，現在是相對於已翻譯的中心點 (0,0) 來繪製
-                ctx.drawImage(moonImage, -canvasWidth / 2, -canvasHeight / 2, canvasWidth, canvasHeight);
-                ctx.restore();
+                ctx.translate(centerX, centerY); // 將繪圖原點移到 Canvas 中心
+                ctx.rotate(tiltAngleRadians); // 旋轉整個繪圖環境
+                // 繪製圖片，並加上水平偏移量 (圖片中心點將在原始 Canvas 中心-5px 處)
+                ctx.drawImage(moonImage, -canvasWidth / 2 + horizontalOffset, -canvasHeight / 2, canvasWidth, canvasHeight);
+                ctx.restore(); // 恢復到未翻譯和未旋轉的狀態
             } else {
                 ctx.fillStyle = '#222';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -168,23 +168,27 @@
             const bluePoints = [];
             const redPoints = [];
 
+            // 定義點和遮罩計算的實際中心，它包含水平偏移
+            const effectiveCenterX = centerX + horizontalOffset;
+            const effectiveCenterY = centerY;
+
             for (let i = 0; i <= numDots; i++) {
                 const angleDegrees = 90 + i; // 左半圓
                 const angleRadians = angleDegrees * Math.PI / 180;
 
-                // **** 修改點 3/4：所有點的計算都基於視覺中心點 ****
-                const originalX = visualCenterX + radius * Math.cos(angleRadians);
-                const originalY = visualCenterY + radius * Math.sin(angleRadians);
+                // 點的原始位置計算基於新的 effectiveCenterX
+                const originalX = effectiveCenterX + radius * Math.cos(angleRadians);
+                const originalY = effectiveCenterY + radius * Math.sin(angleRadians);
 
-                // 旋轉點也以視覺中心點為基準
-                const rotatedBluePoint = rotatePoint(originalX, originalY, visualCenterX, visualCenterY, tiltAngleRadians);
+                // 旋轉點也以 effectiveCenterX 為基準
+                const rotatedBluePoint = rotatePoint(originalX, originalY, effectiveCenterX, effectiveCenterY, tiltAngleRadians);
                 bluePoints.push(rotatedBluePoint);
 
-                // 遮罩線段計算也基於視覺中心點
-                const D0 = visualCenterX - originalX;
+                // 遮罩線段計算也基於 effectiveCenterX
+                const D0 = effectiveCenterX - originalX;
                 const newXBeforeTilt = originalX + (maskPercentage / 100) * (2 * D0);
                 const newYBeforeTilt = originalY;
-                const rotatedRedPoint = rotatePoint(newXBeforeTilt, newYBeforeTilt, visualCenterX, visualCenterY, tiltAngleRadians);
+                const rotatedRedPoint = rotatePoint(newXBeforeTilt, newYBeforeTilt, effectiveCenterX, effectiveCenterY, tiltAngleRadians);
                 redPoints.push(rotatedRedPoint);
             }
 
@@ -209,9 +213,9 @@
                 ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
             }
             
-            // **** 修改點 4/4：中心白點也繪製在視覺中心點 ****
+            // 中心白點也繪製在 effectiveCenterX
             ctx.beginPath();
-            ctx.arc(visualCenterX, visualCenterY, 3, 0, Math.PI * 2);
+            ctx.arc(effectiveCenterX, effectiveCenterY, 3, 0, Math.PI * 2);
             ctx.fillStyle = '#fff';
             ctx.fill();
         }
@@ -248,22 +252,22 @@
 
             const ctx = canvas.getContext('2d');
 
-            // **** 修改點 1/4：定義視覺中心點，包含水平偏移量 ****
-            const trueCanvasCenterX = canvas.width / 2;
-            const trueCanvasCenterY = canvas.height / 2;
-            const horizontalOffset = -5; // 向左偏移 5 像素
+            const centerX = canvas.width / 2; // Canvas 的實際中心 X 座標
+            const centerY = canvas.height / 2; // Canvas 的實際中心 Y 座標
+            const horizontalOffset = -5; // 向左偏移的像素量
 
-            const visualCenterX = trueCanvasCenterX + horizontalOffset;
-            const visualCenterY = trueCanvasCenterY; // Y軸不變
+            const dotSize = 2;
+            const numDots = 180; 
+            const tiltAngleDegrees = 23.4;
+            const tiltAngleRadians = tiltAngleDegrees * Math.PI / 180;
 
             if (moonImage.complete && moonImage.naturalWidth > 0) {
                 ctx.save();
-                // **** 修改點 2/4：將 context 翻譯到新的視覺中心點 ****
-                ctx.translate(visualCenterX, visualCenterY);
-                ctx.rotate(tiltAngleRadians);
-                // 繪製圖片時，現在是相對於已翻譯的中心點 (0,0) 來繪製
-                ctx.drawImage(moonImage, -canvasWidth / 2, -canvasHeight / 2, canvasWidth, canvasHeight);
-                ctx.restore();
+                ctx.translate(centerX, centerY); // 將繪圖原點移到 Canvas 中心
+                ctx.rotate(tiltAngleRadians); // 旋轉整個繪圖環境
+                // 繪製圖片，並加上水平偏移量 (圖片中心點將在原始 Canvas 中心-5px 處)
+                ctx.drawImage(moonImage, -canvasWidth / 2 + horizontalOffset, -canvasHeight / 2, canvasWidth, canvasHeight);
+                ctx.restore(); // 恢復到未翻譯和未旋轉的狀態
             } else {
                 ctx.fillStyle = '#222';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -273,23 +277,27 @@
             const bluePoints = [];
             const redPoints = [];
 
+            // 定義點和遮罩計算的實際中心，它包含水平偏移
+            const effectiveCenterX = centerX + horizontalOffset;
+            const effectiveCenterY = centerY;
+
             for (let i = 0; i <= numDots; i++) {
                 const angleDegrees = -90 + i; // 從 -90 度 (圓下方) 到 90 度 (圓上方)，代表右半圓
                 const angleRadians = angleDegrees * Math.PI / 180;
 
-                // **** 修改點 3/4：所有點的計算都基於視覺中心點 ****
-                const originalX = visualCenterX + radius * Math.cos(angleRadians);
-                const originalY = visualCenterY + radius * Math.sin(angleRadians);
+                // 點的原始位置計算基於新的 effectiveCenterX
+                const originalX = effectiveCenterX + radius * Math.cos(angleRadians);
+                const originalY = effectiveCenterY + radius * Math.sin(angleRadians);
 
-                // 旋轉點也以視覺中心點為基準
-                const rotatedBluePoint = rotatePoint(originalX, originalY, visualCenterX, visualCenterY, tiltAngleRadians);
+                // 旋轉點也以 effectiveCenterX 為基準
+                const rotatedBluePoint = rotatePoint(originalX, originalY, effectiveCenterX, effectiveCenterY, tiltAngleRadians);
                 bluePoints.push(rotatedBluePoint);
 
-                // 遮罩線段計算也基於視覺中心點
-                const D0 = visualCenterX - originalX; 
+                // 遮罩線段計算也基於 effectiveCenterX
+                const D0 = effectiveCenterX - originalX; 
                 const newXBeforeTilt = originalX + (maskPercentage / 100) * (2 * D0);
                 const newYBeforeTilt = originalY;
-                const rotatedRedPoint = rotatePoint(newXBeforeTilt, newYBeforeTilt, visualCenterX, visualCenterY, tiltAngleRadians);
+                const rotatedRedPoint = rotatePoint(newXBeforeTilt, newYBeforeTilt, effectiveCenterX, effectiveCenterY, tiltAngleRadians);
                 redPoints.push(rotatedRedPoint);
             }
 
@@ -314,9 +322,9 @@
                 ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
             }
             
-            // **** 修改點 4/4：中心白點也繪製在視覺中心點 ****
+            // 中心白點也繪製在 effectiveCenterX
             ctx.beginPath();
-            ctx.arc(visualCenterX, visualCenterY, 3, 0, Math.PI * 2);
+            ctx.arc(effectiveCenterX, effectiveCenterY, 3, 0, Math.PI * 2);
             ctx.fillStyle = '#fff';
             ctx.fill();
         }
@@ -326,7 +334,7 @@
         moonImage.onload = () => {
             const leftToRightContainer = document.getElementById('left-to-right-container');
             const rightToLeftContainer = document.getElementById('right-to-left-container');
-            const defaultRadiusForExample = 160; // 此處半徑保持為 160，與您提供的 .25 版一致
+            const defaultRadiusForExample = 160;
 
             // 第一組：左側為起點往右邊走 (遮罩遞減：100% 遮罩到 0% 遮罩 - 盈月)
             for (let p = 100; p >= 0; p -= 5) {
