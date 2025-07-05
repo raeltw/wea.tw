@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>月相盈虧模擬 (兩階段點與線條移動展示 - 以遮罩百分比呈現)</title>
+    <title>月相盈虧模擬 (完整演示：左右側遮罩變化順序修正)</title>
     <style>
         body {
             margin: 0;
@@ -70,18 +70,18 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.05.24</div>
+    <div id="version-info">版本: v2025.07.05.25</div>
 
-    <h2>左側為起點往右邊走 (遮罩遞增：0% 遮罩到 100% 遮罩)</h2>
+    <h2>左側為起點往右邊走 (遮罩遞減：100% 遮罩到 0% 遮罩 - 新月到滿月)</h2>
     <div id="left-to-right-container" class="figures-container">
         </div>
 
-    <h2>右側為起點往左邊走 (遮罩遞減：100% 遮罩到 0% 遮罩)</h2>
+    <h2>右側為起點往左邊走 (遮罩遞增：0% 遮罩到 100% 遮罩 - 滿月到新月)</h2>
     <div id="right-to-left-container" class="figures-container">
         </div>
 
     <script>
-        const VERSION = 'v2025.07.05.24';
+        const VERSION = 'v2025.07.05.25';
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
         const moonImage = new Image();
@@ -312,9 +312,9 @@
             const rightToLeftContainer = document.getElementById('right-to-left-container');
             const defaultRadiusForExample = 160; 
 
-            // 第一組：使用原 maskmoon 函數 (左側為起點往右邊走 - 遮罩遞增：0% 遮罩到 100% 遮罩)
-            // p 代表遮罩百分比，從 0 遞增到 100
-            for (let p = 0; p <= 100; p += 5) {
+            // 第一組：使用原 maskmoon 函數 (左側為起點往右邊走 - 遮罩遞減：100% 遮罩到 0% 遮罩)
+            // p 代表遮罩百分比，從 100 遞減到 0
+            for (let p = 100; p >= 0; p -= 5) {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'figure-wrapper';
                 const uniqueDivId = `leftRightPhaseWrapper_${p}`;
@@ -328,9 +328,9 @@
                 maskmoon(uniqueDivId, defaultRadiusForExample, p); 
             }
 
-            // 第二組：使用新的 drawMoonDotsRightToLeft 函數 (右側為起點往左邊走 - 遮罩遞減：100% 遮罩到 0% 遮罩)
-            // p 代表遮罩百分比，從 100 遞減到 0
-            for (let p = 100; p >= 0; p -= 5) {
+            // 第二組：使用新的 drawMoonDotsRightToLeft 函數 (右側為起點往左邊走 - 遮罩遞增：0% 遮罩到 100% 遮罩)
+            // p 代表遮罩百分比，從 0 遞增到 100
+            for (let p = 0; p <= 100; p += 5) {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'figure-wrapper';
                 const uniqueDivId = `rightLeftPhaseWrapper_${p}`;
@@ -353,7 +353,7 @@
             const defaultRadiusForExample = 160; 
 
             // 第一組 (無底圖)
-            for (let p = 0; p <= 100; p += 5) {
+            for (let p = 100; p >= 0; p -= 5) {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'figure-wrapper';
                 const uniqueDivId = `leftRightPhaseWrapper_${p}`;
@@ -366,7 +366,7 @@
             }
 
             // 第二組 (無底圖)
-            for (let p = 100; p >= 0; p -= 5) {
+            for (let p = 0; p <= 100; p += 5) {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'figure-wrapper';
                 const uniqueDivId = `rightLeftPhaseWrapper_${p}`;
