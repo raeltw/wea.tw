@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>圓形左半邊點繪製</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #333; /* 深灰色背景 */
+            color: #eee;
+            font-family: sans-serif;
+            font-size: 14px;
+        }
+        canvas {
+            background-color: #222; /* Canvas 背景色 */
+            border: 2px solid #555;
+            display: block;
+        }
+        #version-info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px 10px;
+            border-radius: 5px;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <div id="version-info">版本: v2025.07.05.5</div>
+    <canvas id="dotCanvas" width="400" height="400"></canvas>
+
+    <script>
+        // --- 設定版本號 ---
+        const VERSION = 'v2025.07.05.5';
+        document.getElementById('version-info').innerText = `版本: ${VERSION}`;
+
+        const canvas = document.getElementById('dotCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const radius = 150; // 圓的半徑
+        const dotSize = 2; // 每個點的大小 (像素)
+        const numDots = 180; // 繪製點的數量 (決定密度，角度為 90 到 270 度共 180 度，每度一個點)
+
+        function drawLeftHalfCircle() {
+            // 清空畫布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 繪製圓心 (可選)
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
+            ctx.fillStyle = '#fff';
+            ctx.fill();
+
+            // 繪製左半圓周上的點
+            // 角度從 90 度 (圓上方) 到 270 度 (圓下方)，代表左半圓
+            for (let i = 0; i <= numDots; i++) {
+                const angleDegrees = 90 + i; // 從 90 度開始，到 270 度結束
+                const angleRadians = angleDegrees * Math.PI / 180; // 轉換為弧度
+
+                // 計算點的 X, Y 座標
+                const x = centerX + radius * Math.cos(angleRadians);
+                const y = centerY + radius * Math.sin(angleRadians);
+
+                // 繪製點 (使用小方塊來表示)
+                ctx.fillStyle = '#00aaff'; // 點的顏色
+                ctx.fillRect(x - dotSize / 2, y - dotSize / 2, dotSize, dotSize);
+            }
+        }
+
+        // 首次繪製
+        drawLeftHalfCircle();
+    </script>
+</body>
+</html>
