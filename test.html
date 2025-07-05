@@ -14,11 +14,10 @@
             min-height: 100vh;
             background-color: #000;
             color: #eee;
-            font-family: sans-serif;
-            font-size: 14px;
             padding: 20px 0;
         }
-        h2 {
+        /* 新增：替代 h2 的 section-title 樣式 */
+        .section-title {
             color: #fff;
             margin-top: 30px;
             margin-bottom: 20px;
@@ -43,7 +42,6 @@
         /* 新增：百分比標籤的樣式 (普通格式) */
         .percentage-label {
             color: #eee;
-            font-size: 14px; /* 普通字體大小 */
             margin-bottom: 5px; /* 標籤與圖框之間的間距 */
             text-align: center;
         }
@@ -60,12 +58,6 @@
             overflow: hidden; /* 防止 Canvas 超出其容器 */
             width: 320px;
             height: 320px;
-        }
-        /* 原本 h3 在 figure-wrapper 內的樣式，由於標籤移出，這裡可以保留或調整 */
-        .figure-wrapper h3 {
-             /* 由於標籤已移出 figure-wrapper 並改為 div，此 h3 樣式將不再影響每個月相圖的個別標籤 */
-             /* 如果其他地方沒有使用 h3，可以考慮移除此處樣式 */
-             display: none; /* 隱藏原本可能存在的 h3，因為我們改用 div.percentage-label */
         }
         canvas {
             background-color: #222;
@@ -85,18 +77,18 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.06.56 (診斷版)</div>
+    <div id="version-info">版本: v2025.07.06.63 (診斷版)</div>
 
-    <h2>左側為起點往右邊走 (盈月：新月到滿月)</h2>
+    <div class="section-title">左側為起點往右邊走 (盈月：新月到滿月)</div>
     <div id="left-to-right-container" class="figures-container">
-        </div>
+    </div>
 
-    <h2>右側為起點往左邊走 (虧月：滿月到新月)</h2>
+    <div class="section-title">右側為起點往左邊走 (虧月：滿月到新月)</div>
     <div id="right-to-left-container" class="figures-container">
-        </div>
+    </div>
 
     <script>
-        const VERSION = 'v2025.07.06.56 (診斷版)'; // 版本號已更新
+        const VERSION = 'v2025.07.06.63 (診斷版)'; // 版本號已更新
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
         const moonImage = new Image();
@@ -128,12 +120,7 @@
 
             const canvasWidth = targetDiv.clientWidth;
             const canvasHeight = targetDiv.clientHeight;
-
-            if (canvasWidth === 0 || canvasHeight === 0) {
-                 console.warn(`警告：目標 div (${targetDivId}) 的寬度或高度為 0。Canvas 將無法繪製。請確保該 div 在 CSS 中有明確的尺寸 (例如：width: 320px; height: 320px;)。`);
-                 return;
-            }
-
+            
             const canvas = document.createElement('canvas');
             canvas.width = canvasWidth;
             canvas.height = canvasHeight;
@@ -199,7 +186,6 @@
             } else {
                 ctx.fillStyle = '#222';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
-                console.warn('月亮底圖尚未載入或載入失敗，顯示預設背景。');
             }
 
             // 如果 maskPercentage 是 100，則直接繪製一個全黑的圓形遮罩
@@ -283,12 +269,7 @@
 
             const canvasWidth = targetDiv.clientWidth;
             const canvasHeight = targetDiv.clientHeight;
-
-            if (canvasWidth === 0 || canvasHeight === 0) {
-                 console.warn(`警告：目標 div (${targetDivId}) 的寬度或高度為 0。Canvas 將無法繪製。請確保該 div 在 CSS 中有明確的尺寸 (例如：width: 320px; height: 320px;)。`);
-                 return;
-            }
-
+            
             const canvas = document.createElement('canvas');
             canvas.width = canvasWidth;
             canvas.height = canvasHeight;
@@ -352,7 +333,6 @@
             } else {
                 ctx.fillStyle = '#222';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
-                console.warn('月亮底圖尚未載入或載入失敗，顯示預設背景。');
             }
 
             // 如果 maskPercentage 是 100，則直接繪製一個全黑的圓形遮罩
@@ -473,30 +453,7 @@
             }
         };
 
-        // 處理月亮底圖圖片載入失敗的情況
-        moonImage.onerror = () => {
-            alert('無法載入月亮底圖，請檢查圖片網址或網路連線。所有月相圖將顯示為預設背景。');
-            const leftToRightContainer = document.getElementById('left-to-right-container');
-            const rightToLeftContainer = document.getElementById('right-to-left-container');
-            const defaultRadiusForExample = 160;
-
-            // 第一組 (無底圖)
-            for (let p = 100; p >= 0; p -= 5) {
-                const moonUnitItem = document.createElement('div');
-                moonUnitItem.className = 'moon-unit-item';
-
-                const percentageLabel = document.createElement('div');
-                percentageLabel.className = 'percentage-label';
-                // 計算 SunCalc 月相數值 (0.00-0.50)
-                const sunCalcPhase = ((100 - p) * 0.5 / 100).toFixed(2); 
-                percentageLabel.textContent = `遮罩 ${p}% (${sunCalcPhase}) (無底圖)`; 
-                moonUnitItem.appendChild(percentageLabel);
-
-                const figureWrapper = document.createElement('div');
-                figureWrapper.className = 'figure-wrapper';
-                const uniqueDivId = `leftRightPhaseWrapper_${p}`;
-                figureWrapper.id = uniqueDivId;
-                moonUnitItem.appendChild(figureWrapper);
-
-                leftToRightContainer.appendChild(moonUnitItem);
-                mask
+        // moonImage.onerror 函式已移除
+    </script>
+</body>
+</html>
