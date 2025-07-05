@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>月相盈虧模擬 (最終版 - 間距與傾斜修正)</title>
+    <title>月相盈虧模擬 (完整演示：左右側遮罩變化順序修正)</title>
     <style>
         body {
             margin: 0;
@@ -31,18 +31,20 @@
             justify-content: center;
             gap: 20px;
             max-width: 1200px;
-            margin-bottom: 40px;
+            margin-bottom: 40px; /* 增加容器底部間距 */
         }
+        /* 新增：每個月相單元的容器，包含標籤和圖框 */
         .moon-unit-item {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 20px;
+            flex-direction: column; /* 垂直排列，標籤在上方 */
+            align-items: center; /* 水平居中 */
+            margin-bottom: 20px; /* 每個單元之間的垂直間距 */
         }
+        /* 新增：百分比標籤的樣式 (普通格式) */
         .percentage-label {
             color: #eee;
-            font-size: 14px; 
-            margin-bottom: 5px;
+            font-size: 14px; /* 普通字體大小 */
+            margin-bottom: 5px; /* 標籤與圖框之間的間距 */
             text-align: center;
         }
         .figure-wrapper {
@@ -51,11 +53,19 @@
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
             text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
+            display: flex; /* 使用 flexbox 讓 Canvas 居中 */
+            flex-direction: column; /* 讓 Canvas 垂直居中 */
+            align-items: center; /* 水平居中 */
+            justify-content: center; /* 垂直居中 */
+            overflow: hidden; /* 防止 Canvas 超出其容器 */
+            width: 320px;
+            height: 320px;
+        }
+        /* 原本 h3 在 figure-wrapper 內的樣式，由於標籤移出，這裡可以保留或調整 */
+        .figure-wrapper h3 {
+             /* 由於標籤已移出 figure-wrapper 並改為 div，此 h3 樣式將不再影響每個月相圖的個別標籤 */
+             /* 如果其他地方沒有使用 h3，可以考慮移除此處樣式 */
+             display: none; /* 隱藏原本可能存在的 h3，因為我們改用 div.percentage-label */
         }
         canvas {
             background-color: #222;
@@ -75,28 +85,24 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.05.58 (比例 1:1)</div>
+    <div id="version-info">版本: v2025.07.05.47</div>
 
     <h2>左側為起點往右邊走 (盈月：新月到滿月)</h2>
-    <div id="left-container" class="figures-container"></div>
+    <div id="left-to-right-container" class="figures-container">
+        </div>
 
     <h2>右側為起點往左邊走 (虧月：滿月到新月)</h2>
-    <div id="right-container" class="figures-container"></div>
+    <div id="right-to-left-container" class="figures-container">
+        </div>
 
     <script>
-        const VERSION = 'v2025.07.05.58'; 
-        document.getElementById('version-info').innerText = `版本: ${VERSION} (比例 1:1)`;
+        const VERSION = 'v2025.07.05.47'; // 更新版本號
+        document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
-        const moonImg = new Image();
-        moonImg.src = 'https://raeltw.github.io/wea.tw/moon/moon256.png';
+        const moonImage = new Image();
+        moonImage.src = 'https://raeltw.github.io/wea.tw/moon/moon256.png';
 
-        const scaleFactor = 1; // 縮放比例，目前為 1:1
-        const targetMoonDiameterDisplay = 320; // 希望月亮主體（未傾斜時）在畫布上顯示的直徑
-        const overallMarginRatio = 0.05; // 月亮傾斜後的包圍盒與 canvas 邊緣的間距比例 (例如 0.05 = 5% 邊距)
-
-        const dotPixelSize = 3;       // 點陣的像素大小
-        const maskLineThickness = 4;  // 遮罩線的像素粗細
-
+        // 輔助函式：旋轉點 (保持不變)
         function rotatePoint(px, py, cx, cy, angle) {
             const tempX = px - cx;
             const tempY = py - cy;
@@ -105,214 +111,329 @@
             return { x: rotatedX + cx, y: rotatedY + cy };
         }
 
-        // drawMoon 函數
-        function drawMoon(divId, currScale, maskP, isRightToLeft = false, targetMoonDiam, marginRatio, dotSize, maskThickness) {
-            const targetDiv = document.getElementById(divId);
-            if (!targetDiv) return;
+        /**
+         * 繪製月相圖的函式：藍點從左半圓開始，紅點往右邊移動，並繪製黑線遮罩。
+         * 用於顯示遮罩從 0% 遞增到 100% 的效果 (新月到滿月，即盈月)。
+         *
+         * @param {string} targetDivId 目標 div 的 ID，Canvas 將會被創建並放入此 div 中。
+         * @param {number} radius 月亮圓形（藍點/紅點構成的圓形）的半徑。
+         * @param {number} maskPercentage 遮罩的百分比 (0-100)。此值越高，遮罩越廣。
+         */
+        function maskmoon(targetDivId, radius, maskPercentage) {
+            const targetDiv = document.getElementById(targetDivId);
+            if (!targetDiv) {
+                console.error(`找不到 ID 為 ${targetDivId} 的 div 元素。請確認 HTML 中存在該 ID。`);
+                return;
+            }
 
-            const cWidth = targetDiv.clientWidth; 
-            const cHeight = targetDiv.clientHeight;
+            const canvasWidth = targetDiv.clientWidth;
+            const canvasHeight = targetDiv.clientHeight;
 
-            if (cWidth === 0 || cHeight === 0) return;
+            if (canvasWidth === 0 || canvasHeight === 0) {
+                 console.warn(`警告：目標 div (${targetDivId}) 的寬度或高度為 0。Canvas 將無法繪製。請確保該 div 在 CSS 中有明確的尺寸 (例如：width: 320px; height: 320px;)。`);
+                 return;
+            }
 
             const canvas = document.createElement('canvas');
-            canvas.width = cWidth; 
-            canvas.height = cHeight;
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
+            
             targetDiv.innerHTML = ''; 
             targetDiv.appendChild(canvas);
 
             const ctx = canvas.getContext('2d');
 
-            const cX = canvas.width / 2; 
-            const cY = canvas.height / 2; 
-            
-            const tiltDeg = 23.4;
-            const tiltRad = tiltDeg * Math.PI / 180;
-            
-            // 計算繪製月亮圖案和點陣的實際直徑 (已包含縮放因子)
-            const moonDrawDiameter = targetMoonDiam * currScale;
-            const radiusForDots = moonDrawDiameter / 2;
+            const centerX = canvas.width / 2; // Canvas 的實際中心 X 座標
+            const centerY = canvas.height / 2; // Canvas 的實際中心 Y 座標
+            const horizontalOffset = -5; // 向左偏移的像素量
+            const verticalOffset = 1; // 僅影響圖片繪製的向下偏移量 (調整為 1px)
 
-            const dots = 180; // 圓周上的點數
+            const dotSize = 2;
+            const numDots = 180;
+            const tiltAngleDegrees = 23.4;
+            const tiltAngleRadians = tiltAngleDegrees * Math.PI / 180;
 
-            if (moonImg.complete && moonImg.naturalWidth > 0) {
+            if (moonImage.complete && moonImage.naturalWidth > 0) {
                 ctx.save();
-                ctx.translate(cX, cY); 
-                ctx.rotate(tiltRad);
-                ctx.drawImage(moonImg, -moonDrawDiameter / 2, -moonDrawDiameter / 2, moonDrawDiameter, moonDrawDiameter);
-                ctx.restore();
+                ctx.translate(centerX, centerY); // 將繪圖原點移到 Canvas 中心
+                ctx.rotate(tiltAngleRadians); // 旋轉整個繪圖環境
+                // 繪製圖片：只對圖片的 Y 座標應用 verticalOffset
+                ctx.drawImage(moonImage, -canvasWidth / 2 + horizontalOffset, -canvasHeight / 2 + verticalOffset, canvasWidth, canvasHeight);
+                ctx.restore(); // 恢復到未翻譯和未旋轉的狀態
             } else {
                 ctx.fillStyle = '#222';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
+                console.warn('月亮底圖尚未載入或載入失敗，顯示預設背景。');
             }
 
-            const bluePts = [];
-            const redPts = [];
-            
-            for (let i = 0; i <= dots; i++) {
-                const angleDeg = isRightToLeft ? (-90 + i) : (90 + i);
-                const angleRad = angleDeg * Math.PI / 180;
+            const bluePoints = [];
+            const redPoints = [];
 
-                // 藍點的原始位置 (相對於畫布中心和月亮直徑)
-                const origX = cX + radiusForDots * Math.cos(angleRad);
-                const origY = cY + radiusForDots * Math.sin(angleRad);
+            // 定義點和遮罩計算的實際中心，它只包含水平偏移，垂直方向上仍然是畫布的中心
+            const effectiveCenterX = centerX + horizontalOffset;
+            const effectiveCenterY = centerY; // 移除 verticalOffset，確保點陣不隨底圖移動
 
-                // 旋轉藍點，旋轉中心為畫布中心
-                const rBp = rotatePoint(origX, origY, cX, cY, tiltRad);
-                bluePts.push(rBp);
+            for (let i = 0; i <= numDots; i++) {
+                const angleDegrees = 90 + i; // 左半圓
+                const angleRadians = angleDegrees * Math.PI / 180;
 
-                // 紅點的原始位置 (計算遮罩位移)
-                const dist = cX - origX; 
-                const newXB = origX + (maskP / 100) * (2 * dist);
-                const newYB = origY;
-                
-                // 旋轉紅點，旋轉中心為畫布中心
-                const rRp = rotatePoint(newXB, newYB, cX, cY, tiltRad);
-                redPts.push(rRp);
+                // 點的原始位置計算基於 effectiveCenterX, effectiveCenterY
+                const originalX = effectiveCenterX + radius * Math.cos(angleRadians);
+                const originalY = effectiveCenterY + radius * Math.sin(angleRadians);
+
+                // 旋轉點也以 effectiveCenterX, effectiveCenterY 為基準
+                const rotatedBluePoint = rotatePoint(originalX, originalY, effectiveCenterX, effectiveCenterY, tiltAngleRadians);
+                bluePoints.push(rotatedBluePoint);
+
+                // 遮罩線段計算也基於 effectiveCenterX
+                const D0 = effectiveCenterX - originalX;
+                const newXBeforeTilt = originalX + (maskPercentage / 100) * (2 * D0);
+                const newYBeforeTilt = originalY;
+                const rotatedRedPoint = rotatePoint(newXBeforeTilt, newYBeforeTilt, effectiveCenterX, effectiveCenterY, tiltAngleRadians);
+                redPoints.push(rotatedRedPoint);
             }
 
             ctx.strokeStyle = '#000';
-            ctx.lineWidth = maskThickness; // 使用固定的遮罩線粗細
+            ctx.lineWidth = dotSize * 2;
             ctx.lineCap = 'round';
 
-            // 繪製黑線遮罩
-            for (let i = 0; i < bluePts.length; i++) {
+            for (let i = 0; i < bluePoints.length; i++) {
                 ctx.beginPath();
-                ctx.moveTo(bluePts[i].x, bluePts[i].y);
-                ctx.lineTo(redPts[i].x, redPts[i].y);
+                ctx.moveTo(bluePoints[i].x, bluePoints[i].y);
+                ctx.lineTo(redPoints[i].x, redPoints[i].y);
                 ctx.stroke();
             }
 
-            // 繪製藍點 (在黑線之上)
-            ctx.fillStyle = '#00aaff';
-            for (const p of bluePts) {
+            ctx.fillStyle = '#00aaff'; // 藍色
+            for (const p of bluePoints) {
                 ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
             }
 
-            // 繪製紅點 (在黑線之上)
-            ctx.fillStyle = '#ff0000';
-            for (const p of redPts) {
+            ctx.fillStyle = '#ff0000'; // 紅色
+            for (const p of redPoints) {
                 ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
             }
             
-            // 繪製中心白點 (在所有點之上)
+            // 中心白點也繪製在 effectiveCenterX, effectiveCenterY
             ctx.beginPath();
-            ctx.arc(cX, cY, dotSize, 0, Math.PI * 2); // 中心點大小與其他點相同
+            ctx.arc(effectiveCenterX, effectiveCenterY, 3, 0, Math.PI * 2);
             ctx.fillStyle = '#fff';
             ctx.fill();
         }
 
-        moonImg.onload = () => {
-            const leftContainer = document.getElementById('left-container');
-            const rightContainer = document.getElementById('right-container');
-            
-            const tiltDeg = 23.4;
-            const tiltRad = tiltDeg * Math.PI / 180;
 
-            // 計算傾斜後的月亮 (targetMoonDiameterDisplay) 所需的最小包圍盒尺寸
-            const moonBBoxNoMargin = targetMoonDiameterDisplay * (Math.abs(Math.cos(tiltRad)) + Math.abs(Math.sin(tiltRad)));
-            
-            // 計算最終 canvas 的基礎尺寸，包含邊距
-            const canvasBaseSize = moonBBoxNoMargin / (1 - 2 * overallMarginRatio);
-            const finalCanvasBaseSize = Math.ceil(canvasBaseSize); // 向上取整以確保足夠空間
-
-            for (let p = 100; p >= 0; p -= 5) {
-                const unitItem = document.createElement('div');
-                unitItem.className = 'moon-unit-item';
-
-                const label = document.createElement('div');
-                label.className = 'percentage-label';
-                const scPhase = ((100 - p) * 0.5 / 100).toFixed(2); 
-                label.textContent = `遮罩 ${p}% (${scPhase})`; 
-                unitItem.appendChild(label);
-
-                const wrapper = document.createElement('div');
-                wrapper.className = 'figure-wrapper';
-                // wrapper 和 canvas 的實際尺寸
-                wrapper.style.width = `${finalCanvasBaseSize * scaleFactor}px`;
-                wrapper.style.height = `${finalCanvasBaseSize * scaleFactor}px`;
-
-                const divId = `lr-w${p}-${scaleFactor.toFixed(2).replace('.', '_')}`; 
-                wrapper.id = divId;
-                unitItem.appendChild(wrapper);
-                leftContainer.appendChild(unitItem);
-                // 呼叫 drawMoon 時傳遞所有新的控制參數
-                drawMoon(divId, scaleFactor, p, false, targetMoonDiameterDisplay, overallMarginRatio, dotPixelSize, maskLineThickness); 
+        /**
+         * 新增的函式：從右半圓找到藍點，紅點往左邊移動，並繪製黑線。
+         *
+         * @param {string} targetDivId 目標 div 的 ID，Canvas 將會被創建並放入此 div 中。
+         * @param {number} radius 月亮圓形（藍點/紅點構成的圓形）的半徑。
+         * @param {number} maskPercentage 遮罩的百分比 (0-100)。此值越高，遮罩越廣 (月亮越暗)。
+         */
+        function drawMoonDotsRightToLeft(targetDivId, radius, maskPercentage) {
+            const targetDiv = document.getElementById(targetDivId);
+            if (!targetDiv) {
+                console.error(`找不到 ID 為 ${targetDivId} 的 div 元素。請確認 HTML 中存在該 ID。`);
+                return;
             }
 
+            const canvasWidth = targetDiv.clientWidth;
+            const canvasHeight = targetDiv.clientHeight;
+
+            if (canvasWidth === 0 || canvasHeight === 0) {
+                 console.warn(`警告：目標 div (${targetDivId}) 的寬度或高度為 0。Canvas 將無法繪製。請確保該 div 在 CSS 中有明確的尺寸 (例如：width: 320px; height: 320px;)。`);
+                 return;
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
+            
+            targetDiv.innerHTML = ''; 
+            targetDiv.appendChild(canvas);
+
+            const ctx = canvas.getContext('2d');
+
+            const centerX = canvas.width / 2; // Canvas 的實際中心 X 座標
+            const centerY = canvas.height / 2; // Canvas 的實際中心 Y 座標
+            const horizontalOffset = -5; // 向左偏移的像素量
+            const verticalOffset = 1; // 僅影響圖片繪製的向下偏移量 (調整為 1px)
+
+            const dotSize = 2;
+            const numDots = 180; 
+            const tiltAngleDegrees = 23.4;
+            const tiltAngleRadians = tiltAngleDegrees * Math.PI / 180;
+
+            if (moonImage.complete && moonImage.naturalWidth > 0) {
+                ctx.save();
+                ctx.translate(centerX, centerY); // 將繪圖原點移到 Canvas 中心
+                ctx.rotate(tiltAngleRadians); // 旋轉整個繪圖環境
+                // 繪製圖片：只對圖片的 Y 座標應用 verticalOffset
+                ctx.drawImage(moonImage, -canvasWidth / 2 + horizontalOffset, -canvasHeight / 2 + verticalOffset, canvasWidth, canvasHeight);
+                ctx.restore(); // 恢復到未翻譯和未旋轉的狀態
+            } else {
+                ctx.fillStyle = '#222';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                console.warn('月亮底圖尚未載入或載入失敗，顯示預設背景。');
+            }
+
+            const bluePoints = [];
+            const redPoints = [];
+
+            // 定義點和遮罩計算的實際中心，它只包含水平偏移，垂直方向上仍然是畫布的中心
+            const effectiveCenterX = centerX + horizontalOffset;
+            const effectiveCenterY = centerY; // 移除 verticalOffset，確保點陣不隨底圖移動
+
+            for (let i = 0; i <= numDots; i++) {
+                const angleDegrees = -90 + i; // 從 -90 度 (圓下方) 到 90 度 (圓上方)，代表右半圓
+                const angleRadians = angleDegrees * Math.PI / 180;
+
+                // 點的原始位置計算基於 effectiveCenterX, effectiveCenterY
+                const originalX = effectiveCenterX + radius * Math.cos(angleRadians);
+                const originalY = effectiveCenterY + radius * Math.sin(angleRadians);
+
+                // 旋轉點也以 effectiveCenterX, effectiveCenterY 為基準
+                const rotatedBluePoint = rotatePoint(originalX, originalY, effectiveCenterX, effectiveCenterY, tiltAngleRadians);
+                bluePoints.push(rotatedBluePoint);
+
+                // 遮罩線段計算也基於 effectiveCenterX
+                const D0 = effectiveCenterX - originalX; 
+                const newXBeforeTilt = originalX + (maskPercentage / 100) * (2 * D0);
+                const newYBeforeTilt = originalY;
+                const rotatedRedPoint = rotatePoint(newXBeforeTilt, newYBeforeTilt, effectiveCenterX, effectiveCenterY, tiltAngleRadians);
+                redPoints.push(rotatedRedPoint);
+            }
+
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = dotSize * 2;
+            ctx.lineCap = 'round';
+
+            for (let i = 0; i < bluePoints.length; i++) {
+                ctx.beginPath();
+                ctx.moveTo(bluePoints[i].x, bluePoints[i].y);
+                ctx.lineTo(redPoints[i].x, redPoints[i].y);
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = '#00aaff'; // 藍色
+            for (const p of bluePoints) {
+                ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
+            }
+
+            ctx.fillStyle = '#ff0000'; // 紅色
+            for (const p of redPoints) {
+                ctx.fillRect(p.x - dotSize / 2, p.y - dotSize / 2, dotSize, dotSize);
+            }
+            
+            // 中心白點也繪製在 effectiveCenterX, effectiveCenterY
+            ctx.beginPath();
+            ctx.arc(effectiveCenterX, effectiveCenterY, 3, 0, Math.PI * 2);
+            ctx.fillStyle = '#fff';
+            ctx.fill();
+        }
+
+
+        // 當月亮底圖圖片載入完成後，執行範例繪圖迴圈
+        moonImage.onload = () => {
+            const leftToRightContainer = document.getElementById('left-to-right-container');
+            const rightToLeftContainer = document.getElementById('right-to-left-container');
+            const defaultRadiusForExample = 160;
+
+            // 第一組：左側為起點往右邊走 (盈月：新月到滿月)
+            for (let p = 100; p >= 0; p -= 5) {
+                const moonUnitItem = document.createElement('div');
+                moonUnitItem.className = 'moon-unit-item';
+
+                const percentageLabel = document.createElement('div');
+                percentageLabel.className = 'percentage-label';
+                // 計算 SunCalc 月相數值 (0.00-0.50)
+                const sunCalcPhase = ((100 - p) * 0.5 / 100).toFixed(2); 
+                percentageLabel.textContent = `遮罩 ${p}% (${sunCalcPhase})`; 
+                moonUnitItem.appendChild(percentageLabel);
+
+                const figureWrapper = document.createElement('div');
+                figureWrapper.className = 'figure-wrapper';
+                const uniqueDivId = `leftRightPhaseWrapper_${p}`;
+                figureWrapper.id = uniqueDivId;
+                moonUnitItem.appendChild(figureWrapper);
+
+                leftToRightContainer.appendChild(moonUnitItem);
+
+                maskmoon(uniqueDivId, defaultRadiusForExample, p); 
+            }
+
+            // 第二組：右側為起點往左邊走 (虧月：滿月到新月)
             for (let p = 0; p <= 100; p += 5) {
-                const unitItem = document.createElement('div');
-                unitItem.className = 'moon-unit-item';
+                const moonUnitItem = document.createElement('div');
+                moonUnitItem.className = 'moon-unit-item';
 
-                const label = document.createElement('div');
-                label.className = 'percentage-label';
-                const scPhase = (0.5 + (p * 0.5 / 100)).toFixed(2); 
-                label.textContent = `遮罩 ${p}% (${scPhase})`; 
-                unitItem.appendChild(label);
+                const percentageLabel = document.createElement('div');
+                percentageLabel.className = 'percentage-label';
+                // 計算 SunCalc 月相數值 (0.50-1.00)
+                const sunCalcPhase = (0.5 + (p * 0.5 / 100)).toFixed(2); 
+                percentageLabel.textContent = `遮罩 ${p}% (${sunCalcPhase})`; 
+                moonUnitItem.appendChild(percentageLabel);
 
-                const wrapper = document.createElement('div');
-                wrapper.className = 'figure-wrapper';
-                wrapper.style.width = `${finalCanvasBaseSize * scaleFactor}px`;
-                wrapper.style.height = `${finalCanvasBaseSize * scaleFactor}px`;
+                const figureWrapper = document.createElement('div');
+                figureWrapper.className = 'figure-wrapper';
+                const uniqueDivId = `rightLeftPhaseWrapper_${p}`;
+                figureWrapper.id = uniqueDivId;
+                moonUnitItem.appendChild(figureWrapper);
 
-                const divId = `rl-w${p}-${scaleFactor.toFixed(2).replace('.', '_')}`; 
-                wrapper.id = divId;
-                unitItem.appendChild(wrapper);
-                rightContainer.appendChild(unitItem);
-                // 呼叫 drawMoon 時傳遞所有新的控制參數
-                drawMoon(divId, scaleFactor, p, true, targetMoonDiameterDisplay, overallMarginRatio, dotPixelSize, maskLineThickness); 
+                rightToLeftContainer.appendChild(moonUnitItem);
+
+                drawMoonDotsRightToLeft(uniqueDivId, defaultRadiusForExample, p); 
             }
         };
 
-        moonImg.onerror = () => {
+        // 處理月亮底圖圖片載入失敗的情況
+        moonImage.onerror = () => {
             alert('無法載入月亮底圖，請檢查圖片網址或網路連線。所有月相圖將顯示為預設背景。');
-            const leftContainer = document.getElementById('left-container');
-            const rightContainer = document.getElementById('right-container');
-            
-            const tiltDeg = 23.4;
-            const tiltRad = tiltDeg * Math.PI / 180;
-            const moonBBoxNoMargin = targetMoonDiameterDisplay * (Math.abs(Math.cos(tiltRad)) + Math.abs(Math.sin(tiltRad)));
-            const canvasBaseSize = moonBBoxNoMargin / (1 - 2 * overallMarginRatio);
-            const finalCanvasBaseSize = Math.ceil(canvasBaseSize);
+            const leftToRightContainer = document.getElementById('left-to-right-container');
+            const rightToLeftContainer = document.getElementById('right-to-left-container');
+            const defaultRadiusForExample = 160;
 
+            // 第一組 (無底圖)
             for (let p = 100; p >= 0; p -= 5) {
-                const unitItem = document.createElement('div');
-                unitItem.className = 'moon-unit-item';
-                const label = document.createElement('div');
-                label.className = 'percentage-label';
-                const scPhase = ((100 - p) * 0.5 / 100).toFixed(2); 
-                label.textContent = `遮罩 ${p}% (${scPhase}) (無底圖)`; 
-                unitItem.appendChild(label);
+                const moonUnitItem = document.createElement('div');
+                moonUnitItem.className = 'moon-unit-item';
 
-                const wrapper = document.createElement('div');
-                wrapper.className = 'figure-wrapper';
-                wrapper.style.width = `${finalCanvasBaseSize * scaleFactor}px`;
-                wrapper.style.height = `${finalCanvasBaseSize * scaleFactor}px`;
-                const divId = `lr-w${p}-${scaleFactor.toFixed(2).replace('.', '_')}-noimg`;
-                wrapper.id = divId;
-                unitItem.appendChild(wrapper);
-                leftContainer.appendChild(unitItem);
-                drawMoon(divId, scaleFactor, p, false, targetMoonDiameterDisplay, overallMarginRatio, dotPixelSize, maskLineThickness);
+                const percentageLabel = document.createElement('div');
+                percentageLabel.className = 'percentage-label';
+                // 計算 SunCalc 月相數值 (0.00-0.50)
+                const sunCalcPhase = ((100 - p) * 0.5 / 100).toFixed(2); 
+                percentageLabel.textContent = `遮罩 ${p}% (${sunCalcPhase}) (無底圖)`; 
+                moonUnitItem.appendChild(percentageLabel);
+
+                const figureWrapper = document.createElement('div');
+                figureWrapper.className = 'figure-wrapper';
+                const uniqueDivId = `leftRightPhaseWrapper_${p}`;
+                figureWrapper.id = uniqueDivId;
+                moonUnitItem.appendChild(figureWrapper);
+
+                leftToRightContainer.appendChild(moonUnitItem);
+                maskmoon(uniqueDivId, defaultRadiusForExample, p);
             }
 
+            // 第二組 (無底圖)
             for (let p = 0; p <= 100; p += 5) {
-                const unitItem = document.createElement('div');
-                unitItem.className = 'moon-unit-item';
-                const label = document.createElement('div');
-                label.className = 'percentage-label';
-                const scPhase = (0.5 + (p * 0.5 / 100)).toFixed(2); 
-                label.textContent = `遮罩 ${p}% (${scPhase}) (無底圖)`; 
-                unitItem.appendChild(label);
+                const moonUnitItem = document.createElement('div');
+                moonUnitItem.className = 'moon-unit-item';
 
-                const wrapper = document.createElement('div');
-                wrapper.className = 'figure-wrapper';
-                wrapper.style.width = `${finalCanvasBaseSize * scaleFactor}px`;
-                wrapper.style.height = `${finalCanvasBaseSize * scaleFactor}px`;
-                const divId = `rl-w${p}-${scaleFactor.toFixed(2).replace('.', '_')}-noimg`;
-                wrapper.id = divId;
-                unitItem.appendChild(wrapper);
-                rightContainer.appendChild(unitItem);
-                drawMoon(divId, scaleFactor, p, true, targetMoonDiameterDisplay, overallMarginRatio, dotPixelSize, maskLineThickness);
+                const percentageLabel = document.createElement('div');
+                percentageLabel.className = 'percentage-label';
+                // 計算 SunCalc 月相數值 (0.50-1.00)
+                const sunCalcPhase = (0.5 + (p * 0.5 / 100)).toFixed(2); 
+                percentageLabel.textContent = `遮罩 ${p}% (${sunCalcPhase}) (無底圖)`; 
+                moonUnitItem.appendChild(percentageLabel);
+
+                const figureWrapper = document.createElement('div');
+                figureWrapper.className = 'figure-wrapper';
+                const uniqueDivId = `rightLeftPhaseWrapper_${p}`;
+                figureWrapper.id = uniqueDivId;
+                moonUnitItem.appendChild(figureWrapper);
+
+                rightToLeftContainer.appendChild(moonUnitItem);
+                drawMoonDotsRightToLeft(uniqueDivId, defaultRadiusForExample, p);
             }
         };
     </script>
