@@ -79,7 +79,7 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.05.321</div>
+    <div id="version-info">版本: v2025.07.05.33</div>
 
     <h2>左側為起點往右邊走 (盈月：新月到滿月)</h2>
     <div id="left-to-right-container" class="figures-container">
@@ -90,7 +90,7 @@
         </div>
 
     <script>
-        const VERSION = 'v2025.07.05.32'; 
+        const VERSION = 'v2025.07.05.33'; 
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
         const moonImage = new Image();
@@ -317,7 +317,7 @@
         moonImage.onload = () => {
             const leftToRightContainer = document.getElementById('left-to-right-container');
             const rightToLeftContainer = document.getElementById('right-to-left-container');
-            const defaultRadiusForExample = 128; // 將半徑設為 128，與 moon256.png 的 256px 寬高匹配
+            const defaultRadiusForExample = 124; // 將半徑從 128 改為 124
 
             // 第一組：左側為起點往右邊走 (遮罩遞減：100% 遮罩到 0% 遮罩 - 盈月)
             for (let p = 100; p >= 0; p -= 5) {
@@ -325,7 +325,7 @@
                 moonUnitWrapper.className = 'moon-unit-wrapper';
 
                 const title = document.createElement('h3');
-                title.textContent = `遮罩 ${p}%`; // 只顯示遮罩百分比
+                title.textContent = `遮罩 ${p}% Phase`; // 在標示後面加上 "Phase"
                 moonUnitWrapper.appendChild(title); // 將 h3 加入新的外層容器
 
                 const figureWrapper = document.createElement('div');
@@ -344,7 +344,7 @@
                 moonUnitWrapper.className = 'moon-unit-wrapper';
 
                 const title = document.createElement('h3');
-                title.textContent = `遮罩 ${p}%`; // 只顯示遮罩百分比
+                title.textContent = `遮罩 ${p}% Phase`; // 在標示後面加上 "Phase"
                 moonUnitWrapper.appendChild(title); // 將 h3 加入新的外層容器
 
                 const figureWrapper = document.createElement('div');
@@ -363,14 +363,14 @@
             alert('無法載入月亮底圖，請檢查圖片網址或網路連線。所有月相圖將顯示為預設背景。');
             const leftToRightContainer = document.getElementById('left-to-right-container');
             const rightToLeftContainer = document.getElementById('right-to-left-container');
-            const defaultRadiusForExample = 120; 
+            const defaultRadiusForExample = 124; // 將半徑從 128 改為 124
 
             // 第一組 (無底圖)
             for (let p = 100; p >= 0; p -= 5) {
                 const moonUnitWrapper = document.createElement('div');
                 moonUnitWrapper.className = 'moon-unit-wrapper';
                 const title = document.createElement('h3');
-                title.textContent = `遮罩 ${p}% (無底圖)`;
+                title.textContent = `遮罩 ${p}% Phase (無底圖)`; // 在標示後面加上 "Phase"
                 moonUnitWrapper.appendChild(title);
                 const figureWrapper = document.createElement('div');
                 figureWrapper.className = 'figure-wrapper';
@@ -386,7 +386,7 @@
                 const moonUnitWrapper = document.createElement('div');
                 moonUnitWrapper.className = 'moon-unit-wrapper';
                 const title = document.createElement('h3');
-                title.textContent = `遮罩 ${p}% (無底圖)`;
+                title.textContent = `遮罩 ${p}% Phase (無底圖)`; // 在標示後面加上 "Phase"
                 moonUnitWrapper.appendChild(title);
                 const figureWrapper = document.createElement('div');
                 figureWrapper.className = 'figure-wrapper';
