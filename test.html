@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>月相盈虧模擬 (完整演示：左右側遮罩變化順序修正 - 恢復底圖完整顯示)</title>
+    <title>月相盈虧模擬 (完整演示：左右側遮罩變化順序修正 - 嚴格遵循圖片處理順序)</title>
     <style>
         body {
             margin: 0;
@@ -59,7 +59,7 @@
         }
         canvas {
             background-color: #222;
-            border: 2px solid #555; /* 暫時移除邊框，以便觀察 figure-wrapper 實際大小 */
+            border: 2px solid #555; 
             display: block;
             margin: 0 auto;
             /* Canvas 尺寸現在由 JS 動態設定以適應 figure-wrapper */
@@ -78,7 +78,7 @@
     </style>
 </head>
 <body>
-    <div id="version-info">版本: v2025.07.06.73 (恢復底圖完整顯示)</div>
+    <div id="version-info">版本: v2025.07.06.75 (嚴格遵循圖片處理順序)</div>
 
     <div class="section-title">左側為起點往右邊走 (盈月：新月到滿月)</div>
     <div id="left-to-right-container" class="figures-container">
@@ -89,7 +89,7 @@
     </div>
 
     <script>
-        const VERSION = 'v2025.07.06.73 (恢復底圖完整顯示)';
+        const VERSION = 'v2025.07.06.75 (嚴格遵循圖片處理順序)';
         document.getElementById('version-info').innerText = `版本: ${VERSION}`;
 
         const moonImage = new Image();
@@ -98,7 +98,6 @@
         function rotatePoint(px, py, cx, cy, angle) {
             const tempX = px - cx;
             const tempY = py - cy;
-            // 旋轉公式中的 sin 和 cos 應該根據角度來決定正負
             const rotatedX = tempX * Math.cos(angle) - tempY * Math.sin(angle);
             const rotatedY = tempX * Math.sin(angle) + tempY * Math.cos(angle); 
             return { x: rotatedX + cx, y: rotatedY + cy };
@@ -165,13 +164,14 @@
             // --- 診斷輔助線條結束 ---
 
 
-            // 繪製月亮底圖 (精確縮放以填滿整個 Canvas 區域，確保完整顯示，不再以原始尺寸裁切)
+            // 繪製月亮底圖 (先變320x320，然後旋轉，再放入方框置中對齊)
             if (moonImage.complete && moonImage.naturalWidth > 0) {
                 ctx.save();
-                // 將繪圖原點移到有效中心，並應用傾斜旋轉
+                // 將繪圖原點移到有效中心
                 ctx.translate(effectiveCenterX, effectiveCenterY); 
+                // 應用傾斜旋轉
                 ctx.rotate(tiltAngleRadians); 
-                // 繪製圖片：現在圖片會縮放以填滿整個 Canvas 寬高，確保完整顯示
+                // 繪製圖片：圖片將被縮放以填滿整個 Canvas 寬高 (即320x320)，並置中
                 ctx.drawImage(moonImage, -canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
                 ctx.restore(); 
                 
@@ -301,11 +301,12 @@
             ctx.stroke();
             // --- 診斷輔助線條結束 ---
 
-            // 繪製月亮底圖 (精確縮放以填滿整個 Canvas 區域，確保完整顯示，不再以原始尺寸裁切)
+            // 繪製月亮底圖 (先變320x320，然後旋轉，再放入方框置中對齊)
             if (moonImage.complete && moonImage.naturalWidth > 0) {
                 ctx.save();
                 ctx.translate(effectiveCenterX, effectiveCenterY); 
                 ctx.rotate(tiltAngleRadians); 
+                // 繪製圖片：圖片將被縮放以填滿整個 Canvas 寬高 (即320x320)，並置中
                 ctx.drawImage(moonImage, -canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
                 ctx.restore(); 
 
@@ -383,7 +384,8 @@
         moonImage.onload = () => {
             const leftToRightContainer = document.getElementById('left-to-right-container');
             const rightToLeftContainer = document.getElementById('right-to-left-container');
-            const defaultRadiusForExample = 128; // 範例半徑，圖片是 256x256，所以半徑 128 會剛好是圖片大小
+            // defaultRadiusForExample 仍然可以根據需求調整，它現在只影響遮罩
+            const defaultRadiusForExample = 128; // 可以設置為 160 以便遮罩完全填滿 320x320 的月亮圖
 
             for (let p = 100; p >= 0; p -= 5) {
                 const moonUnitItem = document.createElement('div');
