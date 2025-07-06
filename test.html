@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>圓形弧線水平線填色測試 (V42 - 啟用月相填充)</title>
+<title>圓形弧線水平線填色測試 (V43 - 只畫黑線，亮面透出底圖)</title>
 <style>
   body {
     display: flex;
@@ -61,7 +61,7 @@
 </head>
 <body>
 
-<div class="page-version-info">當前版本: V42</div>
+<div class="page-version-info">當前版本: V43</div>
 
 <div class="section-title">第一組: 顯示所有文字，顯示線條圓心 (旋轉 24.5 度)</div>
 <div id="group1Div" class="drawing-group-container">
@@ -93,7 +93,7 @@
   const ANTI_ALIASING_OFFSET = 0.5;
   const FIXED_ROTATION_DEGREES = 24.5;
 
-  const MOON_COLOR_LIGHT = '#e0e0e0';
+  const MOON_COLOR_LIGHT = '#e0e0e0'; // 雖然定義了，但 V43 中不再用於填充亮面
   const MOON_COLOR_DARK = 'black'; 
 
   // 定義月亮圖片的原始尺寸和假設的月亮圓形範圍
@@ -183,10 +183,11 @@
         ctx.fillRect(0, 0, newCanvasWidth, newCanvasHeight);
     }
 
-    // *** 啟用月相填充邏輯，現在會畫出黑色的陰影部分 ***
+    // 月相填充邏輯
+    // 先用黑色填充整個圓形，作為陰影的基礎
     ctx.beginPath();
     ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI); 
-    ctx.fillStyle = MOON_COLOR_DARK; // 預設填充為黑色，作為未被照亮的部分
+    ctx.fillStyle = MOON_COLOR_DARK; 
     ctx.fill(); 
 
     const observationAngleRadians = (angleValue / 100) * Math.PI;
@@ -221,13 +222,26 @@
               redArcX = greenRightX; 
           }
       }
-      ctx.fillStyle = fillLeftBlack ? MOON_COLOR_DARK : MOON_COLOR_LIGHT; // 根據 fillLeftBlack 決定填充顏色
-      ctx.fillRect(greenLeftX, y, redArcX - greenLeftX, renderDensity);
-      ctx.fillStyle = fillLeftBlack ? MOON_COLOR_LIGHT : MOON_COLOR_DARK; // 另一側的填充顏色
-      ctx.fillRect(redArcX, y, greenRightX - redArcX, renderDensity);
-    }
-    // *** 月相填充邏輯結束 ***
 
+      // V43 關鍵修改：
+      // 如果 fillLeftBlack 為 true (表示左邊是黑色的陰影部分)
+      // 則繪製黑色的左半部分
+      if (fillLeftBlack) {
+        ctx.fillStyle = MOON_COLOR_DARK; 
+        ctx.fillRect(greenLeftX, y, redArcX - greenLeftX, renderDensity);
+      } 
+      // 如果 fillLeftBlack 為 false (表示右邊是黑色的陰影部分)
+      // 則繪製黑色的右半部分
+      else {
+        ctx.fillStyle = MOON_COLOR_DARK; 
+        ctx.fillRect(redArcX, y, greenRightX - redArcX, renderDensity);
+      }
+      
+      // 注意：這裡不再有 MOON_COLOR_LIGHT 的填充，亮面直接透過底圖月亮來顯示
+    }
+    // 月相填充邏輯結束
+
+    // 如果沒有隱藏輪廓線，則繪製
     if (!hideOutlines) { 
         // 繪製綠色圓形外框 (此處仍使用 circleRadius)
         ctx.beginPath();
@@ -278,6 +292,7 @@
     ctx.restore(); 
   }
 
+  // 調整 funcm1 和 funcm2，確保它們仍然使用正確的 hideOutlines 邏輯
   function funcm1(targetDivId, size, hideLabel = false, hideOutlines = false) {
       for (let i = 0; i <= gridSize; i++) {
           const angleValue = i * 10;
