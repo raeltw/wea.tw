@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>圓形弧線水平線填色測試 (V31 - 修正尺寸比較顯示 + 僅圖片和邊框)</title>
+<title>圓形弧線水平線填色測試 (V32 - 恢復所有顯示)</title>
 <style>
   body {
     display: flex;
@@ -61,7 +61,7 @@
 </head>
 <body>
 
-<div class="page-version-info">當前版本: V31</div>
+<div class="page-version-info">當前版本: V32</div>
 
 <div class="section-title">第一組: 顯示所有文字，顯示線條圓心 (旋轉 24.5 度)</div>
 <div id="group1Div" class="drawing-group-container">
@@ -159,10 +159,8 @@
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
     
-    // *** 這裡：暫時將 circleRadius 的減去值調整為一個較小的邊距，或完全移除，以便觀察圖片對齊 ***
-    // 為了單純觀察圖片和邊框，我暫時將其恢復到標準邊距，而不是為了「露出」圖片而大減
+    // 恢復 circleRadius 的標準計算，確保月相圖填滿圓形區域
     const circleRadius = Math.min(canvas.width, canvas.height) / 2 - 5; 
-    // ******************************************************************************************
 
     ctx.save();
     ctx.translate(centerX, centerY);
@@ -171,7 +169,7 @@
 
     // 繪製背景月亮圖片
     if (moonImage.complete && moonImage.naturalWidth > 0) {
-        // 現在繪製圖片仍然是簡單地縮放到整個 Canvas 大小
+        // 將圖片縮放到 Canvas 大小，讓其作為底層背景
         ctx.drawImage(moonImage, 0, 0, newCanvasWidth, newCanvasHeight); 
     } else {
         // 如果圖片未載入，顯示純黑背景
@@ -179,11 +177,8 @@
         ctx.fillRect(0, 0, newCanvasWidth, newCanvasHeight);
     }
 
-    // *** 臨時移除西瓜填充邏輯，只為觀察圖片和邊框對齊 ***
-    // 在這個版本中，我們不繪製純色的亮面和暗面填充，只顯示背景圖片和輪廓線。
-    // 這允許您更好地評估圖片在不同 Canvas 尺寸下的行為。
-    // 這個區域的程式碼被註釋掉了：
-    /*
+    // *** 恢復雙色填充邏輯 ***
+    // 先繪製一個完整的圓，作為月球的底色（目前是純黑）
     ctx.beginPath();
     ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI); 
     ctx.fillStyle = MOON_COLOR_DARK; 
@@ -231,7 +226,6 @@
       ctx.fillStyle = fillLeftBlack ? MOON_COLOR_LIGHT : MOON_COLOR_DARK;
       ctx.fillRect(redArcX, y, greenRightX - redArcX, renderDensity);
     }
-    */
     // *****************************************************************
 
     if (!hideOutlines) {
@@ -241,7 +235,6 @@
         ctx.lineWidth = 1;
         ctx.stroke();
 
-        // 雖然這次只繪製滿月(angle=0)，但保留紅線邏輯以防未來需要
         let redArcOutlineStartAngle, redArcOutlineEndAngle;
         if (semiMinorAxis_horizontal >= 0) { 
             redArcOutlineStartAngle = -Math.PI / 2;
