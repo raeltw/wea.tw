@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>圓形弧線水平線填色測試 (V34 - 圖片按半徑對齊)</title>
+<title>圓形弧線水平線填色測試 (V35 - 圖片按新半徑對齊)</title>
 <style>
   body {
     display: flex;
@@ -61,7 +61,7 @@
 </head>
 <body>
 
-<div class="page-version-info">當前版本: V34</div>
+<div class="page-version-info">當前版本: V35</div>
 
 <div class="section-title">第一組: 顯示所有文字，顯示線條圓心 (旋轉 24.5 度)</div>
 <div id="group1Div" class="drawing-group-container">
@@ -99,25 +99,25 @@
   // 定義月亮圖片的原始尺寸和假設的月亮圓形範圍
   const MOON_IMG_ORIGINAL_WIDTH = 256;
   const MOON_IMG_ORIGINAL_HEIGHT = 256;
-  // 假設月亮圖片中的月亮是滿圓的，佔滿整個 256x256 空間
   const MOON_IMG_SOURCE_X = 0;
   const MOON_IMG_SOURCE_Y = 0;
   const MOON_IMG_SOURCE_WIDTH = MOON_IMG_ORIGINAL_WIDTH;
   const MOON_IMG_SOURCE_HEIGHT = MOON_IMG_ORIGINAL_HEIGHT;
 
+  // *** 新增的 X 和 Y 參數 ***
+  const FIXED_RADIUS_RATIO_X = 0.97; // 比例因子 X
+  const FIXED_RADIUS_OFFSET_Y = 0;  // 固定偏移量 Y
 
   const moonImage = new Image();
   moonImage.src = 'https://raeltw.github.io/wea.tw/moon/moon256.png';
 
   moonImage.onload = () => {
-      // 正常繪圖組 (無填充，僅顯示圖片和邊框)
       funcm1('group1Div', 200, false, false); 
       funcm2('group2Div', 250, true, false); 
       funcm1('group3Div', 180, true, true); 
       funcm2('group4Div', 220, false, true); 
       funcm1('group5Div', 150, true, true); 
       
-      // 第六組：多尺寸比較，顯示輪廓線
       const sizesToCompare = [100, 200, 300, 400, 500];
       sizesToCompare.forEach(size => {
           _drawInternal(`canvas_group6Div_m1_0_${size}`, 0, true, 'group6Div', size, size, true, false); 
@@ -126,7 +126,6 @@
 
   moonImage.onerror = () => {
       console.error('月亮圖片載入失敗。請檢查圖片路徑或網路連接。');
-      // 如果圖片載入失敗，仍然繪製，但沒有背景圖片
       funcm1('group1Div', 200, false, false);
       funcm2('group2Div', 250, true, false);
       funcm1('group3Div', 180, true, true);
@@ -168,33 +167,31 @@
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
     
-    // 綠色圓形的半徑，作為月球的標準尺寸
-    const circleRadius = Math.min(canvas.width, canvas.height) / 2 - 5; 
+    // *** 應用新的半徑計算公式 ***
+    const circleRadius = (Math.min(canvas.width, canvas.height) / 2) * FIXED_RADIUS_RATIO_X - FIXED_RADIUS_OFFSET_Y;
 
     ctx.save();
     ctx.translate(centerX, centerY);
     ctx.rotate(FIXED_ROTATION_DEGREES * Math.PI / 180);
     ctx.translate(-centerX, -centerY);
 
-    // *** 關鍵修改：繪製背景月亮圖片，使其與 circleRadius 精確對齊 ***
+    // 繪製背景月亮圖片，使其與 circleRadius 精確對齊
     if (moonImage.complete && moonImage.naturalWidth > 0) {
-        // 目標繪製區域的左上角和尺寸
         const targetDrawX = centerX - circleRadius;
         const targetDrawY = centerY - circleRadius;
-        const targetDrawSize = circleRadius * 2; // 直徑
+        const targetDrawSize = circleRadius * 2; 
 
         ctx.drawImage(
             moonImage,
-            MOON_IMG_SOURCE_X, MOON_IMG_SOURCE_Y, MOON_IMG_SOURCE_WIDTH, MOON_IMG_SOURCE_HEIGHT, // 從圖片中裁剪出的區域
-            targetDrawX, targetDrawY, targetDrawSize, targetDrawSize // 繪製到 Canvas 上的目標位置和大小
+            MOON_IMG_SOURCE_X, MOON_IMG_SOURCE_Y, MOON_IMG_SOURCE_WIDTH, MOON_IMG_SOURCE_HEIGHT, 
+            targetDrawX, targetDrawY, targetDrawSize, targetDrawSize 
         );
     } else {
-        // 如果圖片未載入，顯示純黑背景
         ctx.fillStyle = 'black'; 
         ctx.fillRect(0, 0, newCanvasWidth, newCanvasHeight);
     }
 
-    // *** 保持月相填充邏輯註釋，只顯示圖片和輪廓線 ***
+    // 保持月相填充邏輯註釋
     /*
     ctx.beginPath();
     ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI); 
@@ -213,7 +210,6 @@
       const greenRightX = centerX + dxGreen;
 
       let redArcX = null; 
-
       const discriminant = 1 - Math.pow(dy, 2) / Math.pow(semiMajorAxis_vertical, 2);
       
       if (discriminant >= 0) { 
@@ -225,7 +221,6 @@
             redArcX = centerX - dxRed;
         }
       }
-      
       if (redArcX !== null) {
           redArcX = Math.max(greenLeftX, Math.min(greenRightX, redArcX));
       } else {
@@ -235,17 +230,13 @@
               redArcX = greenRightX; 
           }
       }
-
       ctx.fillStyle = fillLeftBlack ? MOON_COLOR_DARK : MOON_COLOR_LIGHT;
       ctx.fillRect(greenLeftX, y, redArcX - greenLeftX, renderDensity);
-
       ctx.fillStyle = fillLeftBlack ? MOON_COLOR_LIGHT : MOON_COLOR_DARK;
       ctx.fillRect(redArcX, y, greenRightX - redArcX, renderDensity);
     }
     */
-    // *****************************************************************
 
-    // *** 根據 hideOutlines 參數控制是否顯示輪廓線、紅線和藍點 ***
     if (!hideOutlines) { 
         // 繪製綠色圓形外框
         ctx.beginPath();
@@ -309,8 +300,6 @@
           _drawInternal(`canvas_${targetDivId}_m2_${angleValue}_${size}_${hideLabel}_${hideOutlines}`, angleValue, false, targetDivId, size, size, hideLabel, hideOutlines); 
       }
   }
-
-  // --- 頁面加載後調用這些函數來生成圖形 ---
 </script>
 
 </body>
