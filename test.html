@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>圓形弧線水平線填色測試 (V48 - 徹底修正新月和滿月)</title>
+<title>圓形弧線水平線填色測試 (V50 - 根據各組定義修正)</title>
 <style>
   body {
     display: flex;
@@ -61,7 +61,7 @@
 </head>
 <body>
 
-<div class="page-version-info">當前版本: V48</div>
+<div class="page-version-info">當前版本: V50</div>
 
 <div class="section-title">第一組: 顯示所有文字，顯示線條圓心 (旋轉 24.5 度)</div>
 <div id="group1Div" class="drawing-group-container">
@@ -119,10 +119,14 @@
       funcm1('group5Div', 150, true, true); 
       
       const sizesToCompare = [100, 200, 300, 400, 500];
-      // 對於第六組，傳遞 angleValue = 100 (代表滿月狀態)，且 hideOutlines = true
-      sizesToCompare.forEach(size => {
-          _drawInternal(`canvas_group6Div_m1_100_${size}`, 100, true, 'group6Div', size, size, true, false); 
-      });
+      // 對於第六組，傳遞 angleValue = 0 (代表滿月狀態 for funcm2 的定義)，且 hideOutlines = true
+      // 這裡傳遞 fillLeftBlack = false 是因為 funcm2 的組就是用 false，保持一致。
+      // 但實際上，對於 hideOutlines = true 的情況，fillLeftBlack 不影響填充，只影響紅線繪製方向。
+      _drawInternal(`canvas_group6Div_m1_0_${sizesToCompare[0]}`, 0, false, 'group6Div', sizesToCompare[0], sizesToCompare[0], true, false); 
+      _drawInternal(`canvas_group6Div_m1_0_${sizesToCompare[1]}`, 0, false, 'group6Div', sizesToCompare[1], sizesToCompare[1], true, false); 
+      _drawInternal(`canvas_group6Div_m1_0_${sizesToCompare[2]}`, 0, false, 'group6Div', sizesToCompare[2], sizesToCompare[2], true, false); 
+      _drawInternal(`canvas_group6Div_m1_0_${sizesToCompare[3]}`, 0, false, 'group6Div', sizesToCompare[3], sizesToCompare[3], true, false); 
+      _drawInternal(`canvas_group6Div_m1_0_${sizesToCompare[4]}`, 0, false, 'group6Div', sizesToCompare[4], sizesToCompare[4], true, false); 
   };
 
   moonImage.onerror = () => {
@@ -134,9 +138,11 @@
       funcm1('group5Div', 150, true, true);
 
       const sizesToCompare = [100, 200, 300, 400, 500];
-      sizesToCompare.forEach(size => {
-          _drawInternal(`canvas_group6Div_m1_100_${size}`, 100, true, 'group6Div', size, size, true, false);
-      });
+      _drawInternal(`canvas_group6Div_m1_0_${sizesToCompare[0]}`, 0, false, 'group6Div', sizesToCompare[0], sizesToCompare[0], true, false); 
+      _drawInternal(`canvas_group6Div_m1_0_${sizesToCompare[1]}`, 0, false, 'group6Div', sizesToCompare[1], sizesToCompare[1], true, false); 
+      _drawInternal(`canvas_group6Div_m1_0_${sizesToCompare[2]}`, 0, false, 'group6Div', sizesToCompare[2], sizesToCompare[2], true, false); 
+      _drawInternal(`canvas_group6Div_m1_0_${sizesToCompare[3]}`, 0, false, 'group6Div', sizesToCompare[3], sizesToCompare[3], true, false); 
+      _drawInternal(`canvas_group6Div_m1_0_${sizesToCompare[4]}`, 0, false, 'group6Div', sizesToCompare[4], sizesToCompare[4], true, false); 
   };
 
   function _drawInternal(canvasId, angleValue, fillLeftBlack, targetDivId, newCanvasWidth, newCanvasHeight, hideLabel, hideOutlines) {
@@ -152,7 +158,8 @@
     if (!hideLabel) {
         const label = document.createElement('div');
         label.className = 'label';
-        label.textContent = `角度值: ${angleValue} (${newCanvasWidth}x${newCanvasHeight})`;
+        // 為了方便除錯，這裡可以顯示 fillLeftBlack 的值
+        label.textContent = `角度值: ${angleValue} (L:${fillLeftBlack}) (${newCanvasWidth}x${newCanvasHeight})`;
         container.appendChild(label);
     }
 
@@ -183,20 +190,44 @@
         ctx.fillRect(0, 0, newCanvasWidth, newCanvasHeight);
     }
 
-    // 月相填充邏輯：重新設計以精確處理新月、滿月和弦月
+    // 月相填充邏輯：根據各組的 angleValue 和 fillLeftBlack 獨立判斷
     if (!hideOutlines) { // 只在前五組進行月相填充
         ctx.beginPath();
         ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI); 
         ctx.clip(); // 將繪圖區域裁剪為這個圓形
 
-        if (angleValue === 0) { // 新月 (全黑)
+        let isFullMoon = false;
+        let isNewMoon = false;
+
+        if (fillLeftBlack) { // 第一組的定義：0是新月，100是滿月
+            if (angleValue === 0) { // 新月
+                isNewMoon = true;
+            } else if (angleValue === 100) { // 滿月
+                isFullMoon = true;
+            }
+        } else { // 第二組的定義：0是滿月，100是新月
+            if (angleValue === 0) { // 滿月
+                isFullMoon = true;
+            } else if (angleValue === 100) { // 新月
+                isNewMoon = true;
+            }
+        }
+
+        if (isNewMoon) { // 新月 (全黑)
             ctx.fillStyle = MOON_COLOR_DARK;
             ctx.fillRect(centerX - circleRadius, centerY - circleRadius, circleRadius * 2, circleRadius * 2);
-        } else if (angleValue === 100) { // 滿月 (完全透出底圖，不進行任何填充)
+        } else if (isFullMoon) { // 滿月 (完全透出底圖，不進行任何填充)
             // 不做任何填充操作
         } else { // 其他月相 (部分陰影)
-            const observationAngleRadians = (angleValue / 100) * Math.PI;
-            const semiMinorAxis_horizontal = circleRadius * Math.cos(observationAngleRadians);
+            // 這裡的 angleValue 0-100 仍然代表月相的百分比
+            // observationAngleRadians 應該從 0 (滿月) 到 PI (新月)
+            // 為此，我們需要根據當前組的 angleValue 定義來計算正確的 phase 角度
+            let phaseAngle = (angleValue / 100) * Math.PI; // 這對 fillLeftBlack=true (0新月100滿月) 的組是正確的
+                                                           // 對於 fillLeftBlack=false (0滿月100新月) 的組也應如此
+                                                           // 因為 angleValue 增加，陰影面積應該增加，
+                                                           // cos 值應從 1 (亮) 變到 -1 (暗)
+
+            const semiMinorAxis_horizontal = circleRadius * Math.cos(phaseAngle);
             const semiMajorAxis_vertical = circleRadius; 
             const currentAbsoluteSemiMinorAxis = Math.abs(semiMinorAxis_horizontal); 
 
@@ -248,20 +279,50 @@
         ctx.stroke();
 
         // 只有在需要繪製紅線時才繪製 (非滿月且非新月)
-        if (angleValue !== 0 && angleValue !== 100) {
-            const observationAngleRadians = (angleValue / 100) * Math.PI; 
-            const semiMinorAxis_horizontal = circleRadius * Math.cos(observationAngleRadians);
+        let drawRedLine = true;
+        if (fillLeftBlack) { // 第一組的定義
+            if (angleValue === 0 || angleValue === 100) { // 新月或滿月
+                drawRedLine = false;
+            }
+        } else { // 第二組的定義
+            if (angleValue === 0 || angleValue === 100) { // 滿月或新月
+                drawRedLine = false;
+            }
+        }
+
+        if (drawRedLine) {
+            // 這裡的 observationAngleRadians 仍然需要根據當前組的 angleValue 定義來計算
+            let phaseAngle = (angleValue / 100) * Math.PI;
+
+            const semiMinorAxis_horizontal = circleRadius * Math.cos(phaseAngle);
             const semiMajorAxis_vertical = circleRadius; 
             const currentAbsoluteSemiMinorAxis = Math.abs(semiMinorAxis_horizontal); 
 
             let redArcOutlineStartAngle, redArcOutlineEndAngle;
-            if (semiMinorAxis_horizontal >= 0) { 
+            // 紅線的繪製方向應該始終與填充方向一致
+            // 如果 fillLeftBlack 為 true，陰影在左，亮面在右，紅線應該在右邊 (半圓)
+            // 如果 fillLeftBlack 為 false，陰影在右，亮面在左，紅線應該在左邊 (半圓)
+            if (fillLeftBlack) { // 亮面在右
                 redArcOutlineStartAngle = -Math.PI / 2;
                 redArcOutlineEndAngle = Math.PI / 2;
-            } else { 
+            } else { // 亮面在左
                 redArcOutlineStartAngle = Math.PI / 2;
                 redArcOutlineEndAngle = 3 * Math.PI / 2;
             }
+            // 但如果 semiMinorAxis_horizontal 是負數 (陰影面積超過一半)，這個角度計算邏輯需要反轉
+            // 最簡單的方式是保持紅線只畫半個橢圓，而這個半橢圓的方向由 semiMinorAxis_horizontal 的正負決定
+            // 由於 semiMinorAxis_horizontal 已經考慮了 cos(phaseAngle) 的正負，這裡無需額外反轉
+            // 我們只需確保橢圓的「長軸」永遠是垂直的 (semiMajorAxis_vertical)，而「短軸」是水平的 (currentAbsoluteSemiMinorAxis)
+
+            // 為了簡化，直接根據 semiMinorAxis_horizontal 的正負判斷紅線左右
+            if (semiMinorAxis_horizontal >= 0) { // 陰影小於一半，亮面大於一半 (右側是亮面)
+                redArcOutlineStartAngle = -Math.PI / 2;
+                redArcOutlineEndAngle = Math.PI / 2;
+            } else { // 陰影大於一半，亮面小於一半 (左側是亮面)
+                redArcOutlineStartAngle = Math.PI / 2;
+                redArcOutlineEndAngle = 3 * Math.PI / 2;
+            }
+
 
             ctx.beginPath();
             const redOutlinePoint1X = centerX + currentAbsoluteSemiMinorAxis * Math.cos(redArcOutlineStartAngle);
@@ -297,16 +358,20 @@
     ctx.restore(); 
   }
 
+  // funcm1 的定義保持不變
   function funcm1(targetDivId, size, hideLabel = false, hideOutlines = false) {
       for (let i = 0; i <= gridSize; i++) {
           const angleValue = i * 10;
+          // 第一組的定義：0是新月，100是滿月，fillLeftBlack = true
           _drawInternal(`canvas_${targetDivId}_m1_${angleValue}_${size}_${hideLabel}_${hideOutlines}`, angleValue, true, targetDivId, size, size, hideLabel, hideOutlines); 
       }
   }
 
+  // funcm2 的定義保持不變
   function funcm2(targetDivId, size, hideLabel = false, hideOutlines = false) {
       for (let i = 0; i <= gridSize; i++) {
           const angleValue = i * 10;
+          // 第二組的定義：0是滿月，100是新月，fillLeftBlack = false
           _drawInternal(`canvas_${targetDivId}_m2_${angleValue}_${size}_${hideLabel}_${hideOutlines}`, angleValue, false, targetDivId, size, size, hideLabel, hideOutlines); 
       }
   }
