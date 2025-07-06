@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>圓形弧線水平線填色測試 (V40 - 底圖與西瓜分離，X=0.95)</title>
+<title>圓形弧線水平線填色測試 (V41 - 底圖與西瓜分離，X=0.935)</title>
 <style>
   body {
     display: flex;
@@ -61,7 +61,7 @@
 </head>
 <body>
 
-<div class="page-version-info">當前版本: V40</div>
+<div class="page-version-info">當前版本: V41</div>
 
 <div class="section-title">第一組: 顯示所有文字，顯示線條圓心 (旋轉 24.5 度)</div>
 <div id="group1Div" class="drawing-group-container">
@@ -105,7 +105,7 @@
   const MOON_IMG_SOURCE_HEIGHT = MOON_IMG_ORIGINAL_HEIGHT;
 
   // *** 維持當前您指定的 X 和 Y 參數，它們將只影響西瓜（相位線）***
-  const FIXED_RADIUS_RATIO_X = 0.95; // 比例因子 X，從 0.83 修改為 0.95
+  const FIXED_RADIUS_RATIO_X = 0.935; // 比例因子 X，從 0.95 修改為 0.935
   const FIXED_RADIUS_OFFSET_Y = 0;  // 固定偏移量 Y，保持為 0
 
   const moonImage = new Image();
@@ -260,7 +260,7 @@
         ctx.moveTo(redOutlinePoint1X, redOutlinePoint1Y);
         const numSegments = 100;
         for (let i = 0; i <= numSegments; i++) {
-            const t = redArcOutlineStartAngle + (redArcOutlineEndAngle - redArcOutlineStartAngle) * (i / numSegments); // 修正：這裡是 redArcOutlineStartAngle + (redArcOutlineEndAngle - redArcOutlineStartAngle)
+            const t = redArcOutlineStartAngle + (redArcOutlineEndAngle - redArcOutlineStartAngle) * (i / numSegments);
             const x = centerX + currentAbsoluteSemiMinorAxis * Math.cos(t);
             const y = centerY + semiMajorAxis_vertical * Math.sin(t);
             ctx.lineTo(x, y);
