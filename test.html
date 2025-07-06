@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>圓形弧線水平線填色測試 (V32 - 恢復所有顯示)</title>
+<title>圓形弧線水平線填色測試 (V33 - 無填充，第六組顯示輪廓)</title>
 <style>
   body {
     display: flex;
@@ -61,7 +61,7 @@
 </head>
 <body>
 
-<div class="page-version-info">當前版本: V32</div>
+<div class="page-version-info">當前版本: V33</div>
 
 <div class="section-title">第一組: 顯示所有文字，顯示線條圓心 (旋轉 24.5 度)</div>
 <div id="group1Div" class="drawing-group-container">
@@ -83,7 +83,7 @@
 <div id="group5Div" class="drawing-group-container">
     </div>
 
-<div class="section-title" style="clear: both;">第六組: 尺寸比較 (滿月，隱藏文字和線條圓心)</div>
+<div class="section-title" style="clear: both;">第六組: 尺寸比較 (滿月，顯示輪廓線)</div>
 <div id="group6Div" class="drawing-group-container">
     </div>
 
@@ -100,25 +100,26 @@
   moonImage.src = 'https://raeltw.github.io/wea.tw/moon/moon256.png';
 
   moonImage.onload = () => {
-      // 正常繪圖組
-      funcm1('group1Div', 200);
-      funcm2('group2Div', 250, true, false);
-      funcm1('group3Div', 180, true, true);
-      funcm2('group4Div', 220, false, true);
-      funcm1('group5Div', 150, true, true);
+      // 正常繪圖組 (無填充，僅顯示圖片和邊框)
+      // 為了觀察圖片對齊，將這些組也暫時設定為不顯示填充色
+      funcm1('group1Div', 200, false, false); // 保持顯示線條圓心
+      funcm2('group2Div', 250, true, false); 
+      funcm1('group3Div', 180, true, true); // 此組本身就隱藏輪廓
+      funcm2('group4Div', 220, false, true); // 此組本身就隱藏輪廓
+      funcm1('group5Div', 150, true, true); // 此組本身就隱藏輪廓
       
-      // 第六組：多尺寸比較
+      // 第六組：多尺寸比較，顯示輪廓線
       const sizesToCompare = [100, 200, 300, 400, 500];
       sizesToCompare.forEach(size => {
-          // 繪製角度值為 0 的月相 (滿月)，隱藏文字和線條圓心
-          _drawInternal(`canvas_group6Div_m1_0_${size}`, 0, true, 'group6Div', size, size, true, true);
+          // 繪製角度值為 0 的月相 (滿月)，隱藏文字，但顯示線條圓心 (hideOutlines = false)
+          _drawInternal(`canvas_group6Div_m1_0_${size}`, 0, true, 'group6Div', size, size, true, false); // <--- 這裡將 hideOutlines 設為 false
       });
   };
 
   moonImage.onerror = () => {
       console.error('月亮圖片載入失敗。請檢查圖片路徑或網路連接。');
       // 如果圖片載入失敗，仍然繪製，但沒有背景圖片
-      funcm1('group1Div', 200);
+      funcm1('group1Div', 200, false, false);
       funcm2('group2Div', 250, true, false);
       funcm1('group3Div', 180, true, true);
       funcm2('group4Div', 220, false, true);
@@ -126,7 +127,7 @@
 
       const sizesToCompare = [100, 200, 300, 400, 500];
       sizesToCompare.forEach(size => {
-          _drawInternal(`canvas_group6Div_m1_0_${size}`, 0, true, 'group6Div', size, size, true, true);
+          _drawInternal(`canvas_group6Div_m1_0_${size}`, 0, true, 'group6Div', size, size, true, false);
       });
   };
 
@@ -159,7 +160,7 @@
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
     
-    // 恢復 circleRadius 的標準計算，確保月相圖填滿圓形區域
+    // 恢復 circleRadius 的標準計算，確保月相圖圓形貼近 Canvas 邊緣
     const circleRadius = Math.min(canvas.width, canvas.height) / 2 - 5; 
 
     ctx.save();
@@ -177,8 +178,8 @@
         ctx.fillRect(0, 0, newCanvasWidth, newCanvasHeight);
     }
 
-    // *** 恢復雙色填充邏輯 ***
-    // 先繪製一個完整的圓，作為月球的底色（目前是純黑）
+    // *** 關鍵修改：註釋掉月相填充邏輯，只顯示圖片和輪廓線 ***
+    /*
     ctx.beginPath();
     ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI); 
     ctx.fillStyle = MOON_COLOR_DARK; 
@@ -226,14 +227,21 @@
       ctx.fillStyle = fillLeftBlack ? MOON_COLOR_LIGHT : MOON_COLOR_DARK;
       ctx.fillRect(redArcX, y, greenRightX - redArcX, renderDensity);
     }
+    */
     // *****************************************************************
 
-    if (!hideOutlines) {
+    // *** 根據 hideOutlines 參數控制是否顯示輪廓線、紅線和藍點 ***
+    if (!hideOutlines) { // 如果 hideOutlines 為 false (即顯示輪廓線)
         ctx.beginPath();
         ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI);
         ctx.strokeStyle = 'green'; 
         ctx.lineWidth = 1;
         ctx.stroke();
+
+        const observationAngleRadians = (angleValue / 100) * Math.PI; // 需要重新計算這些值
+        const semiMinorAxis_horizontal = circleRadius * Math.cos(observationAngleRadians);
+        const semiMajorAxis_vertical = circleRadius; 
+        const currentAbsoluteSemiMinorAxis = Math.abs(semiMinorAxis_horizontal); 
 
         let redArcOutlineStartAngle, redArcOutlineEndAngle;
         if (semiMinorAxis_horizontal >= 0) { 
