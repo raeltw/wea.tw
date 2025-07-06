@@ -1,0 +1,363 @@
+https://gemini.google.com/u/1/app/d7fd5021a38889a3 
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>圓形弧線水平線填色測試 (V53 - 統一標註所有塗黑程式碼的透明度設定點)</title>
+<style>
+  body {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: flex-start;
+    padding: 20px;
+    font-family: sans-serif;
+    background-color: #333;
+  }
+  .page-version-info {
+    width: 100%;
+    text-align: right;
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+    border-bottom: 1px dashed #666;
+  }
+  .section-title {
+    width: 100%;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #eee;
+    border-bottom: 1px solid #777;
+    padding-bottom: 5px;
+  }
+  .canvas-container {
+    margin: 10px;
+    border: 1px solid #555;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+    position: relative;
+  }
+  canvas {
+    background-color: black;
+  }
+  .label {
+    text-align: center;
+    font-size: 14px;
+    margin-top: 5px;
+    color: #ccc;
+  }
+  .drawing-group-container {
+      border: 2px dashed #666;
+      padding: 10px;
+      margin: 20px 0;
+      width: 100%;
+      box-sizing: border-box;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+      align-items: flex-start;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-version-info">當前版本: V53</div>
+
+<div class="section-title">第一組: 顯示所有文字，顯示線條圓心 (旋轉 24.5 度)</div>
+<div id="group1Div" class="drawing-group-container">
+    </div>
+
+<div class="section-title" style="clear: both;">第二組: 隱藏所有文字，顯示線條圓心 (旋轉 24.5 度)</div>
+<div id="group2Div" class="drawing-group-container">
+    </div>
+
+<div class="section-title" style="clear: both;">第三組: 隱藏所有文字，隱藏所有線條圓心 (旋轉 24.5 度)</div>
+<div id="group3Div" class="drawing-group-container">
+    </div>
+
+<div class="section-title" style="clear: both;">第四組: 顯示所有文字，隱藏所有線條圓心 (旋轉 24.5 度)</div>
+<div id="group4Div" class="drawing-group-container">
+    </div>
+
+<div class="section-title" style="clear: both;">第五組: 隱藏所有文字，隱藏所有線條圓心 (旋轉 24.5 度)</div>
+<div id="group5Div" class="drawing-group-container">
+    </div>
+
+<div class="section-title" style="clear: both;">第六組: 尺寸比較 (滿月，顯示輪廓線)</div>
+<div id="group6Div" class="drawing-group-container">
+    </div>
+
+<script>
+  const gridSize = 10;
+  const renderDensity = 1;
+  const ANTI_ALIASING_OFFSET = 0.5;
+  const FIXED_ROTATION_DEGREES = 24.5;
+
+  const MOON_COLOR_LIGHT = '#e0e0e0';
+  const MOON_COLOR_DARK = 'black'; 
+
+  // 定義月亮圖片的原始尺寸和假設的月亮圓形範圍
+  const MOON_IMG_ORIGINAL_WIDTH = 256;
+  const MOON_IMG_ORIGINAL_HEIGHT = 256;
+  const MOON_IMG_SOURCE_X = 0;
+  const MOON_IMG_SOURCE_Y = 0;
+  const MOON_IMG_SOURCE_WIDTH = MOON_IMG_ORIGINAL_WIDTH;
+  const MOON_IMG_SOURCE_HEIGHT = MOON_IMG_ORIGINAL_HEIGHT;
+
+  // *** 備註位置：X 和 Y 參數在此處定義 ***
+  const FIXED_RADIUS_RATIO_X = 0.935; // 比例因子 X
+  const FIXED_RADIUS_OFFSET_Y = 0;  // 固定偏移量 Y
+
+  const moonImage = new Image();
+  moonImage.src = 'https://raeltw.github.io/wea.tw/moon/moon256.png';
+
+  moonImage.onload = () => {
+      funcm1('group1Div', 200, false, false); 
+      funcm2('group2Div', 250, true, false); 
+      funcm1('group3Div', 180, true, true); 
+      funcm2('group4Div', 220, false, true); 
+      funcm1('group5Div', 150, true, true); 
+      
+      const sizesToCompare = [100, 200, 300, 400, 500];
+      _drawInternal(`canvas_group6Div_m1_0_${sizesToCompare[0]}`, 0, false, 'group6Div', sizesToCompare[0], sizesToCompare[0], true, false); 
+      _drawInternal(`canvas_group6Div_m1_0_${sizesToCompare[1]}`, 0, false, 'group6Div', sizesToCompare[1], sizesToCompare[1], true, false); 
+      _drawInternal(`canvas_group6Div_m1_0_${sizesToCompare[2]}`, 0, false, 'group6Div', sizesToCompare[2], sizesToCompare[2], true, false); 
+      _drawInternal(`canvas_group6Div_m1_0_${sizesToCompare[3]}`, 0, false, 'group6Div', sizesToCompare[3], sizesToCompare[3], true, false); 
+      _drawInternal(`canvas_group6Div_m1_0_${sizesToCompare[4]}`, 0, false, 'group6Div', sizesToCompare[4], sizesToCompare[4], true, false); 
+  };
+
+  moonImage.onerror = () => {
+      console.error('月亮圖片載入失敗。請檢查圖片路徑或網路連接。');
+      funcm1('group1Div', 200, false, false);
+      funcm2('group2Div', 250, true, false);
+      funcm1('group3Div', 180, true, true);
+      funcm2('group4Div', 220, false, true);
+      funcm1('group5Div', 150, true, true);
+
+      const sizesToCompare = [100, 200, 300, 400, 500];
+      _drawInternal(`canvas_group6Div_m1_0_${sizesToCompare[0]}`, 0, false, 'group6Div', sizesToCompare[0], sizesToCompare[0], true, false); 
+      _drawInternal(`canvas_group6Div_m1_0_${sizesToCompare[1]}`, 0, false, 'group6Div', sizesToCompare[1], sizesToCompare[1], true, false); 
+      _drawInternal(`canvas_group6Div_m1_0_${sizesToCompare[2]}`, 0, false, 'group6Div', sizesToCompare[2], sizesToCompare[2], true, false); 
+      _drawInternal(`canvas_group6Div_m1_0_${sizesToCompare[3]}`, 0, false, 'group6Div', sizesToCompare[3], sizesToCompare[3], true, false); 
+      _drawInternal(`canvas_group6Div_m1_0_${sizesToCompare[4]}`, 0, false, 'group6Div', sizesToCompare[4], sizesToCompare[4], true, false); 
+  };
+
+  function _drawInternal(canvasId, angleValue, fillLeftBlack, targetDivId, newCanvasWidth, newCanvasHeight, hideLabel, hideOutlines) {
+    const container = document.createElement('div');
+    container.className = 'canvas-container';
+
+    const canvas = document.createElement('canvas');
+    canvas.id = canvasId;
+    canvas.width = newCanvasWidth;
+    canvas.height = newCanvasHeight;
+    container.appendChild(canvas);
+
+    if (!hideLabel) {
+        const label = document.createElement('div');
+        label.className = 'label';
+        label.textContent = `角度值: ${angleValue} (L:${fillLeftBlack}) (${newCanvasWidth}x${newCanvasHeight})`;
+        container.appendChild(label);
+    }
+
+    const targetDiv = document.getElementById(targetDivId);
+    if (targetDiv) {
+        targetDiv.appendChild(container);
+    } else {
+        console.error(`找不到 ID 為 "${targetDivId}" 的容器 div。將圖形添加到 body。`);
+        document.body.appendChild(container);
+    }
+
+    const ctx = canvas.getContext('2d');
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    
+    const circleRadius = (Math.min(canvas.width, canvas.height) / 2) * FIXED_RADIUS_RATIO_X - FIXED_RADIUS_OFFSET_Y;
+
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.rotate(FIXED_ROTATION_DEGREES * Math.PI / 180);
+    ctx.translate(-centerX, -centerY);
+
+    // 月亮底圖始終填滿整個 Canvas
+    if (moonImage.complete && moonImage.naturalWidth > 0) {
+        ctx.drawImage(moonImage, 0, 0, newCanvasWidth, newCanvasHeight); 
+    } else {
+        ctx.fillStyle = 'black'; 
+        ctx.fillRect(0, 0, newCanvasWidth, newCanvasHeight);
+    }
+
+    // 月相填充邏輯：根據各組的 angleValue 和 fillLeftBlack 獨立判斷
+    if (!hideOutlines) { // 只在前五組進行月相填充
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI); 
+        ctx.clip(); // 將繪圖區域裁剪為這個圓形
+
+        let isFullMoon = false;
+        let isNewMoon = false;
+
+        // 判斷當前是哪一組定義下的滿月或新月
+        if (fillLeftBlack) { // 這對應 funcm1 / 第一組及其類似組 (0=新月, 100=滿月)
+            if (angleValue === 0) { // 新月
+                isNewMoon = true;
+            } else if (angleValue === 100) { // 滿月
+                isFullMoon = true;
+            }
+        } else { // 這對應 funcm2 / 第二組及其類似組 (0=滿月, 100=新月)
+            if (angleValue === 0) { // 滿月
+                isFullMoon = true;
+            } else if (angleValue === 100) { // 新月
+                isNewMoon = true;
+            }
+        }
+
+        if (isNewMoon) { // 新月 (全黑)
+            // *** 透明度修改點：新月全黑 ***
+            // 在這裡設定 ctx.globalAlpha 來調整新月的透明度
+            // 例如：ctx.globalAlpha = 0.8; // 80% 不透明，20% 透明
+            ctx.fillStyle = MOON_COLOR_DARK;
+            ctx.fillRect(centerX - circleRadius, centerY - circleRadius, circleRadius * 2, circleRadius * 2);
+            // 記得在繪製完畢後將 globalAlpha 重設回 1.0，以免影響後續繪圖（如輪廓線）
+            // 例如：ctx.globalAlpha = 1.0; 
+        } else if (isFullMoon) { // 滿月 (完全透出底圖，不進行任何填充)
+            // 不做任何填充操作
+        } else { // 其他月相 (部分陰影)
+            // *** 透明度修改點：其他月相的部分陰影 ***
+            // 在這裡設定 ctx.globalAlpha 來調整部分陰影的透明度
+            // 例如：ctx.globalAlpha = 0.7; // 70% 不透明，30% 透明
+
+            const observationAngleRadians = (angleValue / 100) * Math.PI; 
+            const semiMinorAxis_horizontal = circleRadius * Math.cos(observationAngleRadians);
+            const semiMajorAxis_vertical = circleRadius; 
+            const currentAbsoluteSemiMinorAxis = Math.abs(semiMinorAxis_horizontal); 
+
+            for (let y = centerY - circleRadius; y <= centerY + circleRadius; y += renderDensity) {
+              const dy = y - centerY;
+              const dxGreen = Math.sqrt(Math.pow(circleRadius, 2) - Math.pow(dy, 2));
+              const greenLeftX = centerX - dxGreen;
+              const greenRightX = centerX + dxGreen;
+
+              let redArcX = null; 
+              const discriminant = 1 - Math.pow(dy, 2) / Math.pow(semiMajorAxis_vertical, 2);
+              
+              if (discriminant >= 0) { 
+                const dxRed = currentAbsoluteSemiMinorAxis * Math.sqrt(discriminant);
+                
+                if (semiMinorAxis_horizontal >= 0) { 
+                    redArcX = centerX + dxRed;
+                } else { 
+                    redArcX = centerX - dxRed;
+                }
+              }
+              if (redArcX !== null) {
+                  redArcX = Math.max(greenLeftX, Math.min(greenRightX, redArcX));
+              } else {
+                  if (semiMinorAxis_horizontal >= 0) { 
+                      redArcX = greenLeftX; 
+                  } else { 
+                      redArcX = greenRightX; 
+                  }
+              }
+
+              ctx.fillStyle = MOON_COLOR_DARK; // 填充顏色為黑色
+              if (fillLeftBlack) {
+                ctx.fillRect(greenLeftX, y, redArcX - greenLeftX, renderDensity);
+              } else {
+                ctx.fillRect(redArcX, y, greenRightX - redArcX, renderDensity);
+              }
+            }
+            // 記得在繪製完畢後將 globalAlpha 重設回 1.0，以免影響後續繪圖（如輪廓線）
+            // 例如：ctx.globalAlpha = 1.0; 
+        }
+    }
+
+    // 繪製輪廓線和中心點
+    // 請注意：如果上面的填充區塊設定了 globalAlpha，而您希望輪廓線和藍點不透明，
+    // 則在進入這個 if 區塊之前，必須確保 globalAlpha 被重設為 1.0。
+    if (!hideOutlines) { 
+        // 繪製綠色圓形外框 
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI);
+        ctx.strokeStyle = 'green'; 
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        let drawRedLine = true;
+        if (fillLeftBlack) { 
+            if (angleValue === 0 || angleValue === 100) { 
+                drawRedLine = false;
+            }
+        } else { 
+            if (angleValue === 0 || angleValue === 100) { 
+                drawRedLine = false;
+            }
+        }
+
+        if (drawRedLine) {
+            let phaseAngle = (angleValue / 100) * Math.PI;
+
+            const semiMinorAxis_horizontal = circleRadius * Math.cos(phaseAngle);
+            const semiMajorAxis_vertical = circleRadius; 
+            const currentAbsoluteSemiMinorAxis = Math.abs(semiMinorAxis_horizontal); 
+
+            let redArcOutlineStartAngle, redArcOutlineEndAngle;
+            if (semiMinorAxis_horizontal >= 0) { 
+                redArcOutlineStartAngle = -Math.PI / 2;
+                redArcOutlineEndAngle = Math.PI / 2;
+            } else { 
+                redArcOutlineStartAngle = Math.PI / 2;
+                redArcOutlineEndAngle = 3 * Math.PI / 2;
+            }
+
+            ctx.beginPath();
+            const redOutlinePoint1X = centerX + currentAbsoluteSemiMinorAxis * Math.cos(redArcOutlineStartAngle);
+            const redOutlinePoint1Y = centerY + semiMajorAxis_vertical * Math.sin(redArcOutlineStartAngle);
+            
+            ctx.moveTo(redOutlinePoint1X, redOutlinePoint1Y);
+            const numSegments = 100;
+            for (let i = 0; i <= numSegments; i++) {
+                const t = redArcOutlineStartAngle + (redArcOutlineEndAngle - redArcOutlineStartAngle) * (i / numSegments);
+                const x = centerX + currentAbsoluteSemiMinorAxis * Math.cos(t);
+                const y = centerY + semiMajorAxis_vertical * Math.sin(t);
+                ctx.lineTo(x, y);
+            }
+            ctx.strokeStyle = 'red'; 
+            ctx.lineWidth = 3;
+            ctx.stroke();
+        }
+
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 2, 0, 2 * Math.PI);
+        ctx.fillStyle = 'blue'; 
+        ctx.fill();
+    } else {
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI);
+        ctx.strokeStyle = 'green';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+    }
+
+    ctx.restore(); 
+  }
+
+  function funcm1(targetDivId, size, hideLabel = false, hideOutlines = false) {
+      for (let i = 0; i <= gridSize; i++) {
+          const angleValue = i * 10;
+          _drawInternal(`canvas_${targetDivId}_m1_${angleValue}_${size}_${hideLabel}_${hideOutlines}`, angleValue, true, targetDivId, size, size, hideLabel, hideOutlines); 
+      }
+  }
+
+  function funcm2(targetDivId, size, hideLabel = false, hideOutlines = false) {
+      for (let i = 0; i <= gridSize; i++) {
+          const angleValue = i * 10;
+          _drawInternal(`canvas_${targetDivId}_m2_${angleValue}_${size}_${hideLabel}_${hideOutlines}`, angleValue, false, targetDivId, size, size, hideLabel, hideOutlines); 
+      }
+  }
+</script>
+
+</body>
+</html>

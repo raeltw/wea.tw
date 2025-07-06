@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>圓形弧線水平線填色測試 (V27 - 旋轉角度固定為 24.5 度)</title>
+<style>
+  body {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: flex-start;
+    padding: 20px;
+    font-family: sans-serif;
+    background-color: #333; 
+  }
+  .page-version-info { 
+    width: 100%;
+    text-align: right;
+    font-size: 12px;
+    color: #999; 
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+    border-bottom: 1px dashed #666; 
+  }
+  .section-title {
+    width: 100%;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #eee; 
+    border-bottom: 1px solid #777; 
+    padding-bottom: 5px;
+  }
+  .canvas-container {
+    margin: 10px;
+    border: 1px solid #555; 
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.5); 
+    position: relative; 
+  }
+  canvas {
+    background-color: black; 
+  }
+  .label {
+    text-align: center;
+    font-size: 14px;
+    margin-top: 5px;
+    color: #ccc; 
+  }
+  .drawing-group-container { 
+      border: 2px dashed #666; 
+      padding: 10px;
+      margin: 20px 0;
+      width: 100%; 
+      box-sizing: border-box;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+      align-items: flex-start;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-version-info">當前版本: V27</div>
+
+<div class="section-title">第一組: 所有圖形皆旋轉 24.5 度</div>
+<div id="group1Div" class="drawing-group-container">
+    </div>
+
+<div class="section-title" style="clear: both;">第二組: 所有圖形皆旋轉 24.5 度</div>
+<div id="group2Div" class="drawing-group-container">
+    </div>
+
+<div class="section-title" style="clear: both;">第三組: 所有圖形皆旋轉 24.5 度</div>
+<div id="group3Div" class="drawing-group-container">
+    </div>
+
+<div class="section-title" style="clear: both;">第四組: 所有圖形皆旋轉 24.5 度</div>
+<div id="group4Div" class="drawing-group-container">
+    </div>
+
+<div class="section-title" style="clear: both;">第五組: 所有圖形皆旋轉 24.5 度</div>
+<div id="group5Div" class="drawing-group-container">
+    </div>
+
+
+<script>
+  const gridSize = 10; 
+  const renderDensity = 1;
+  const ANTI_ALIASING_OFFSET = 0.5; 
+
+  const MOON_COLOR_LIGHT = '#e0e0e0'; 
+  const MOON_COLOR_DARK = 'black'; 
+
+  const FIXED_ROTATION_DEGREES = 24.5; // *** 寫死旋轉角度為 24.5 度 ***
+
+  // 核心繪圖邏輯函數 (移除了 rotationDegrees 參數)
+  function _drawInternal(canvasId, angleValue, fillLeftBlack, targetDivId, newCanvasWidth, newCanvasHeight, hideLabel, hideOutlines) {
+    const container = document.createElement('div');
+    container.className = 'canvas-container';
+
+    const canvas = document.createElement('canvas');
+    canvas.id = canvasId;
+    canvas.width = newCanvasWidth;
+    canvas.height = newCanvasHeight;
+    container.appendChild(canvas);
+
+    if (!hideLabel) {
+        const label = document.createElement('div');
+        label.className = 'label';
+        label.textContent = `角度值: ${angleValue} (${newCanvasWidth}x${newCanvasHeight})`;
+        container.appendChild(label);
+    }
+
+    const targetDiv = document.getElementById(targetDivId);
+    if (targetDiv) {
+        targetDiv.appendChild(container);
+    } else {
+        console.error(`找不到 ID 為 "${targetDivId}" 的容器 div。將圖形添加到 body。`);
+        document.body.appendChild(container); 
+    }
+
+    const ctx = canvas.getContext('2d');
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const circleRadius = Math.min(canvas.width, canvas.height) / 2 - 5; 
+
+    // *** 直接應用寫死的旋轉角度 ***
+    ctx.save(); 
+    ctx.translate(centerX, centerY); 
+    ctx.rotate(FIXED_ROTATION_DEGREES * Math.PI / 180); 
+    ctx.translate(-centerX, -centerY); 
+    // ********************************************
+
+    // 先繪製一個完整的、稍大一點的暗色圓
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, circleRadius + ANTI_ALIASING_OFFSET, 0, 2 * Math.PI); 
+    ctx.fillStyle = MOON_COLOR_DARK; 
+    ctx.fill();
+
+    const observationAngleRadians = (angleValue / 100) * Math.PI;
+
+    const semiMinorAxis_horizontal = circleRadius * Math.cos(observationAngleRadians);
+    const semiMajorAxis_vertical = circleRadius; 
+    const currentAbsoluteSemiMinorAxis = Math.abs(semiMinorAxis_horizontal); 
+
+    // 現在只繪製月亮的亮面部分
+    ctx.fillStyle = MOON_COLOR_LIGHT; 
+
+    for (let y = centerY - circleRadius; y <= centerY + circleRadius; y += renderDensity) {
+      const dy = y - centerY;
+      const dxGreen = Math.sqrt(Math.pow(circleRadius, 2) - Math.pow(dy, 2));
+      const greenLeftX = centerX - dxGreen;
+      const greenRightX = centerX + dxGreen;
+
+      let redArcX = null; 
+
+      const discriminant = 1 - Math.pow(dy, 2) / Math.pow(semiMajorAxis_vertical, 2);
+      
+      if (discriminant >= 0) { 
+        const dxRed = currentAbsoluteSemiMinorAxis * Math.sqrt(discriminant);
+        
+        if (semiMinorAxis_horizontal >= 0) { 
+            redArcX = centerX + dxRed;
+        } else { 
+            redArcX = centerX - dxRed;
+        }
+      }
+      
+      if (redArcX !== null) {
+          redArcX = Math.max(greenLeftX, Math.min(greenRightX, redArcX));
+      } else {
+          if (semiMinorAxis_horizontal >= 0) { 
+              redArcX = greenLeftX; 
+          } else { 
+              redArcX = greenRightX; 
+          }
+      }
+
+      if (fillLeftBlack) { 
+          ctx.fillRect(redArcX, y, greenRightX - redArcX, renderDensity);
+      } else { 
+          ctx.fillRect(greenLeftX, y, redArcX - greenLeftX, renderDensity);
+      }
+    }
+
+    if (!hideOutlines) {
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI);
+        ctx.strokeStyle = 'green'; 
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        let redArcOutlineStartAngle, redArcOutlineEndAngle;
+        if (semiMinorAxis_horizontal >= 0) { 
+            redArcOutlineStartAngle = -Math.PI / 2;
+            redArcOutlineEndAngle = Math.PI / 2;
+        } else { 
+            redArcOutlineStartAngle = Math.PI / 2;
+            redArcOutlineEndAngle = 3 * Math.PI / 2;
+        }
+
+        ctx.beginPath();
+        const redOutlinePoint1X = centerX + currentAbsoluteSemiMinorAxis * Math.cos(redArcOutlineStartAngle);
+        const redOutlinePoint1Y = centerY + semiMajorAxis_vertical * Math.sin(redArcOutlineStartAngle);
+        
+        ctx.moveTo(redOutlinePoint1X, redOutlinePoint1Y);
+        const numSegments = 100;
+        for (let i = 0; i <= numSegments; i++) {
+            const t = redArcOutlineStartAngle + (redArcOutlineEndAngle - redArcOutlineStartAngle) * (i / numSegments);
+            const x = centerX + currentAbsoluteSemiMinorAxis * Math.cos(t);
+            const y = centerY + semiMajorAxis_vertical * Math.sin(t);
+            ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = 'red'; 
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 2, 0, 2 * Math.PI);
+        ctx.fillStyle = 'blue'; 
+        ctx.fill();
+    }
+
+    // *** 無論如何都恢復 Canvas 狀態，因為總是會旋轉 ***
+    ctx.restore(); 
+    // ********************************************
+  }
+
+  // 繪製第一組圖形 (紅線左側為月亮暗面，右側為亮面)。
+  // 移除了 rotationDegrees 參數
+  function funcm1(targetDivId, size, hideLabel = false, hideOutlines = false) {
+      for (let i = 0; i <= gridSize; i++) {
+          const angleValue = i * 10;
+          _drawInternal(`canvas_${targetDivId}_m1_${angleValue}_${size}_${hideLabel}_${hideOutlines}`, angleValue, true, targetDivId, size, size, hideLabel, hideOutlines); 
+      }
+  }
+
+  // 繪製第二組圖形 (紅線左側為月亮亮面，右側為暗面)。
+  // 移除了 rotationDegrees 參數
+  function funcm2(targetDivId, size, hideLabel = false, hideOutlines = false) {
+      for (let i = 0; i <= gridSize; i++) {
+          const angleValue = i * 10;
+          _drawInternal(`canvas_${targetDivId}_m2_${angleValue}_${size}_${hideLabel}_${hideOutlines}`, angleValue, false, targetDivId, size, size, hideLabel, hideOutlines); 
+      }
+  }
+
+  // --- 頁面加載後調用這些函數來生成圖形 ---
+  // 所有圖形現在都將會自動旋轉 24.5 度
+  funcm1('group1Div', 200); 
+  funcm2('group2Div', 250, true, false); 
+  funcm1('group3Div', 180, true, true); 
+  funcm2('group4Div', 220, false, true); 
+  funcm1('group5Div', 150, true, true);
+
+</script>
+
+</body>
+</html>
