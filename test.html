@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>圓形弧線水平線填色測試 (V29 - 暫時縮小西瓜半徑)</title>
+<title>圓形弧線水平線填色測試 (V30 - 多尺寸比較)</title>
 <style>
   body {
     display: flex;
@@ -61,7 +61,7 @@
 </head>
 <body>
 
-<div class="page-version-info">當前版本: V29</div>
+<div class="page-version-info">當前版本: V30</div>
 
 <div class="section-title">第一組: 顯示所有文字，顯示線條圓心 (旋轉 24.5 度)</div>
 <div id="group1Div" class="drawing-group-container">
@@ -83,29 +83,38 @@
 <div id="group5Div" class="drawing-group-container">
     </div>
 
+<div class="section-title" style="clear: both;">第六組: 尺寸比較 (角度值 0，隱藏文字和線條圓心)</div>
+<div id="group6Div" class="drawing-group-container">
+    </div>
+
 <script>
   const gridSize = 10;
   const renderDensity = 1;
-  const ANTI_ALIASING_OFFSET = 0.5; 
+  const ANTI_ALIASING_OFFSET = 0.5;
   const FIXED_ROTATION_DEGREES = 24.5;
 
   const MOON_COLOR_LIGHT = '#e0e0e0';
   const MOON_COLOR_DARK = 'black'; 
 
-  // 載入月亮圖片
   const moonImage = new Image();
   moonImage.src = 'https://raeltw.github.io/wea.tw/moon/moon256.png';
 
-  // 等待圖片載入完成後才開始繪製，確保圖片可用
   moonImage.onload = () => {
       funcm1('group1Div', 200);
       funcm2('group2Div', 250, true, false);
       funcm1('group3Div', 180, true, true);
       funcm2('group4Div', 220, false, true);
       funcm1('group5Div', 150, true, true);
+      
+      // *** 新增的第六組：多尺寸比較 ***
+      const sizesToCompare = [100, 200, 300, 400, 500];
+      sizesToCompare.forEach(size => {
+          // 只繪製角度值為 0 的月相（滿月），隱藏文字和線條圓心
+          _drawInternal(`canvas_group6Div_m1_0_${size}`, 0, true, 'group6Div', size, size, true, true);
+      });
+      // **********************************
   };
 
-  // 如果圖片載入失敗，給出提示
   moonImage.onerror = () => {
       console.error('月亮圖片載入失敗。請檢查圖片路徑或網路連接。');
       funcm1('group1Div', 200);
@@ -113,6 +122,12 @@
       funcm1('group3Div', 180, true, true);
       funcm2('group4Div', 220, false, true);
       funcm1('group5Div', 150, true, true);
+
+      // 如果圖片載入失敗，尺寸比較組也會繪製純色月相
+      const sizesToCompare = [100, 200, 300, 400, 500];
+      sizesToCompare.forEach(size => {
+          _drawInternal(`canvas_group6Div_m1_0_${size}`, 0, true, 'group6Div', size, size, true, true);
+      });
   };
 
   function _drawInternal(canvasId, angleValue, fillLeftBlack, targetDivId, newCanvasWidth, newCanvasHeight, hideLabel, hideOutlines) {
@@ -144,20 +159,17 @@
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
     
-    // *** 修改這裡：暫時縮小西瓜的半徑 ***
-    // 原來是 `Math.min(canvas.width, canvas.height) / 2 - 5;`
-    // 現在減去更多，讓圖片露出來
-    const circleRadius = Math.min(canvas.width, canvas.height) / 2 - 80; // 減去80像素，讓圖片露出來
-    // ************************************
+    // 暫時縮小西瓜的半徑，讓圖片露出來
+    const circleRadius = Math.min(canvas.width, canvas.height) / 2 - 80; 
 
     ctx.save();
     ctx.translate(centerX, centerY);
     ctx.rotate(FIXED_ROTATION_DEGREES * Math.PI / 180);
     ctx.translate(-centerX, -centerY);
 
-    // 繪製背景月亮圖片 (目前繪製在左上角，尺寸為圖片原始尺寸)
+    // 繪製背景月亮圖片
     if (moonImage.complete && moonImage.naturalWidth > 0) {
-        // 現在暫時簡單地將圖片繪製到整個 Canvas，讓您看到圖片內容
+        // 現在繪製圖片仍然是簡單地縮放到整個 Canvas 大小
         ctx.drawImage(moonImage, 0, 0, newCanvasWidth, newCanvasHeight); 
     } else {
         ctx.fillStyle = '#1a1a1a';
@@ -168,7 +180,7 @@
     ctx.beginPath();
     ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI); 
     ctx.fillStyle = MOON_COLOR_DARK; 
-    ctx.fill(); // 先填充整個圓為暗面色
+    ctx.fill(); 
 
     const observationAngleRadians = (angleValue / 100) * Math.PI;
 
@@ -206,7 +218,6 @@
           }
       }
 
-      // 恢復雙色填充：左側填充一種顏色，右側填充另一種顏色
       ctx.fillStyle = fillLeftBlack ? MOON_COLOR_DARK : MOON_COLOR_LIGHT;
       ctx.fillRect(greenLeftX, y, redArcX - greenLeftX, renderDensity);
 
