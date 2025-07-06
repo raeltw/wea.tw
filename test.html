@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>圓形弧線水平線填色測試 (V46 - 精確控制黑線填充)</title>
+<title>圓形弧線水平線填色測試 (V48 - 徹底修正新月和滿月)</title>
 <style>
   body {
     display: flex;
@@ -61,7 +61,7 @@
 </head>
 <body>
 
-<div class="page-version-info">當前版本: V46</div>
+<div class="page-version-info">當前版本: V48</div>
 
 <div class="section-title">第一組: 顯示所有文字，顯示線條圓心 (旋轉 24.5 度)</div>
 <div id="group1Div" class="drawing-group-container">
@@ -119,10 +119,9 @@
       funcm1('group5Div', 150, true, true); 
       
       const sizesToCompare = [100, 200, 300, 400, 500];
-      // 這裡對第六組的 angleValue 仍傳遞 0，因為它是滿月
-      // 但內部邏輯會確保不填充黑色，只顯示輪廓線
+      // 對於第六組，傳遞 angleValue = 100 (代表滿月狀態)，且 hideOutlines = true
       sizesToCompare.forEach(size => {
-          _drawInternal(`canvas_group6Div_m1_0_${size}`, 0, true, 'group6Div', size, size, true, false); 
+          _drawInternal(`canvas_group6Div_m1_100_${size}`, 100, true, 'group6Div', size, size, true, false); 
       });
   };
 
@@ -136,7 +135,7 @@
 
       const sizesToCompare = [100, 200, 300, 400, 500];
       sizesToCompare.forEach(size => {
-          _drawInternal(`canvas_group6Div_m1_0_${size}`, 0, true, 'group6Div', size, size, true, false);
+          _drawInternal(`canvas_group6Div_m1_100_${size}`, 100, true, 'group6Div', size, size, true, false);
       });
   };
 
@@ -169,7 +168,6 @@
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
     
-    // 西瓜（綠色圓形和紅色盈虧線）的半徑，由 X 和 Y 決定
     const circleRadius = (Math.min(canvas.width, canvas.height) / 2) * FIXED_RADIUS_RATIO_X - FIXED_RADIUS_OFFSET_Y;
 
     ctx.save();
@@ -177,7 +175,7 @@
     ctx.rotate(FIXED_ROTATION_DEGREES * Math.PI / 180);
     ctx.translate(-centerX, -centerY);
 
-    // 月亮底圖始終填滿整個 Canvas，與 circleRadius 無關
+    // 月亮底圖始終填滿整個 Canvas
     if (moonImage.complete && moonImage.naturalWidth > 0) {
         ctx.drawImage(moonImage, 0, 0, newCanvasWidth, newCanvasHeight); 
     } else {
@@ -185,61 +183,64 @@
         ctx.fillRect(0, 0, newCanvasWidth, newCanvasHeight);
     }
 
-    // 月相填充邏輯：精確控制陰影部分
-    // 只有在需要顯示月相填充（非hideOutlines）且不是滿月（angleValue !== 100）時才繪製黑色陰影
-    if (!hideOutlines && angleValue !== 100) { 
+    // 月相填充邏輯：重新設計以精確處理新月、滿月和弦月
+    if (!hideOutlines) { // 只在前五組進行月相填充
         ctx.beginPath();
         ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI); 
         ctx.clip(); // 將繪圖區域裁剪為這個圓形
 
-        const observationAngleRadians = (angleValue / 100) * Math.PI;
-        const semiMinorAxis_horizontal = circleRadius * Math.cos(observationAngleRadians);
-        const semiMajorAxis_vertical = circleRadius; 
-        const currentAbsoluteSemiMinorAxis = Math.abs(semiMinorAxis_horizontal); 
+        if (angleValue === 0) { // 新月 (全黑)
+            ctx.fillStyle = MOON_COLOR_DARK;
+            ctx.fillRect(centerX - circleRadius, centerY - circleRadius, circleRadius * 2, circleRadius * 2);
+        } else if (angleValue === 100) { // 滿月 (完全透出底圖，不進行任何填充)
+            // 不做任何填充操作
+        } else { // 其他月相 (部分陰影)
+            const observationAngleRadians = (angleValue / 100) * Math.PI;
+            const semiMinorAxis_horizontal = circleRadius * Math.cos(observationAngleRadians);
+            const semiMajorAxis_vertical = circleRadius; 
+            const currentAbsoluteSemiMinorAxis = Math.abs(semiMinorAxis_horizontal); 
 
-        for (let y = centerY - circleRadius; y <= centerY + circleRadius; y += renderDensity) {
-          const dy = y - centerY;
-          const dxGreen = Math.sqrt(Math.pow(circleRadius, 2) - Math.pow(dy, 2));
-          const greenLeftX = centerX - dxGreen;
-          const greenRightX = centerX + dxGreen;
+            for (let y = centerY - circleRadius; y <= centerY + circleRadius; y += renderDensity) {
+              const dy = y - centerY;
+              const dxGreen = Math.sqrt(Math.pow(circleRadius, 2) - Math.pow(dy, 2));
+              const greenLeftX = centerX - dxGreen;
+              const greenRightX = centerX + dxGreen;
 
-          let redArcX = null; 
-          const discriminant = 1 - Math.pow(dy, 2) / Math.pow(semiMajorAxis_vertical, 2);
-          
-          if (discriminant >= 0) { 
-            const dxRed = currentAbsoluteSemiMinorAxis * Math.sqrt(discriminant);
-            
-            if (semiMinorAxis_horizontal >= 0) { 
-                redArcX = centerX + dxRed;
-            } else { 
-                redArcX = centerX - dxRed;
-            }
-          }
-          if (redArcX !== null) {
-              redArcX = Math.max(greenLeftX, Math.min(greenRightX, redArcX));
-          } else {
-              if (semiMinorAxis_horizontal >= 0) { 
-                  redArcX = greenLeftX; 
-              } else { 
-                  redArcX = greenRightX; 
+              let redArcX = null; 
+              const discriminant = 1 - Math.pow(dy, 2) / Math.pow(semiMajorAxis_vertical, 2);
+              
+              if (discriminant >= 0) { 
+                const dxRed = currentAbsoluteSemiMinorAxis * Math.sqrt(discriminant);
+                
+                if (semiMinorAxis_horizontal >= 0) { 
+                    redArcX = centerX + dxRed;
+                } else { 
+                    redArcX = centerX - dxRed;
+                }
               }
-          }
+              if (redArcX !== null) {
+                  redArcX = Math.max(greenLeftX, Math.min(greenRightX, redArcX));
+              } else {
+                  if (semiMinorAxis_horizontal >= 0) { 
+                      redArcX = greenLeftX; 
+                  } else { 
+                      redArcX = greenRightX; 
+                  }
+              }
 
-          // 填充陰影部分
-          ctx.fillStyle = MOON_COLOR_DARK; // 填充顏色為黑色
-          if (fillLeftBlack) {
-            // 如果左側是陰影，則從最左邊到紅線繪製黑色
-            ctx.fillRect(greenLeftX, y, redArcX - greenLeftX, renderDensity);
-          } else {
-            // 如果右側是陰影，則從紅線到最右邊繪製黑色
-            ctx.fillRect(redArcX, y, greenRightX - redArcX, renderDensity);
-          }
+              ctx.fillStyle = MOON_COLOR_DARK; // 填充顏色為黑色
+              if (fillLeftBlack) {
+                ctx.fillRect(greenLeftX, y, redArcX - greenLeftX, renderDensity);
+              } else {
+                ctx.fillRect(redArcX, y, greenRightX - redArcX, renderDensity);
+              }
+            }
         }
     }
 
     // 繪製輪廓線和中心點
     if (!hideOutlines) { 
-        // 繪製綠色圓形外框 (此處仍使用 circleRadius)
+        // 繪製綠色圓形外框 
         ctx.beginPath();
         ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI);
         ctx.strokeStyle = 'green'; 
@@ -248,13 +249,11 @@
 
         // 只有在需要繪製紅線時才繪製 (非滿月且非新月)
         if (angleValue !== 0 && angleValue !== 100) {
-            // 計算月相紅線（此處仍使用 circleRadius）
             const observationAngleRadians = (angleValue / 100) * Math.PI; 
             const semiMinorAxis_horizontal = circleRadius * Math.cos(observationAngleRadians);
             const semiMajorAxis_vertical = circleRadius; 
             const currentAbsoluteSemiMinorAxis = Math.abs(semiMinorAxis_horizontal); 
 
-            // 繪製紅色橢圓弧線（此處仍使用 circleRadius）
             let redArcOutlineStartAngle, redArcOutlineEndAngle;
             if (semiMinorAxis_horizontal >= 0) { 
                 redArcOutlineStartAngle = -Math.PI / 2;
@@ -281,13 +280,13 @@
             ctx.stroke();
         }
 
-        // 繪製藍色圓心點（此處仍使用 circleRadius，但它是一個固定點）
+        // 繪製藍色圓心點
         ctx.beginPath();
         ctx.arc(centerX, centerY, 2, 0, 2 * Math.PI);
         ctx.fillStyle = 'blue'; 
         ctx.fill();
     } else {
-        // 如果 hideOutlines 為 true（第六組），仍然要畫出綠色外框
+        // 如果 hideOutlines 為 true（第六組），只畫綠色外框
         ctx.beginPath();
         ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI);
         ctx.strokeStyle = 'green';
