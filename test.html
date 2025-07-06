@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>圓形弧線水平線填色測試 (V41 - 底圖與西瓜分離，X=0.935)</title>
+<title>圓形弧線水平線填色測試 (V42 - 啟用月相填充)</title>
 <style>
   body {
     display: flex;
@@ -61,7 +61,7 @@
 </head>
 <body>
 
-<div class="page-version-info">當前版本: V41</div>
+<div class="page-version-info">當前版本: V42</div>
 
 <div class="section-title">第一組: 顯示所有文字，顯示線條圓心 (旋轉 24.5 度)</div>
 <div id="group1Div" class="drawing-group-container">
@@ -104,9 +104,9 @@
   const MOON_IMG_SOURCE_WIDTH = MOON_IMG_ORIGINAL_WIDTH;
   const MOON_IMG_SOURCE_HEIGHT = MOON_IMG_ORIGINAL_HEIGHT;
 
-  // *** 維持當前您指定的 X 和 Y 參數，它們將只影響西瓜（相位線）***
-  const FIXED_RADIUS_RATIO_X = 0.935; // 比例因子 X，從 0.95 修改為 0.935
-  const FIXED_RADIUS_OFFSET_Y = 0;  // 固定偏移量 Y，保持為 0
+  // *** 備註位置：X 和 Y 參數在此處定義 ***
+  const FIXED_RADIUS_RATIO_X = 0.935; // 比例因子 X
+  const FIXED_RADIUS_OFFSET_Y = 0;  // 固定偏移量 Y
 
   const moonImage = new Image();
   moonImage.src = 'https://raeltw.github.io/wea.tw/moon/moon256.png';
@@ -167,7 +167,7 @@
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
     
-    // *** 西瓜（綠色圓形和紅色盈虧線）的半徑，由 X 和 Y 決定 ***
+    // 西瓜（綠色圓形和紅色盈虧線）的半徑，由 X 和 Y 決定
     const circleRadius = (Math.min(canvas.width, canvas.height) / 2) * FIXED_RADIUS_RATIO_X - FIXED_RADIUS_OFFSET_Y;
 
     ctx.save();
@@ -175,7 +175,7 @@
     ctx.rotate(FIXED_ROTATION_DEGREES * Math.PI / 180);
     ctx.translate(-centerX, -centerY);
 
-    // *** 關鍵修正：月亮底圖始終填滿整個 Canvas，與 circleRadius 無關 ***
+    // 月亮底圖始終填滿整個 Canvas，與 circleRadius 無關
     if (moonImage.complete && moonImage.naturalWidth > 0) {
         ctx.drawImage(moonImage, 0, 0, newCanvasWidth, newCanvasHeight); 
     } else {
@@ -183,11 +183,10 @@
         ctx.fillRect(0, 0, newCanvasWidth, newCanvasHeight);
     }
 
-    // 保持月相填充邏輯註釋
-    /*
+    // *** 啟用月相填充邏輯，現在會畫出黑色的陰影部分 ***
     ctx.beginPath();
     ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI); 
-    ctx.fillStyle = MOON_COLOR_DARK; 
+    ctx.fillStyle = MOON_COLOR_DARK; // 預設填充為黑色，作為未被照亮的部分
     ctx.fill(); 
 
     const observationAngleRadians = (angleValue / 100) * Math.PI;
@@ -222,12 +221,12 @@
               redArcX = greenRightX; 
           }
       }
-      ctx.fillStyle = fillLeftBlack ? MOON_COLOR_DARK : MOON_COLOR_LIGHT;
+      ctx.fillStyle = fillLeftBlack ? MOON_COLOR_DARK : MOON_COLOR_LIGHT; // 根據 fillLeftBlack 決定填充顏色
       ctx.fillRect(greenLeftX, y, redArcX - greenLeftX, renderDensity);
-      ctx.fillStyle = fillLeftBlack ? MOON_COLOR_LIGHT : MOON_COLOR_DARK;
+      ctx.fillStyle = fillLeftBlack ? MOON_COLOR_LIGHT : MOON_COLOR_DARK; // 另一側的填充顏色
       ctx.fillRect(redArcX, y, greenRightX - redArcX, renderDensity);
     }
-    */
+    // *** 月相填充邏輯結束 ***
 
     if (!hideOutlines) { 
         // 繪製綠色圓形外框 (此處仍使用 circleRadius)
