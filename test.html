@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>圓形弧線水平線填色測試 (V43 - 只畫黑線，亮面透出底圖)</title>
+<title>圓形弧線水平線填色測試 (V44 - 正確的黑線填充，亮面透出底圖)</title>
 <style>
   body {
     display: flex;
@@ -61,7 +61,7 @@
 </head>
 <body>
 
-<div class="page-version-info">當前版本: V43</div>
+<div class="page-version-info">當前版本: V44</div>
 
 <div class="section-title">第一組: 顯示所有文字，顯示線條圓心 (旋轉 24.5 度)</div>
 <div id="group1Div" class="drawing-group-container">
@@ -93,7 +93,7 @@
   const ANTI_ALIASING_OFFSET = 0.5;
   const FIXED_ROTATION_DEGREES = 24.5;
 
-  const MOON_COLOR_LIGHT = '#e0e0e0'; // 雖然定義了，但 V43 中不再用於填充亮面
+  const MOON_COLOR_LIGHT = '#e0e0e0'; // 雖然定義了，但在 V44 中不再用於填充亮面
   const MOON_COLOR_DARK = 'black'; 
 
   // 定義月亮圖片的原始尺寸和假設的月亮圓形範圍
@@ -183,12 +183,11 @@
         ctx.fillRect(0, 0, newCanvasWidth, newCanvasHeight);
     }
 
-    // 月相填充邏輯
-    // 先用黑色填充整個圓形，作為陰影的基礎
+    // 月相填充邏輯：只繪製陰影部分
+    // 我們需要先裁剪出月亮的完整圓形區域，然後再在其內部繪製陰影
     ctx.beginPath();
     ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI); 
-    ctx.fillStyle = MOON_COLOR_DARK; 
-    ctx.fill(); 
+    ctx.clip(); // 將繪圖區域裁剪為這個圓形
 
     const observationAngleRadians = (angleValue / 100) * Math.PI;
     const semiMinorAxis_horizontal = circleRadius * Math.cos(observationAngleRadians);
@@ -223,21 +222,16 @@
           }
       }
 
-      // V43 關鍵修改：
-      // 如果 fillLeftBlack 為 true (表示左邊是黑色的陰影部分)
-      // 則繪製黑色的左半部分
+      // V44 關鍵修正：只填充陰影部分
+      ctx.fillStyle = MOON_COLOR_DARK; // 填充顏色為黑色
       if (fillLeftBlack) {
-        ctx.fillStyle = MOON_COLOR_DARK; 
+        // 如果左側是陰影，則從最左邊到紅線繪製黑色
         ctx.fillRect(greenLeftX, y, redArcX - greenLeftX, renderDensity);
-      } 
-      // 如果 fillLeftBlack 為 false (表示右邊是黑色的陰影部分)
-      // 則繪製黑色的右半部分
-      else {
-        ctx.fillStyle = MOON_COLOR_DARK; 
+      } else {
+        // 如果右側是陰影，則從紅線到最右邊繪製黑色
         ctx.fillRect(redArcX, y, greenRightX - redArcX, renderDensity);
       }
-      
-      // 注意：這裡不再有 MOON_COLOR_LIGHT 的填充，亮面直接透過底圖月亮來顯示
+      // 亮面部分（另一側）不進行任何填充，讓裁剪後的底圖顯示出來
     }
     // 月相填充邏輯結束
 
