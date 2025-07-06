@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>圓形弧線水平線填色測試 (V50 - 根據各組定義修正)</title>
+<title>圓形弧線水平線填色測試 (V53 - 統一標註所有塗黑程式碼的透明度設定點)</title>
 <style>
   body {
     display: flex;
@@ -61,7 +61,7 @@
 </head>
 <body>
 
-<div class="page-version-info">當前版本: V50</div>
+<div class="page-version-info">當前版本: V53</div>
 
 <div class="section-title">第一組: 顯示所有文字，顯示線條圓心 (旋轉 24.5 度)</div>
 <div id="group1Div" class="drawing-group-container">
@@ -119,9 +119,6 @@
       funcm1('group5Div', 150, true, true); 
       
       const sizesToCompare = [100, 200, 300, 400, 500];
-      // 對於第六組，傳遞 angleValue = 0 (代表滿月狀態 for funcm2 的定義)，且 hideOutlines = true
-      // 這裡傳遞 fillLeftBlack = false 是因為 funcm2 的組就是用 false，保持一致。
-      // 但實際上，對於 hideOutlines = true 的情況，fillLeftBlack 不影響填充，只影響紅線繪製方向。
       _drawInternal(`canvas_group6Div_m1_0_${sizesToCompare[0]}`, 0, false, 'group6Div', sizesToCompare[0], sizesToCompare[0], true, false); 
       _drawInternal(`canvas_group6Div_m1_0_${sizesToCompare[1]}`, 0, false, 'group6Div', sizesToCompare[1], sizesToCompare[1], true, false); 
       _drawInternal(`canvas_group6Div_m1_0_${sizesToCompare[2]}`, 0, false, 'group6Div', sizesToCompare[2], sizesToCompare[2], true, false); 
@@ -158,7 +155,6 @@
     if (!hideLabel) {
         const label = document.createElement('div');
         label.className = 'label';
-        // 為了方便除錯，這裡可以顯示 fillLeftBlack 的值
         label.textContent = `角度值: ${angleValue} (L:${fillLeftBlack}) (${newCanvasWidth}x${newCanvasHeight})`;
         container.appendChild(label);
     }
@@ -199,13 +195,14 @@
         let isFullMoon = false;
         let isNewMoon = false;
 
-        if (fillLeftBlack) { // 第一組的定義：0是新月，100是滿月
+        // 判斷當前是哪一組定義下的滿月或新月
+        if (fillLeftBlack) { // 這對應 funcm1 / 第一組及其類似組 (0=新月, 100=滿月)
             if (angleValue === 0) { // 新月
                 isNewMoon = true;
             } else if (angleValue === 100) { // 滿月
                 isFullMoon = true;
             }
-        } else { // 第二組的定義：0是滿月，100是新月
+        } else { // 這對應 funcm2 / 第二組及其類似組 (0=滿月, 100=新月)
             if (angleValue === 0) { // 滿月
                 isFullMoon = true;
             } else if (angleValue === 100) { // 新月
@@ -214,20 +211,22 @@
         }
 
         if (isNewMoon) { // 新月 (全黑)
+            // *** 透明度修改點：新月全黑 ***
+            // 在這裡設定 ctx.globalAlpha 來調整新月的透明度
+            // 例如：ctx.globalAlpha = 0.8; // 80% 不透明，20% 透明
             ctx.fillStyle = MOON_COLOR_DARK;
             ctx.fillRect(centerX - circleRadius, centerY - circleRadius, circleRadius * 2, circleRadius * 2);
+            // 記得在繪製完畢後將 globalAlpha 重設回 1.0，以免影響後續繪圖（如輪廓線）
+            // 例如：ctx.globalAlpha = 1.0; 
         } else if (isFullMoon) { // 滿月 (完全透出底圖，不進行任何填充)
             // 不做任何填充操作
         } else { // 其他月相 (部分陰影)
-            // 這裡的 angleValue 0-100 仍然代表月相的百分比
-            // observationAngleRadians 應該從 0 (滿月) 到 PI (新月)
-            // 為此，我們需要根據當前組的 angleValue 定義來計算正確的 phase 角度
-            let phaseAngle = (angleValue / 100) * Math.PI; // 這對 fillLeftBlack=true (0新月100滿月) 的組是正確的
-                                                           // 對於 fillLeftBlack=false (0滿月100新月) 的組也應如此
-                                                           // 因為 angleValue 增加，陰影面積應該增加，
-                                                           // cos 值應從 1 (亮) 變到 -1 (暗)
+            // *** 透明度修改點：其他月相的部分陰影 ***
+            // 在這裡設定 ctx.globalAlpha 來調整部分陰影的透明度
+            // 例如：ctx.globalAlpha = 0.7; // 70% 不透明，30% 透明
 
-            const semiMinorAxis_horizontal = circleRadius * Math.cos(phaseAngle);
+            const observationAngleRadians = (angleValue / 100) * Math.PI; 
+            const semiMinorAxis_horizontal = circleRadius * Math.cos(observationAngleRadians);
             const semiMajorAxis_vertical = circleRadius; 
             const currentAbsoluteSemiMinorAxis = Math.abs(semiMinorAxis_horizontal); 
 
@@ -266,10 +265,14 @@
                 ctx.fillRect(redArcX, y, greenRightX - redArcX, renderDensity);
               }
             }
+            // 記得在繪製完畢後將 globalAlpha 重設回 1.0，以免影響後續繪圖（如輪廓線）
+            // 例如：ctx.globalAlpha = 1.0; 
         }
     }
 
     // 繪製輪廓線和中心點
+    // 請注意：如果上面的填充區塊設定了 globalAlpha，而您希望輪廓線和藍點不透明，
+    // 則在進入這個 if 區塊之前，必須確保 globalAlpha 被重設為 1.0。
     if (!hideOutlines) { 
         // 繪製綠色圓形外框 
         ctx.beginPath();
@@ -278,20 +281,18 @@
         ctx.lineWidth = 1;
         ctx.stroke();
 
-        // 只有在需要繪製紅線時才繪製 (非滿月且非新月)
         let drawRedLine = true;
-        if (fillLeftBlack) { // 第一組的定義
-            if (angleValue === 0 || angleValue === 100) { // 新月或滿月
+        if (fillLeftBlack) { 
+            if (angleValue === 0 || angleValue === 100) { 
                 drawRedLine = false;
             }
-        } else { // 第二組的定義
-            if (angleValue === 0 || angleValue === 100) { // 滿月或新月
+        } else { 
+            if (angleValue === 0 || angleValue === 100) { 
                 drawRedLine = false;
             }
         }
 
         if (drawRedLine) {
-            // 這裡的 observationAngleRadians 仍然需要根據當前組的 angleValue 定義來計算
             let phaseAngle = (angleValue / 100) * Math.PI;
 
             const semiMinorAxis_horizontal = circleRadius * Math.cos(phaseAngle);
@@ -299,30 +300,13 @@
             const currentAbsoluteSemiMinorAxis = Math.abs(semiMinorAxis_horizontal); 
 
             let redArcOutlineStartAngle, redArcOutlineEndAngle;
-            // 紅線的繪製方向應該始終與填充方向一致
-            // 如果 fillLeftBlack 為 true，陰影在左，亮面在右，紅線應該在右邊 (半圓)
-            // 如果 fillLeftBlack 為 false，陰影在右，亮面在左，紅線應該在左邊 (半圓)
-            if (fillLeftBlack) { // 亮面在右
+            if (semiMinorAxis_horizontal >= 0) { 
                 redArcOutlineStartAngle = -Math.PI / 2;
                 redArcOutlineEndAngle = Math.PI / 2;
-            } else { // 亮面在左
+            } else { 
                 redArcOutlineStartAngle = Math.PI / 2;
                 redArcOutlineEndAngle = 3 * Math.PI / 2;
             }
-            // 但如果 semiMinorAxis_horizontal 是負數 (陰影面積超過一半)，這個角度計算邏輯需要反轉
-            // 最簡單的方式是保持紅線只畫半個橢圓，而這個半橢圓的方向由 semiMinorAxis_horizontal 的正負決定
-            // 由於 semiMinorAxis_horizontal 已經考慮了 cos(phaseAngle) 的正負，這裡無需額外反轉
-            // 我們只需確保橢圓的「長軸」永遠是垂直的 (semiMajorAxis_vertical)，而「短軸」是水平的 (currentAbsoluteSemiMinorAxis)
-
-            // 為了簡化，直接根據 semiMinorAxis_horizontal 的正負判斷紅線左右
-            if (semiMinorAxis_horizontal >= 0) { // 陰影小於一半，亮面大於一半 (右側是亮面)
-                redArcOutlineStartAngle = -Math.PI / 2;
-                redArcOutlineEndAngle = Math.PI / 2;
-            } else { // 陰影大於一半，亮面小於一半 (左側是亮面)
-                redArcOutlineStartAngle = Math.PI / 2;
-                redArcOutlineEndAngle = 3 * Math.PI / 2;
-            }
-
 
             ctx.beginPath();
             const redOutlinePoint1X = centerX + currentAbsoluteSemiMinorAxis * Math.cos(redArcOutlineStartAngle);
@@ -341,13 +325,11 @@
             ctx.stroke();
         }
 
-        // 繪製藍色圓心點
         ctx.beginPath();
         ctx.arc(centerX, centerY, 2, 0, 2 * Math.PI);
         ctx.fillStyle = 'blue'; 
         ctx.fill();
     } else {
-        // 如果 hideOutlines 為 true（第六組），只畫綠色外框
         ctx.beginPath();
         ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI);
         ctx.strokeStyle = 'green';
@@ -358,20 +340,16 @@
     ctx.restore(); 
   }
 
-  // funcm1 的定義保持不變
   function funcm1(targetDivId, size, hideLabel = false, hideOutlines = false) {
       for (let i = 0; i <= gridSize; i++) {
           const angleValue = i * 10;
-          // 第一組的定義：0是新月，100是滿月，fillLeftBlack = true
           _drawInternal(`canvas_${targetDivId}_m1_${angleValue}_${size}_${hideLabel}_${hideOutlines}`, angleValue, true, targetDivId, size, size, hideLabel, hideOutlines); 
       }
   }
 
-  // funcm2 的定義保持不變
   function funcm2(targetDivId, size, hideLabel = false, hideOutlines = false) {
       for (let i = 0; i <= gridSize; i++) {
           const angleValue = i * 10;
-          // 第二組的定義：0是滿月，100是新月，fillLeftBlack = false
           _drawInternal(`canvas_${targetDivId}_m2_${angleValue}_${size}_${hideLabel}_${hideOutlines}`, angleValue, false, targetDivId, size, size, hideLabel, hideOutlines); 
       }
   }
