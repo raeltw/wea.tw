@@ -329,7 +329,8 @@
                 ///在最後終於要畫圖
                 d31chart();
                 writedh('Chart3', 'xaxis3d', 'U', _dt0, 0, +40);
-                writeicon('Chart3', 'xicon3d', _dt0, _wc0, 32, _weat3, 0, 0);
+                writeicon('Chart3', 'xicon3d', _dt0, _wc0, 36, _weat3, 0, 0);
+                // 250707 X軸加寬 圖示可以大一點 32>36
      
                 //不要浪費記憶體
                 //sendmsg('3darea', '(完整數據請按[F12]至Console頁面查看)<br />');
