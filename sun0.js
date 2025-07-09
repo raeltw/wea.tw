@@ -250,7 +250,8 @@ const roundHalfDown = (num) => {
       "月相": moonPhaseInfo.name,
       "月相編號": moonPhaseInfo.code,
       "高度角": toDegrees(moonPosition.altitude),
-      "方位角": toDegrees(moonPosition.azimuth)
+      "方位角": toDegrees(moonPosition.azimuth),
+      "月相角": toDegrees(moonIllumination.angle),
     }
   };
   // 將物件轉換為 JSON 字串並回傳

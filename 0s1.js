@@ -71,5 +71,8 @@
       // phase 告訴您月亮在整個盈虧週期中處於哪個階段和方向。
       sendmsg('moon_data0', `飽滿度: ${(_sm0.moon.被照亮比例*100).toFixed(1)}%`); // fraction
       sendmsg('moon_data0', `月相: ${_sm0.moon.月相} (${_sm0.moon.月相進程.toFixed(2)})`); // phase
+      sendmsg('moon_data0', `月相角: ${_sm0.moon.月相角.toFixed(2)} 度`); 
+      //sendmsg('moon_data0', `視角差: ${_sm0.moon.視角差.toFixed(2)} 度`); 
+      //sendmsg('moon_data0', `傾斜度: ${(_sm0.moon.月相角-_sm0.moon.視角差).toFixed(2)} 度`); 
    }   
 }
