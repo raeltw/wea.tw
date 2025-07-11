@@ -39,18 +39,21 @@
             // API 數據成功獲取後，在這裡處理並顯示
             //sendmsg('3darea', '資料載入成功！');
 
+           sendmsg('sun_data0', data.records.locations.location[0].CountyName);
+
             var _tmp1=data.records.locations.location[0].time[0];
 
-           //window.alert(_tmp1.Date);
+           //window.alert(data.records.locations.location[0].CountyName);
            //return ;
 
+           //sendmsg('sun_data0', `太陽:`);
            sendmsg('sun_data0', `日出: ${_tmp1.SunRiseTime}`, 0);
            sendmsg('sun_data0', ` ${toDir(_tmp1.SunRiseAZ)} (${_tmp1.SunRiseAZ})`);
-           sendmsg('sun_data0', `日過中天: ${_tmp1.SunTransitTime}`, 0);
-           sendmsg('sun_data0', ` (${_tmp1.SunTransitAlt})`);
            sendmsg('sun_data0', `日落: ${_tmp1.SunSetTime}`, 0);
            sendmsg('sun_data0', ` ${toDir(_tmp1.SunSetAZ)} (${_tmp1.SunSetAZ})`);
            sendmsg('sun_data0', `日長: ${calcdura(_tmp1.SunRiseTime, _tmp1.SunSetTime)}`);
+           sendmsg('sun_data0', `日過中天: ${_tmp1.SunTransitTime}`, 0);
+           sendmsg('sun_data0', ` (${_tmp1.SunTransitAlt})`);
            sendmsg('sun_data0', ``);
 
            sendmsg('sun_data0', `黎明: ${_tmp1.BeginCivilTwilightTime}`);
@@ -112,15 +115,17 @@
            //_today = '20250701';
 
            //20250710
-           sendmsg('moon_data0', "<img style='filter: sepia(50%) saturate(100%); float:right; width: 128px;' src='https://www.cwa.gov.tw/Data/astronomy/moon/"+_today+".jpg'>", 0 );
+           sendmsg('moon_data0', "<img style='float:right; width: 160px;' src='https://www.cwa.gov.tw/Data/astronomy/moon/"+_today+".jpg'>", 0 );
+           // filter: sepia(50%) saturate(100%);
 
+           //sendmsg('moon_data0', `月亮:`);
            sendmsg('moon_data0', `月出: ${_tmp1.MoonRiseTime}`, 0);
            sendmsg('moon_data0', ` ${toDir(_tmp1.MoonRiseAZ)} (${_tmp1.MoonRiseAZ})`);
-           sendmsg('moon_data0', `月過中天: ${_tmp1.MoonTransitTime}`, 0);
-           sendmsg('moon_data0', ` (${_tmp1.MoonTransitAlt})`);
            sendmsg('moon_data0', `月落: ${_tmp1.MoonSetTime}`, 0);
            sendmsg('moon_data0', ` ${toDir(_tmp1.MoonSetAZ)} (${_tmp1.MoonSetAZ})`);
            sendmsg('moon_data0', `月長: ${calcdura(_tmp1.MoonRiseTime, _tmp1.MoonSetTime)}`);
+           sendmsg('moon_data0', `月過中天: ${_tmp1.MoonTransitTime}`, 0);
+           sendmsg('moon_data0', ` (${_tmp1.MoonTransitAlt})`);
            sendmsg('moon_data0', ``);
 
            //sendmsg('sun_data0', `黎明: ${_tmp1.BeginCivilTwilightTime}`);
