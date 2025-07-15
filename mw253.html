@@ -583,8 +583,11 @@ let _colorb1 = [
    document.addEventListener('DOMContentLoaded', () => { air1(); } );
 </script>
 
- <!--  衛星雲圖 -->
- <script src="himawari0.js"></script>
+ <!--  衛星雲圖 
+    himawari0.js 只有最新一張
+    himawari1.js 最多可抓到24小時 可翻頁 也可自動撥放
+-->
+ <script src="himawari1.js"></script>
 <script>
    switchF('hf1', 'ht1');
    document.addEventListener('DOMContentLoaded', () => { loadHimawariImages('api_datah'); } );
