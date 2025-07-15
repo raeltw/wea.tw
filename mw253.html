@@ -135,6 +135,10 @@ flex-direction: column;
 <div id='at1p'><span id='at1'>空氣品質:</span><div id='api_dataa'><!-- 這是真的 --></div></div>
 <p></p>
 
+<div id='hf1p'><span id='hf1'>衛星雲圖...</span></div>
+<div id='ht1p'><span id='ht1'>衛星雲圖:</span><div id='api_datah'><!-- 這是真的 --></div></div>
+<p></p>
+
 <div id='api_data3'>3日預報:<br /></div>
 <!-- 250707 X軸捲軸 -->
 <div style="width: 960px; height: 412px; overflow-x: scroll; scrollbar-width: 1px; overflow-y: hidden; border: 0px; padding: 0px; margin: 0px; ">
@@ -578,6 +582,14 @@ let _colorb1 = [
    switchF('af1', 'at1');
    document.addEventListener('DOMContentLoaded', () => { air1(); } );
 </script>
+
+ <!--  衛星雲圖 -->
+ <script src="himawari0.js"></script>
+<script>
+   switchF('hf1', 'ht1');
+   document.addEventListener('DOMContentLoaded', () => { loadHimawariImages('api_datah'); } );
+</script>
+
 
 <!-- 3日預報 -->
 <script>
