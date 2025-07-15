@@ -13,7 +13,7 @@ let curIdx1 = 0;
 let curIdx2 = 0;
 
 let tipTmr1 = null; // 用於管理 imageGroup1 的提示自動隱藏計時器
-let tipTmr2 = null; // 用於管理 imageGroup2 的提示自動隱藏計時器
+let tipTmr2 = null; // 用於管理 imageGroup2 的提示自動隱動計時器
 
 const DBL_TMOUT = 300;
 let clkTmr1 = null;
@@ -28,7 +28,7 @@ let isPlaying2 = false;
 
 // 將 hoursToFetch 定義在這裡，作為模組內部的變數
 // 您想修改抓取的小時數時，直接修改這個值即可
-let HIMAWARI_HOURS_TO_FETCH = 24; // <--- 在這裡修改您希望抓取的小時數 (例如：12, 24 等)
+let HIMAWARI_HOURS_TO_FETCH = 8; // <--- 在這裡修改您希望抓取的小時數 (例如：12, 24 等)
 
 // 對 HIMAWARI_HOURS_TO_FETCH 設定上限 (最大 24 小時)
 const MAX_HOURS_TO_FETCH = 24;
@@ -178,6 +178,7 @@ function dispImg(gIdx, idx) {
     newImg.onload = () => {
         imgEl.src = newImg.src;
         imgEl.style.display = 'block';
+        // 這裡的 setTimeout 保持 50ms，這是為了淡入效果。
         setTimeout(() => {
             imgEl.classList.add('show');
         }, 50); // 短暫延遲後顯示，讓過渡更平滑
@@ -291,7 +292,6 @@ function dblClkEdge(gIdx, tgt) {
 }
 
 function startAutoplay(gIdx) {
-    const urls = (gIdx === 1) ? fUrls1 : fUrls2;
     let autoplayTmrRef = (gIdx === 1) ? autoplayTmr1 : autoplayTmr2;
     let isPlayingRef = (gIdx === 1) ? isPlaying1 : isPlaying2;
 
@@ -300,60 +300,79 @@ function startAutoplay(gIdx) {
         return;
     }
 
-    if (urls.length < 2) {
-        // 如果歷史圖片還在載入，提示使用者
-        if (!(gIdx === 1 ? allHistoryLoaded1 : allHistoryLoaded2)) {
-             showTip(gIdx, '圖片不足，正在載入歷史圖片...');
-        } else {
-             showTip(gIdx, '圖片不足，無法播放'); // 如果所有圖片都載入完了還不到2張，說明沒圖
-        }
+    let urls = (gIdx === 1) ? fUrls1 : fUrls2; // 獲取當前 URL 列表
+    if (urls.length < 1) { // 至少需要一張圖片來顯示
+        showTip(gIdx, '無可用圖片，無法播放', false);
         return;
     }
 
-    stopAutoplay(gIdx);
+    stopAutoplay(gIdx); // 確保停止任何現有播放
 
-    // 設置為從最舊一張開始
-    // 但如果歷史圖片還沒完全載入，則從目前已載入的最舊一張開始播放
+    // 設置初始索引為最舊的圖片 (索引 0)
     if (gIdx === 1) curIdx1 = 0;
     else curIdx2 = 0;
     
+    // 顯示第一張圖片 (最舊的)
     dispImg(gIdx, (gIdx === 1) ? curIdx1 : curIdx2);
 
-    // 關鍵修改：根據實際載入的圖片數量計算總播放時間
-    // 每小時理論上有 6 張圖片 (每 10 分鐘一張)
-    // 我們希望每張圖片的理想播放時間是 2 秒 / 6 張 = 1/3 秒 ≈ 333.33 毫秒
-    // 總播放時間 = 實際載入的圖片數量 * (2 秒 / 6 張) * 1000 毫秒/秒
+    // 理論計算，用於確保播放速度一致
     const theoreticalImagesPerHour = 6;
-    const secondsPerTheoreticalHour = 2; // 每理論小時播放 2 秒
+    const secondsPerTheoreticalHour = 2; // <--- 這裡保持 2 秒，不變
+    const interval = (1 / theoreticalImagesPerHour) * secondsPerTheoreticalHour * 1000; // 每幀的毫秒數
 
-    // 如果只有一張圖片，則總播放時間為 0 (因為沒有動畫)
-    const playbackDuration = (urls.length > 0) 
-        ? (urls.length / theoreticalImagesPerHour) * secondsPerTheoreticalHour * 1000
-        : 0;
-    
-    // 如果只有一張圖片，間隔時間設為播放時長（或避免除以零）
-    const interval = urls.length > 1 ? playbackDuration / (urls.length - 1) : playbackDuration;
-    
     if (gIdx === 1) {
         isPlaying1 = true;
         autoplayTmr1 = setInterval(() => {
-            if (curIdx1 < urls.length - 1) {
+            let currentUrls = fUrls1; // <--- **每次迭代都獲取最新的圖片列表**
+            let allLoadedStatus = allHistoryLoaded1; // <--- **每次迭代都獲取最新的載入狀態**
+
+            if (currentUrls.length === 0) { // 安全檢查
+                stopAutoplay(gIdx);
+                showTip(gIdx, '無可用圖片，停止播放');
+                return;
+            }
+
+            if (curIdx1 < currentUrls.length - 1) { // 如果還沒到當前列表的最後一張
                 curIdx1++;
                 dispImg(gIdx, curIdx1);
             } else {
-                stopAutoplay(gIdx);
-                showTip(gIdx, '播放完畢');
+                // 已播放到當前列表的最後一張圖片
+                if (allLoadedStatus) {
+                    // 如果所有歷史圖片都已載入完畢，則播放結束
+                    stopAutoplay(gIdx);
+                    showTip(gIdx, '播放完畢');
+                } else {
+                    // 歷史圖片尚未全部載入，循環回到最舊一張，並等待更多圖片
+                    curIdx1 = 0;
+                    dispImg(gIdx, curIdx1);
+                    showTip(gIdx, '正在等待更多歷史圖片...'); // 提示用戶
+                }
             }
         }, interval);
-    } else {
+    } else { // 針對 imageGroup2 的相同邏輯
         isPlaying2 = true;
         autoplayTmr2 = setInterval(() => {
-            if (curIdx2 < urls.length - 1) {
+            let currentUrls = fUrls2; // <--- **每次迭代都獲取最新的圖片列表**
+            let allLoadedStatus = allHistoryLoaded2; // <--- **每次迭代都獲取最新的載入狀態**
+
+            if (currentUrls.length === 0) {
+                stopAutoplay(gIdx);
+                showTip(gIdx, '無可用圖片，停止播放');
+                return;
+            }
+
+            if (curIdx2 < currentUrls.length - 1) {
                 curIdx2++;
                 dispImg(gIdx, curIdx2);
             } else {
-                stopAutoplay(gIdx);
-                showTip(gIdx, '播放完畢');
+                if (allLoadedStatus) {
+                    stopAutoplay(gIdx);
+                    showTip(gIdx, '播放完畢');
+                } else {
+                    curIdx2 = 0;
+                    dispImg(gIdx, curIdx2);
+                    showTip(gIdx, '正在等待更多歷史圖片...');
+                }
             }
         }, interval);
     }
@@ -492,9 +511,15 @@ async function loadHistoryImagesInBackground(cfg, h, gIdx, loadOvEl) {
         const curT = new Date(tmpT.getTime());
 
         // 如果當前時間點的圖片已經存在於列表中，則跳過，避免重複添加
-        if (curT.getTime() >= currentOldestTime && fUrls1.length > 0) { // 這裡假設 fUrls1.length > 0 才需要檢查 currentOldestTime
-            tmpT.setMinutes(tmpT.getMinutes() - 10);
-            continue; 
+        if (curT.getTime() >= currentOldestTime && ((gIdx === 1) ? fUrls1.length : fUrls2.length) > 0) { 
+             // 確保 fUrls1.length > 0 或 fUrls2.length > 0 才檢查 currentOldestTime
+            // 這裡還需要檢查該時間點的圖片是否已經存在，避免重複添加
+            const targetUrls = (gIdx === 1) ? fUrls1 : fUrls2;
+            const exists = targetUrls.some(item => item.time.getTime() === curT.getTime());
+            if (exists) {
+                tmpT.setMinutes(tmpT.getMinutes() - 10);
+                continue;
+            }
         }
 
         const fmtFNTime = fmtFN(curT);
@@ -506,17 +531,13 @@ async function loadHistoryImagesInBackground(cfg, h, gIdx, loadOvEl) {
                 const img = new Image();
                 img.onload = () => {
                     const urlObj = { url: imgUrl, time: curT };
-                    // 只有當這個圖片的時間比目前列表中的最舊圖還舊，或者列表中沒有這個時間的圖才添加
-                    // 因為 findAndLoadLatestImage 可能會添加一張
                     let targetUrls = (gIdx === 1) ? fUrls1 : fUrls2;
+                    // 再次檢查是否存在，以防在 setTimeout 延遲期間被添加
                     const exists = targetUrls.some(item => item.time.getTime() === curT.getTime());
                     if (!exists) { // 避免重複添加
                         targetUrls.push(urlObj);
                         targetUrls.sort((a, b) => a.time.getTime() - b.time.getTime()); // 保持排序
-                        // 更新 currentOldestTime
-                        if (targetUrls.length > 0) {
-                            currentOldestTime = targetUrls[0].time.getTime();
-                        }
+                        // 更新 currentOldestTime (不是絕對必要，因為每次循環都會根據 tmpT 往前回溯)
                     }
                     resolve();
                 };
@@ -601,7 +622,6 @@ window.loadHimawariImages = async function(targetDivId) {
                 padding: 5px 10px;
                 border-radius: 5px;
                 background-color: rgba(0, 0, 0, 0.5);
-                display: none;
             }
             .loading-overlay {
                 top: 50%;
@@ -652,13 +672,10 @@ window.loadHimawariImages = async function(targetDivId) {
     loadOv2.style.display = 'block';
 
     // 優先載入並顯示最新一張圖片
-    // 這裡我們不再將 findAndLoadLatestImage 的結果直接賦值給 fUrls1/2，
-    // 而是讓它自己在內部修改 fUrls1/2 並調用 dispImg
     await findAndLoadLatestImage(H_CFGS.twi1350, 1, loadOv1);
     await findAndLoadLatestImage(H_CFGS.lcc2750, 2, loadOv2);
 
     // 在背景非同步載入所有歷史圖片，不阻塞主線程
-    // 不需要 await，讓它在背景執行
     loadHistoryImagesInBackground(H_CFGS.twi1350, HIMAWARI_HOURS_TO_FETCH, 1, loadOv1);
     loadHistoryImagesInBackground(H_CFGS.lcc2750, HIMAWARI_HOURS_TO_FETCH, 2, loadOv2);
 };
