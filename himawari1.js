@@ -28,7 +28,7 @@ let isPlaying2 = false;
 
 // 將 hoursToFetch 定義在這裡，作為模組內部的變數
 // 您想修改抓取的小時數時，直接修改這個值即可
-let HIMAWARI_HOURS_TO_FETCH = 8; // <--- 在這裡修改您希望抓取的小時數 (例如：12, 24 等)
+let HIMAWARI_HOURS_TO_FETCH = 24; // <--- 在這裡修改您希望抓取的小時數 (例如：12, 24 等)
 
 // 對 HIMAWARI_HOURS_TO_FETCH 設定上限 (最大 24 小時)
 const MAX_HOURS_TO_FETCH = 24;
