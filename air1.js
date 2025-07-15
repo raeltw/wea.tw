@@ -64,7 +64,7 @@
                      sendmsg('api_dataa',  '空氣品質指標值: '+airLocations[ii].aqi, 1);
                      sendmsg('api_dataa',  '狀態: '+airLocations[ii].status, 1);
                      sendmsg('api_dataa',  '空氣污染指標物: '+airLocations[ii].pollutant, 1);
-                     sendmsg('api_dataa',  '風速: '+toDir(airLocations[ii].wind_direc)+' ('+airLocations[ii].wind_direc+') '+airLocations[ii].wind_speed*3.6+' km/h', 1);
+                     sendmsg('api_dataa',  '風速: '+toDir(airLocations[ii].wind_direc)+' ('+airLocations[ii].wind_direc+') '+(airLocations[ii].wind_speed*3.6).toFixed(2)+' km/h', 1);
                      sendmsg('api_dataa',  '發布時間: '+airLocations[ii].publishtime, 1);
                      sendmsg('api_dataa',  '', 1);
                      _tmp1=_tmp1+ "<table style='text-align: left;'>";
