@@ -126,6 +126,10 @@ flex-direction: column;
       </tr></tbody></table>
 <div style='clear: both;'></div>
 
+<div id='af1p'><span id='af1'>空氣品質...</span></div>
+<div id='at1p'><span id='at1'>空氣品質:</span><div id='api_dataa'>這是真的</div></div>
+<p></p>
+
 <div id='api_data3'>3日預報:<br /></div>
 <!-- 250707 X軸捲軸 -->
 <div style="width: 960px; height: 412px; overflow-x: scroll; scrollbar-width: 1px; overflow-y: hidden; border: 0px; padding: 0px; margin: 0px; ">
@@ -155,7 +159,7 @@ flex-direction: column;
       </tr></tbody></table>
 <div style='clear: both;'><br /></div>
 
-<span title='版本'>v 1.7.7</span>
+<span title='版本'>v 1.7.9</span>
 <!--  style='float:right; margin-top:0px; margin-right:20px;' -->
 
 
@@ -422,6 +426,46 @@ function sendmsg(block1, msg1, br1= 1)
    }
 }
 
+function switchF(idToShow, idToHide) {
+  const e_Show = document.getElementById(idToShow);
+  const e_Hide = document.getElementById(idToHide);
+
+  // 檢查元素是否存在
+  if (!e_Show || !e_Hide) {
+    console.error('指定的元素 ID 不存在。');
+    return;
+  }
+
+  const p_Show = e_Show.parentElement;
+  const p_Hide = e_Hide.parentElement;
+
+  // 初始設定：顯示第一個區塊的父元素，隱藏第二個區塊的父元素
+  if (p_Show) {
+    p_Show.style.display = 'block'; // 或 'flex', 'grid' 等，視你的排版而定
+  }
+  if (p_Hide) {
+    p_Hide.style.display = 'none';
+  }
+
+  // 設定點擊事件監聽器，用於切換顯示狀態
+  // 這裡的邏輯是，無論點擊哪一個，都切換兩個父元素的顯示狀態
+  const toggleVisibility = () => {
+    if (p_Show && p_Hide) {
+      if (p_Show.style.display === 'none') {
+        p_Show.style.display = 'block';
+        p_Hide.style.display = 'none';
+      } else {
+        p_Show.style.display = 'none';
+        p_Hide.style.display = 'block';
+      }
+    }
+  };
+
+  // 將點擊事件監聽器添加到兩個子元素上
+  e_Show.addEventListener('click', toggleVisibility);
+  e_Hide.addEventListener('click', toggleVisibility);
+}
+
 
 /// ---
 
@@ -520,6 +564,11 @@ let _colorb1 = [
  <!--  呼叫 現在觀測 -->
 <script src="now1.js"></script>
 <script> document.addEventListener('DOMContentLoaded', () => { nowwea1(); } ); </script>
+
+ <!--  空氣品質 -->
+<script>
+switchF('af1', 'at1');
+</script>
 
 <!-- 3日預報 -->
 <script>
