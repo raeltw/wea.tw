@@ -82,7 +82,7 @@
 
                      _tmp1=_tmp1+ "<tr>";
                      _tmp1=_tmp1+ "<td class='air1'>臭氧</td>";
-                     _tmp1=_tmp1+ "<td class='air1'>o3 (ppb)</td>";
+                     _tmp1=_tmp1+ "<td class='air1'>O3 (ppb)</td>";
                      _tmp1=_tmp1+ "<td class='air1'>"+airLocations[ii].o3+"</td>";
                      _tmp1=_tmp1+ "<td class='air1'>"+airLocations[ii].o3_8hr+"</td>";
                      _tmp1=_tmp1+ "<td class='air1'>54 - 70</td>";
