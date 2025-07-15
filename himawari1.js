@@ -3,8 +3,8 @@
 // === JS 程式碼開始 ===
 
 const H_CFGS = {
-    twi1350: { b: "https://www.cwa.gov.tw/Data/satellite/TWI_TRGB_1350/", p: "TWI_TRGB_1350-" },
-    lcc2750: { b: "https://www.cwa.gov.tw/Data/satellite/LCC_TRGB_2750/", p: "LCC_TRGB_2750-" }
+    twi1350: { b: "https://www.cwa.gov.tw/Data/satellite/TWI_TRGB_1000/", p: "TWI_TRGB_1000-" },
+    lcc2750: { b: "https://www.cwa.gov.tw/Data/satellite/LCC_TRGB_1000/", p: "LCC_TRGB_1000-" }
 };
 
 let fUrls1 = [];
@@ -28,7 +28,7 @@ let isPlaying2 = false;
 
 // 將 hoursToFetch 定義在這裡，作為模組內部的變數
 // 您想修改抓取的小時數時，直接修改這個值即可
-let HIMAWARI_HOURS_TO_FETCH = 8; // <--- 在這裡修改您希望抓取的小時數 (例如：12, 24 等)
+let HIMAWARI_HOURS_TO_FETCH = 24; // <--- 在這裡修改您希望抓取的小時數 (例如：12, 24 等)
 
 // 對 HIMAWARI_HOURS_TO_FETCH 設定上限 (最大 24 小時)
 const MAX_HOURS_TO_FETCH = 24;
