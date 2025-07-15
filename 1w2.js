@@ -77,7 +77,6 @@
                
                var ii;
                for (ii = 0; ii < forecastLocations.length; ii++) {
-                   //forecastLocations[0].ElementName;
                    //window.alert();
                    //sendmsg('1warea', '');
                    //sendmsg('1warea', forecastLocations[ii].ElementName+"數據讀取中... ", 0);

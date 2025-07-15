@@ -1,0 +1,497 @@
+﻿<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>衛星雲圖檢視器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column; /* 垂直排列圖片容器和 URL 顯示 */
+            align-items: flex-start; /* 左對齊 */
+            margin: 20px;
+            background-color: #f0f0f0;
+        }
+        .container-group {
+            display: flex; /* 讓圖片容器保持水平排列 */
+            margin-bottom: 20px; /* 在兩組圖片-URL之間增加間距 */
+        }
+        .wrapper-container {
+            /* 包裹圖片容器和 URL 顯示，使其成為一個邏輯單元 */
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        #image2-container {
+            margin-left: 16px; /* 圖一與圖二間距 */
+        }
+        .image-container {
+            position: relative;
+            width: 640px; /* 圖片寬度加大到 640px */
+            overflow: hidden;
+            border: 1px solid #ccc;
+            background-color: #000; /* 背景設為黑色，載入時更清晰 */
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            min-height: 480px; /* 根據 640px 寬度，按 4:3 比例設置最小高度，避免內容跳動 */
+            display: flex; /* 使用 flexbox 幫助內容置中 */
+            align-items: center; /* 垂直置中 */
+            justify-content: center; /* 水平置中 */
+            color: white; /* 載入訊息預設顏色 */
+        }
+        .image-container img {
+            display: block;
+            width: 100%;
+            height: auto;
+            background-color: #333; /* 圖片載入失敗時的替補背景 */
+        }
+        .overlay-message {
+            position: absolute;
+            bottom: 10px; /* 調整位置 */
+            left: 10px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 13px;
+            z-index: 10;
+            display: none; /* 預設隱藏 */
+            white-space: nowrap; /* 防止文字換行 */
+        }
+        .loading-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 16px;
+            z-index: 10;
+            display: none; /* 預設隱藏 */
+            text-align: center;
+            white-space: nowrap; /* 防止文字換行 */
+        }
+        .external-url-display {
+            margin-top: 5px; /* 與上方圖片的間距 */
+            width: 640px; /* 與圖片容器對齊 */
+            background-color: #e0e0e0; /* 淺灰色背景 */
+            color: #333; /* 深灰色文字 */
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            word-break: break-all; /* 長網址自動換行 */
+            min-height: 2em; /* 確保有足夠空間顯示 */
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+        }
+        #urlDisplay2-external {
+            /* 調整右側URL顯示框的左邊距，使其與右側圖片框對齊 */
+            margin-left: 16px; 
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container-group">
+        <div class="wrapper-container">
+            <div id="image1-container" class="image-container">
+                <img id="satelliteImage1" src="" alt="衛星雲圖一">
+                <div class="overlay-message" id="message1"></div>
+                <div class="loading-message" id="loading1"></div>
+            </div>
+            <div class="external-url-display" id="urlDisplay1-external"></div> </div>
+
+        <div class="wrapper-container">
+            <div id="image2-container" class="image-container">
+                <img id="satelliteImage2" src="" alt="衛星雲圖二">
+                <div class="overlay-message" id="message2"></div>
+                <div class="loading-message" id="loading2"></div>
+            </div>
+            <div class="external-url-display" id="urlDisplay2-external"></div> </div>
+    </div>
+
+    <script>
+        const imageConfig = {
+            image1: {
+                baseUrl: "https://www.cwa.gov.tw/Data/satellite/TWI_TRGB_1350/",
+                prefix: "TWI_TRGB_1350-"
+            },
+            image2: {
+                baseUrl: "https://www.cwa.gov.tw/Data/satellite/LCC_TRGB_2750/",
+                prefix: "LCC_TRGB_2750-"
+            }
+        };
+
+        const satelliteImage1 = document.getElementById('satelliteImage1');
+        const satelliteImage2 = document.getElementById('satelliteImage2');
+        const message1 = document.getElementById('message1');
+        const message2 = document.getElementById('message2');
+        const loading1 = document.getElementById('loading1');
+        const loading2 = document.getElementById('loading2');
+        const urlDisplay1External = document.getElementById('urlDisplay1-external'); 
+        const urlDisplay2External = document.getElementById('urlDisplay2-external'); 
+
+        let imageHistory1 = [];
+        let currentIndex1 = 0;
+        let imageHistory2 = [];
+        let currentIndex2 = 0;
+
+        /**
+         * 格式化日期時間為 YYYY-MM-DD-HH-MM
+         * @param {Date} dateObj
+         * @returns {string}
+         */
+        function formatDateTime(dateObj) {
+            if (!(dateObj instanceof Date) || isNaN(dateObj.getTime())) {
+                console.warn("formatDateTime 收到無效的日期物件", dateObj);
+                return ''; 
+            }
+            const year = dateObj.getFullYear();
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            const hours = String(dateObj.getHours()).padStart(2, '0');
+            const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+            return `${year}-${month}-${day}-${hours}-${minutes}`;
+        }
+
+        /**
+         * 格式化日期時間為 DD HH:MM
+         * @param {Date} dateObj
+         * @returns {string}
+         */
+        function formatShortTime(dateObj) {
+            if (!(dateObj instanceof Date) || isNaN(dateObj.getTime())) {
+                console.warn("formatShortTime 收到無效的日期物件", dateObj);
+                return '載入中...'; // 無法格式化時顯示載入中
+            }
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            const hours = String(dateObj.getHours()).padStart(2, '0');
+            const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+            return `${day} ${hours}:${minutes}`;
+        }
+
+        /**
+         * 尋找最新的可用圖片時間
+         * @param {object} config - 包含 baseUrl 和 prefix 的配置物件
+         * @param {HTMLElement} loadingElement - 載入中顯示元素
+         * @param {HTMLElement} urlDisplayElement - 顯示 URL 的元素
+         * @returns {Promise<Date | null>} - 返回 Promise 以便非同步處理
+         */
+        function findLatestImageTime(config, loadingElement, urlDisplayElement) {
+            return new Promise(resolve => {
+                const now = new Date();
+                let searchTime = new Date(now.getTime());
+                searchTime.setSeconds(0);
+                searchTime.setMilliseconds(0);
+                const minutes = searchTime.getMinutes();
+                searchTime.setMinutes(minutes - (minutes % 10)); // 向下捨去到最近的10分鐘
+
+                const maxAttempts = 24 * 6 * 3; // 最多嘗試3天份的數據 (24小時 * 6個10分鐘間隔/小時 * 3天)
+                let attempts = 0;
+
+                function attemptLoad() {
+                    if (attempts >= maxAttempts) {
+                        if (loadingElement) loadingElement.style.display = 'none';
+                        if (urlDisplayElement) urlDisplayElement.textContent = `找不到圖片 URL (已嘗試超過 ${maxAttempts} 次)。`;
+                        resolve(null); // 超過最大嘗試次數，找不到圖片
+                        return;
+                    }
+
+                    const formattedTime = formatDateTime(searchTime);
+                    if (!formattedTime) { // 如果日期格式化失敗，跳過這次嘗試並繼續回溯
+                        searchTime.setMinutes(searchTime.getMinutes() - 10);
+                        attempts++;
+                        attemptLoad();
+                        return;
+                    }
+                    
+                    const imageUrl = `${config.baseUrl}${config.prefix}${formattedTime}.jpg`;
+
+                    if (loadingElement) {
+                        loadingElement.textContent = `${formatShortTime(searchTime)} 載入中`;
+                        loadingElement.style.display = 'block';
+                    }
+                    if (urlDisplayElement) {
+                        urlDisplayElement.textContent = `尋找最新圖片 (${formatShortTime(searchTime)}): ${imageUrl}`; // 顯示正在嘗試的 URL
+                    }
+
+                    const img = new Image();
+                    img.onload = () => {
+                        if (loadingElement) loadingElement.style.display = 'none'; // 找到圖片，隱藏載入訊息
+                        if (urlDisplayElement) urlDisplayElement.textContent = `最新圖片 URL: ${imageUrl}`; // 載入成功顯示最終 URL
+                        resolve(searchTime); // 找到圖片，解決 Promise
+                    };
+                    img.onerror = () => {
+                        // console.warn(`圖片載入失敗或不存在: ${imageUrl}. 嘗試下一張.`);
+                        searchTime.setMinutes(searchTime.getMinutes() - 10);
+                        attempts++;
+                        attemptLoad(); // 遞迴呼叫嘗試下一張
+                    };
+                    img.src = imageUrl;
+                }
+                attemptLoad(); // 開始嘗試載入
+            });
+        }
+
+        /**
+         * 載入圖片並更新顯示，自動跳過不存在的圖片
+         * @param {HTMLImageElement} imgElement - 圖片元素
+         * @param {string[]} historyArray - 圖片歷史陣列 (格式化時間字串)
+         * @param {number} startIndex - 期望載入的圖片索引
+         * @param {object} config - 包含 baseUrl 和 prefix 的配置物件
+         * @param {HTMLElement} messageElement - 訊息顯示元素
+         * @param {HTMLElement} loadingElement - 載入中顯示元素
+         * @param {HTMLElement} urlDisplayElement - 顯示 URL 的元素
+         * @param {function} setCurrentIndexFn - 更新 currentIndex 的回呼函式
+         * @param {number} direction - 1為向前找(next), -1為向後找(prev), 0為只找當前
+         * @param {number} maxSkips - 最大允許跳過不存在圖片的數量
+         */
+        function loadImageAndSkip(imgElement, historyArray, startIndex, config, messageElement, loadingElement, urlDisplayElement, setCurrentIndexFn, direction = 0, maxSkips = 100) {
+            let currentIndex = startIndex;
+            let skippedCount = 0;
+
+            const tryLoad = () => {
+                if (historyArray.length === 0) {
+                    messageElement.textContent = '無圖片可顯示';
+                    messageElement.style.display = 'block';
+                    imgElement.src = ''; 
+                    loadingElement.style.display = 'none';
+                    if (urlDisplayElement) urlDisplayElement.textContent = '歷史記錄為空，無 URL。';
+                    setCurrentIndexFn(0); // 重置索引
+                    return;
+                }
+
+                // 檢查索引是否有效，並處理到達邊界的情況
+                if (currentIndex < 0 || currentIndex >= historyArray.length) {
+                    const lastAttemptedIndex = Math.max(0, Math.min(startIndex, historyArray.length - 1));
+                    const lastAttemptedTime = historyArray[lastAttemptedIndex];
+                    const lastAttemptedUrl = lastAttemptedTime ? `${config.baseUrl}${config.prefix}${lastAttemptedTime}.jpg` : '無效 URL';
+
+                    if (direction === 1) { // 往前找但已經到頭
+                        showMessage(messageElement, '已是最新圖片');
+                    } else if (direction === -1) { // 往後找但已經到頭
+                        showMessage(messageElement, '已是最舊圖片');
+                    }
+                    loadingElement.style.display = 'none';
+                    if (urlDisplayElement) urlDisplayElement.textContent = `已達邊界，找不到圖片。最後嘗試: ${lastAttemptedUrl}`;
+                    // 嘗試停留在最後一個有效索引或清空
+                    setCurrentIndexFn(Math.max(0, Math.min(startIndex, historyArray.length -1))); 
+                    return;
+                }
+
+                const formattedTime = historyArray[currentIndex];
+                const dateObj = new Date(formattedTime.replace(/-/g, '/'));
+
+                if (isNaN(dateObj.getTime())) {
+                    console.error(`loadImageAndSkip 遇到無效日期格式: ${formattedTime}. 跳過.`);
+                    skippedCount++;
+                    if (skippedCount > maxSkips) {
+                        console.warn('達到最大跳過次數，停止尋找。');
+                        showMessage(messageElement, '圖片資料不完整');
+                        loadingElement.style.display = 'none';
+                        if (urlDisplayElement) urlDisplayElement.textContent = `資料不完整，跳過太多。無法生成有效 URL。`;
+                        return;
+                    }
+                    currentIndex += direction; // 無效日期也跳過
+                    tryLoad();
+                    return;
+                }
+
+                const imageUrl = `${config.baseUrl}${config.prefix}${formattedTime}.jpg`;
+
+                loadingElement.textContent = `${formatShortTime(dateObj)} 載入中`;
+                loadingElement.style.display = 'block';
+                messageElement.style.display = 'none'; 
+                if (urlDisplayElement) urlDisplayElement.textContent = `嘗試載入: ${imageUrl}`; // 顯示正在嘗試的 URL
+
+                const img = new Image();
+                img.onload = () => {
+                    imgElement.src = imageUrl;
+                    loadingElement.style.display = 'none';
+                    if (urlDisplayElement) urlDisplayElement.textContent = `當前圖片 URL: ${imageUrl}`; // 載入成功顯示最終 URL
+                    setCurrentIndexFn(currentIndex); // 成功載入後才更新外部索引
+                };
+                img.onerror = () => {
+                    // console.warn(`圖片載入失敗或不存在: ${imageUrl}. 嘗試跳過.`);
+                    skippedCount++;
+                    if (skippedCount > maxSkips) {
+                        console.warn('達到最大跳過次數，停止尋找。');
+                        showMessage(messageElement, '圖片資料不完整或已是邊緣');
+                        loadingElement.style.display = 'none';
+                        if (urlDisplayElement) urlDisplayElement.textContent = `載入失敗，跳過太多。最後失敗 URL: ${imageUrl}`;
+                        return;
+                    }
+                    currentIndex += direction; // 圖片不存在則繼續往同方向尋找
+                    tryLoad(); // 遞迴呼叫嘗試下一張
+                };
+                img.src = imageUrl;
+            };
+
+            tryLoad(); // 開始載入
+        }
+
+
+        /**
+         * 初始化圖片歷史陣列，包含最新時間點往前回溯8小時的數據
+         * @param {Date} latestTime - 最新可用圖片的時間
+         * @returns {string[]} - 格式化時間字串陣列
+         */
+        function initializeHistory(latestTime) {
+            if (!latestTime || !(latestTime instanceof Date) || isNaN(latestTime.getTime())) return [];
+            
+            const history = [];
+            const eightHoursAgo = new Date(latestTime.getTime());
+            eightHoursAgo.setHours(eightHoursAgo.getHours() - 8);
+
+            let currentPoint = new Date(eightHoursAgo.getTime());
+            currentPoint.setMinutes(currentPoint.getMinutes() - (currentPoint.getMinutes() % 10)); 
+            currentPoint.setSeconds(0);
+            currentPoint.setMilliseconds(0);
+
+            // 確保從比 `eightHoursAgo` 更早且對齊10分鐘的時間點開始，然後向上遞增
+            while (currentPoint.getTime() <= latestTime.getTime()) {
+                history.push(formatDateTime(currentPoint));
+                currentPoint.setMinutes(currentPoint.getMinutes() + 10);
+            }
+            return history;
+        }
+
+        /**
+         * 處理圖片點擊事件
+         * @param {MouseEvent} event - 點擊事件物件
+         * @param {HTMLImageElement} imgElement - 圖片元素
+         * @param {object} config - 包含 baseUrl 和 prefix 的配置物件
+         * @param {HTMLElement} messageElement - 訊息顯示元素
+         * @param {HTMLElement} loadingElement - 載入中顯示元素
+         * @param {HTMLElement} urlDisplayElement - 顯示 URL 的元素
+         * @param {string} imageType - 'image1' 或 'image2'
+         */
+        function handleClick(event, imgElement, config, messageElement, loadingElement, urlDisplayElement, imageType) {
+            const rect = imgElement.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const width = rect.width;
+
+            let currentHistory, currentIndex, setCurrentIndex;
+            if (imageType === 'image1') {
+                currentHistory = imageHistory1;
+                currentIndex = currentIndex1;
+                setCurrentIndex = (val) => currentIndex1 = val;
+            } else {
+                currentHistory = imageHistory2;
+                currentIndex = currentIndex2;
+                setCurrentIndex = (val) => currentIndex2 = val;
+            }
+
+            if (x < width * 0.2) { // 最左20% (上一張)
+                if (currentIndex > 0) {
+                    loadImageAndSkip(imgElement, currentHistory, currentIndex - 1, config, messageElement, loadingElement, urlDisplayElement, setCurrentIndex, -1); // 往回找
+                } else {
+                    showMessage(messageElement, '已是最舊圖片');
+                    if (urlDisplayElement) urlDisplayElement.textContent = `已是最舊圖片，URL: ${imgElement.src || '無'}`;
+                }
+            } else if (x > width * 0.8) { // 最右20% (下一張)
+                if (currentIndex < currentHistory.length - 1) {
+                    loadImageAndSkip(imgElement, currentHistory, currentIndex + 1, config, messageElement, loadingElement, urlDisplayElement, setCurrentIndex, 1); // 往前找
+                } else {
+                    showMessage(messageElement, '已是最新圖片');
+                    if (urlDisplayElement) urlDisplayElement.textContent = `已是最新圖片，URL: ${imgElement.src || '無'}`;
+                }
+            }
+            // 中間區域點擊不處理，留給雙擊事件
+        }
+
+        /**
+         * 處理圖片雙擊事件
+         * @param {MouseEvent} event - 雙擊事件物件
+         * @param {HTMLImageElement} imgElement - 圖片元素
+         * @param {object} config - 包含 baseUrl 和 prefix 的配置物件
+         * @param {HTMLElement} messageElement - 訊息顯示元素
+         * @param {HTMLElement} loadingElement - 載入中顯示元素
+         * @param {HTMLElement} urlDisplayElement - 顯示 URL 的元素
+         * @param {string} imageType - 'image1' 或 'image2'
+         */
+        async function handleDoubleClick(event, imgElement, config, messageElement, loadingElement, urlDisplayElement, imageType) {
+            const rect = imgElement.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const width = rect.width;
+
+            let currentHistory, setCurrentIndex;
+            if (imageType === 'image1') {
+                currentHistory = imageHistory1;
+                setCurrentIndex = (val) => currentIndex1 = val;
+            } else {
+                currentHistory = imageHistory2;
+                setCurrentIndex = (val) => currentIndex2 = val;
+            }
+
+            messageElement.style.display = 'none'; // 隱藏任何舊的訊息
+
+            if (x < width * 0.2) { // 雙擊最左20% (最舊圖)
+                if (currentHistory.length > 0) {
+                    loadImageAndSkip(imgElement, currentHistory, 0, config, messageElement, loadingElement, urlDisplayElement, setCurrentIndex, 1); // 從最舊開始向後找第一個存在的
+                } else {
+                    showMessage(messageElement, '無歷史圖片可顯示');
+                    if (urlDisplayElement) urlDisplayElement.textContent = `無歷史圖片可顯示，無 URL。`;
+                }
+            } else if (x > width * 0.8) { // 雙擊最右20% (最新圖)
+                if (currentHistory.length > 0) {
+                    // 從最新時間點開始往前找第一個存在的
+                    loadImageAndSkip(imgElement, currentHistory, currentHistory.length - 1, config, messageElement, loadingElement, urlDisplayElement, setCurrentIndex, -1); 
+                } else {
+                    showMessage(messageElement, '無最新圖片可顯示');
+                    if (urlDisplayElement) urlDisplayElement.textContent = `無最新圖片可顯示，無 URL。`;
+                }
+            } else { // 雙擊中間區域 (重新找最新圖)
+                const latestTime = await findLatestImageTime(config, loadingElement, urlDisplayElement);
+                if (imageType === 'image1') {
+                    imageHistory1 = initializeHistory(latestTime);
+                    currentIndex1 = imageHistory1.length > 0 ? imageHistory1.length - 1 : 0;
+                    loadImageAndSkip(satelliteImage1, imageHistory1, currentIndex1, imageConfig.image1, message1, loading1, urlDisplay1External, (val) => currentIndex1 = val, -1); // 從最新向回找
+                } else {
+                    imageHistory2 = initializeHistory(latestTime);
+                    currentIndex2 = imageHistory2.length > 0 ? imageHistory2.length - 1 : 0;
+                    loadImageAndSkip(satelliteImage2, imageHistory2, currentIndex2, imageConfig.image2, message2, loading2, urlDisplay2External, (val) => currentIndex2 = val, -1); // 從最新向回找
+                }
+            }
+        }
+
+        /**
+         * 顯示浮動訊息
+         * @param {HTMLElement} element - 訊息元素
+         * @param {string} msg - 訊息內容
+         */
+        function showMessage(element, msg) {
+            element.textContent = msg;
+            element.style.display = 'block';
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 3000); // 3秒後自動隱藏
+        }
+
+        // 初始化載入
+        async function initialize() {
+            // 載入圖一
+            const latestTime1 = await findLatestImageTime(imageConfig.image1, loading1, urlDisplay1External);
+            imageHistory1 = initializeHistory(latestTime1);
+            currentIndex1 = imageHistory1.length > 0 ? imageHistory1.length - 1 : 0;
+            loadImageAndSkip(satelliteImage1, imageHistory1, currentIndex1, imageConfig.image1, message1, loading1, urlDisplay1External, (val) => currentIndex1 = val, -1); 
+
+            // 載入圖二
+            const latestTime2 = await findLatestImageTime(imageConfig.image2, loading2, urlDisplay2External);
+            imageHistory2 = initializeHistory(latestTime2);
+            currentIndex2 = imageHistory2.length > 0 ? imageHistory2.length - 1 : 0;
+            loadImageAndSkip(satelliteImage2, imageHistory2, currentIndex2, imageConfig.image2, message2, loading2, urlDisplay2External, (val) => currentIndex2 = val, -1); 
+
+            // 添加事件監聽器
+            satelliteImage1.addEventListener('click', (e) => handleClick(e, satelliteImage1, imageConfig.image1, message1, loading1, urlDisplay1External, 'image1'));
+            satelliteImage1.addEventListener('dblclick', (e) => handleDoubleClick(e, satelliteImage1, imageConfig.image1, message1, loading1, urlDisplay1External, 'image1'));
+
+            satelliteImage2.addEventListener('click', (e) => handleClick(e, satelliteImage2, imageConfig.image2, message2, loading2, urlDisplay2External, 'image2'));
+            satelliteImage2.addEventListener('dblclick', (e) => handleDoubleClick(e, satelliteImage2, imageConfig.image2, message2, loading2, urlDisplay2External, 'image2'));
+        }
+
+        initialize();
+    </script>
+</body>
+</html>

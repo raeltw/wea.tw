@@ -25,6 +25,11 @@ flex-direction: column;
     color: #ddd;
 }
 
+.air1
+{
+   padding-right: 16px;
+}
+   
 .underline
 {
    display: none; 
@@ -127,7 +132,7 @@ flex-direction: column;
 <div style='clear: both;'></div>
 
 <div id='af1p'><span id='af1'>空氣品質...</span></div>
-<div id='at1p'><span id='at1'>空氣品質:</span><div id='api_dataa'>這是真的</div></div>
+<div id='at1p'><span id='at1'>空氣品質:</span><div id='api_dataa'><!-- 這是真的 --></div></div>
 <p></p>
 
 <div id='api_data3'>3日預報:<br /></div>
@@ -467,6 +472,8 @@ function switchF(idToShow, idToHide) {
 }
 
 
+//T
+
 /// ---
 
 //測試區
@@ -566,8 +573,10 @@ let _colorb1 = [
 <script> document.addEventListener('DOMContentLoaded', () => { nowwea1(); } ); </script>
 
  <!--  空氣品質 -->
+ <script src="air1.js"></script>
 <script>
-switchF('af1', 'at1');
+   switchF('af1', 'at1');
+   document.addEventListener('DOMContentLoaded', () => { air1(); } );
 </script>
 
 <!-- 3日預報 -->

@@ -76,7 +76,6 @@
                
                var ii;
                for (ii = 0; ii < forecastLocations.length; ii++) {
-                   forecastLocations[0].ElementName;
                    //window.alert();
                    //sendmsg('3darea', '');
                    //sendmsg('3darea', forecastLocations[ii].ElementName+"數據讀取中... ", 0);
