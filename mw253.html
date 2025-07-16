@@ -131,6 +131,10 @@ flex-direction: column;
       </tr></tbody></table>
 <div style='clear: both;'></div>
 
+<span id='wf1p'><span id='wf1'>警/特報...</span></span>
+<span id='wt1p'><span id='wt1'>警/特報:</span><div id='api_dataw' style='width: 900px;'><!-- 這是真的 --></div></span>
+<!-- p></p -->
+
 <span id='af1p'><span id='af1'>空氣品質...</span></span>
 <span id='at1p'><span id='at1'>空氣品質:</span><div id='api_dataa' style='width: 900px;'><!-- 這是真的 --></div><br /></span>
 <!-- p></p -->
@@ -168,7 +172,7 @@ flex-direction: column;
       </tr></tbody></table>
 <div style='clear: both;'><br /></div>
 
-<span title='版本'>v 1.8.6</span>
+<span title='版本'>v 1.8.7</span>
 <!--  style='float:right; margin-top:0px; margin-right:20px;' -->
 
 
@@ -568,13 +572,18 @@ let _colorb1 = [
     24,  [0, 0, 0] 
 ];
 
-
 </script>
-
 
  <!--  呼叫 現在觀測 -->
 <script src="now1.js"></script>
 <script> document.addEventListener('DOMContentLoaded', () => { nowwea1(); } ); </script>
+
+ <!--  警/特報 -->
+ <script src="warning1.js"></script>
+<script>
+   switchF('wf1', 'wt1');
+   document.addEventListener('DOMContentLoaded', () => { warning1(); } );
+</script>
 
  <!--  空氣品質 -->
  <script src="air1.js"></script>
