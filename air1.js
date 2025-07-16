@@ -130,7 +130,7 @@
 
                      _tmp1=_tmp1+"</tbody>" ;
                      _tmp1=_tmp1+ "</table>";
-                     sendmsg('api_dataa', _tmp1 ,0);
+                     sendmsg('api_dataa', _tmp1 ,1);
                      //sendmsg('api_dataa', '定義參考來源: 環境部 空氣品質監測網 ' ,1);
                      //sendmsg('api_dataa', 'https://airtw.moenv.gov.tw/CHT/Information/Standard/AirQualityIndicatorNew.aspx' ,1);
                      
