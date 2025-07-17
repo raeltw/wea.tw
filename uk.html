@@ -1,0 +1,534 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>月亮資料查詢 DEMO - image_2c9283.png</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #0056b3;
+            text-align: center;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .input-group input[type="date"],
+        .input-group input[type="number"],
+        .input-group input[type="text"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .input-group button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        .input-group button:hover {
+            background-color: #0056b3;
+        }
+        .moon-info {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .moon-card {
+            flex: 1 1 calc(33% - 20px); /* 1個大卡片，5個小卡片，共6個 */
+            min-width: 250px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+        .moon-card h3 {
+            margin-top: 0;
+            color: #0056b3;
+        }
+        .moon-card img {
+            width: 100px;
+            height: 100px;
+            margin: 10px auto;
+            display: block;
+            object-fit: contain; /* 確保圖片不變形 */
+            transition: transform 0.3s ease;
+        }
+        .moon-card.main-card img {
+            width: 150px;
+            height: 150px;
+        }
+        .moon-detail p {
+            margin: 5px 0;
+            font-size: 1.1em;
+        }
+        .moon-detail span {
+            font-weight: bold;
+            color: #555;
+        }
+        .error-message {
+            color: red;
+            font-weight: bold;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .lean-modal-overlay { /* 簡易模態視窗樣式 */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+        #moon_view_close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        #moon_img_big {
+            max-width: 90%;
+            max-height: 90vh;
+            display: block;
+            margin: 50px auto;
+        }
+        .moon-viewer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        /* 以下是原來程式碼中會用到的 ID，即使不完全呈現所有功能，也先保留以便 JS 操作 */
+        #moon_cal_date { display: none; } /* 隱藏日期輸入框，我們用另一個 */
+        #moon_container { /* 這個 ID 決定 len 是 1 還是 6 */
+            display: flex; /* 讓它生效，以便觸發 len = 6 */
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+        .cal_selected { /* 模擬原始程式碼可能有的 cal_selected 類別 */
+            border: 2px solid #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>月亮資料查詢 DEMO</h1>
+        <p>您的編號是 **image_2c9283.png**。</p>
+        <p>請輸入您想查詢的日期、經緯度和時區，然後點擊「獲取月亮資料」。</p>
+
+        <div class="input-group">
+            <label for="query_date">查詢日期:</label>
+            <input type="date" id="query_date" value="">
+        </div>
+        <div class="input-group">
+            <label for="input_lat">緯度 (例如: 25.0330 台北):</label>
+            <input type="number" id="input_lat" value="25.0330" step="0.0001">
+        </div>
+        <div class="input-group">
+            <label for="input_lng">經度 (例如: 121.5654 台北):</label>
+            <input type="number" id="input_lng" value="121.5654" step="0.0001">
+        </div>
+        <div class="input-group">
+            <label for="input_tz">時區 (例如: Asia/Taipei):</label>
+            <input type="text" id="input_tz" value="Asia/Taipei">
+        </div>
+        <div class="input-group">
+            <button id="fetchMoonDataBtn">獲取月亮資料</button>
+        </div>
+
+        <div id="error_display" class="error-message"></div>
+
+        <hr>
+
+        <h2>今日月亮資訊</h2>
+        <div class="moon-info">
+            <div class="moon-card main-card">
+                <h3>當前日期</h3>
+                <p>月相: <span id="moon_phase_text">載入中...</span></p>
+                <a href="#" rel="moon_launch">
+                    <img id="moon_img" src="https://moonphases.co.uk/images/moons/placeholder.png" alt="月相圖片">
+                </a>
+                <p>亮度/直徑: <span id="moon_illum_text">載入中...</span></p>
+                <p>星座: <a href="#" id="moon_sign_link">載入中...</a></p>
+                <p>升起時間: <span id="moon_rise_date_text"></span> <span id="moon_rise_time">載入中...</span></p>
+                <p>落下時間: <span id="moon_set_time">載入中...</span></p>
+            </div>
+            <div style="display:none;">
+                <span id="mini_moon_phase_text"></span>
+                <img id="mini_moon_img" src="" alt="">
+                <span id="mini_moon_illum_text"></span>
+                <span id="mini_moon_sign_link"></span>
+                <span id="mini_moon_rise_time"></span>
+                <span id="mini_moon_set_time"></span>
+            </div>
+        </div>
+
+        <hr>
+
+        <h2>未來五天月亮資訊</h2>
+        <div id="moon_container" class="moon-info">
+            <div class="moon-card">
+                <h3><span id="moon1_date_text"></span></h3>
+                <p>月相: <span id="moon1_phase_text"></span></p>
+                <a href="#" rel="moon_launch">
+                    <img id="moon1_img" src="https://moonphases.co.uk/images/moons/placeholder.png" alt="月相圖片">
+                </a>
+                <p>亮度/直徑: <span id="moon1_illum_text"></span></p>
+                <p>星座: <a href="#" id="moon1_sign_link"></a></p>
+            </div>
+            <div class="moon-card">
+                <h3><span id="moon2_date_text"></span></h3>
+                <p>月相: <span id="moon2_phase_text"></span></p>
+                <a href="#" rel="moon_launch">
+                    <img id="moon2_img" src="https://moonphases.co.uk/images/moons/placeholder.png" alt="月相圖片">
+                </a>
+                <p>亮度/直徑: <span id="moon2_illum_text"></span></p>
+                <p>星座: <a href="#" id="moon2_sign_link"></a></p>
+            </div>
+            <div class="moon-card">
+                <h3><span id="moon3_date_text"></span></h3>
+                <p>月相: <span id="moon3_phase_text"></span></p>
+                <a href="#" rel="moon_launch">
+                    <img id="moon3_img" src="https://moonphases.co.uk/images/moons/placeholder.png" alt="月相圖片">
+                </a>
+                <p>亮度/直徑: <span id="moon3_illum_text"></span></p>
+                <p>星座: <a href="#" id="moon3_sign_link"></a></p>
+            </div>
+            <div class="moon-card">
+                <h3><span id="moon4_date_text"></span></h3>
+                <p>月相: <span id="moon4_phase_text"></span></p>
+                <a href="#" rel="moon_launch">
+                    <img id="moon4_img" src="https://moonphases.co.uk/images/moons/placeholder.png" alt="月相圖片">
+                </a>
+                <p>亮度/直徑: <span id="moon4_illum_text"></span></p>
+                <p>星座: <a href="#" id="moon4_sign_link"></a></p>
+            </div>
+            <div class="moon-card">
+                <h3><span id="moon5_date_text"></span></h3>
+                <p>月相: <span id="moon5_phase_text"></span></p>
+                <a href="#" rel="moon_launch">
+                    <img id="moon5_img" src="https://moonphases.co.uk/images/moons/placeholder.png" alt="月相圖片">
+                </a>
+                <p>亮度/直徑: <span id="moon5_illum_text"></span></p>
+                <p>星座: <a href="#" id="moon5_sign_link"></a></p>
+            </div>
+        </div>
+
+        <div class="moon-viewer">
+            <span id="moon_view_close">&times;</span>
+            <img id="moon_img_big" src="" alt="大月相圖片">
+        </div>
+    </div>
+
+    <script>
+        // core date functions ##################################################################################################################
+
+        /**
+         * 簡易的 Cookie 讀取/設定函式
+         */
+        const simpleCookie = {
+            get: function(name) {
+                const nameEQ = name + "=";
+                const ca = document.cookie.split(';');
+                for (let i = 0; i < ca.length; i++) {
+                    let c = ca[i];
+                    while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+                }
+                return null;
+            },
+            set: function(name, value, days) {
+                let expires = "";
+                if (days) {
+                    const date = new Date();
+                    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                    expires = "; expires=" + date.toUTCString();
+                }
+                document.cookie = name + "=" + (value || "") + expires + "; path=/";
+            }
+        };
+
+
+        /**
+         * 獲取月亮相關資料
+         * @param {string} dateString - 日期字串，格式為 'YYYY-MM-DD'。
+         * @param {object} options - 包含經緯度和時區的選項物件。
+         * @param {number} options.lat - 緯度。
+         * @param {number} options.lng - 經度。
+         * @param {string} options.tz - 時區。
+         * @param {number} [options.len=1] - 獲取資料的天數，預設為 1。
+         * @returns {Promise<object>} 返回一個 Promise，當成功獲取資料時解析為月亮數據。
+         */
+        function getMoon(dateString, options = {}) {
+            const defaultOptions = {
+                lat: simpleCookie.get('lat') || null, // 從 cookie 讀取或預設為 null
+                lng: simpleCookie.get('lng') || null, // 從 cookie 讀取或預設為 null
+                tz: simpleCookie.get('tz') || 'UTC',  // 從 cookie 讀取或預設為 'UTC'
+                len: 1 // 預設獲取 1 天的資料
+            };
+
+            const mergedOptions = { ...defaultOptions, ...options };
+
+            // 檢查經緯度和時區是否已提供或存在於 cookie 中
+            if (!mergedOptions.lat || !mergedOptions.lng || !mergedOptions.tz) {
+                const errorMessage = "經緯度 (lat, lng) 和時區 (tz) 是獲取月亮資料的必要參數。請透過 options 傳入或確保 cookie 中已設定。";
+                console.warn(errorMessage);
+                $('#error_display').text(errorMessage);
+                return Promise.reject(new Error(errorMessage));
+            } else {
+                $('#error_display').text(''); // 清除錯誤訊息
+            }
+
+            const theDate = moment(dateString, 'YYYY-MM-DD');
+
+            if (!theDate.isValid()) {
+                const errorMessage = "提供的日期格式無效。請使用 'YYYY-MM-DD' 格式。";
+                console.error(errorMessage);
+                $('#error_display').text(errorMessage);
+                return Promise.reject(new Error(errorMessage));
+            } else {
+                $('#error_display').text('');
+            }
+
+            const theDay = theDate.format("D");
+            const theMonth = theDate.format("M");
+            const theYear = theDate.format("YYYY");
+
+            // 原始程式碼邏輯：如果 #moon_container 存在，則 len 為 6，否則為 options.len
+            const theLen = ( $('#moon_container').length ) ? 6 : mergedOptions.len;
+
+            return new Promise((resolve, reject) => {
+                $.getJSON(
+                    'https://moonphases.co.uk/MoonDetails.php',
+                    {
+                        day: theDay,
+                        month: theMonth,
+                        year: theYear,
+                        lat: mergedOptions.lat,
+                        lng: mergedOptions.lng,
+                        len: theLen,
+                        tz: mergedOptions.tz
+                    }
+                )
+                .done(function(data) {
+                    if (data && data.days && data.days.length > 0) {
+                        const todayMoonData = data.days[0];
+
+                        // 更新主要月亮資訊
+                        $('#moon_phase_text').text(todayMoonData.phase_name);
+                        // ***** 圖片路徑修改為絕對路徑 *****
+                        $('#moon_img').attr('alt', todayMoonData.phase_name);
+                        $('#moon_img').attr('src', 'https://moonphases.co.uk/images/moons/' + todayMoonData.phase_img);
+                        // ********************************
+                        $('#moon_illum_text').text(todayMoonData.illumination + '% / ' + todayMoonData.diameter);
+                        $('#moon_sign_link').text(todayMoonData.moonsign);
+                        // 如果有連結，可以啟用：$('#moon_sign_link').prop('href', 'https://moonphases.co.uk/moon-signs/' + todayMoonData.moonsign);
+
+
+                        // 迷你月亮資訊 (在 DEMO 中不獨立顯示，僅確保 JS 操作不報錯)
+                        $('#mini_moon_phase_text').text(todayMoonData.phase_name);
+                        // ***** 圖片路徑修改為絕對路徑 *****
+                        $('#mini_moon_img').attr('alt', todayMoonData.phase_name);
+                        $('#mini_moon_img').attr('src', 'https://moonphases.co.uk/images/moons/' + todayMoonData.phase_img);
+                        // ********************************
+                        $('#mini_moon_illum_text').text(todayMoonData.illumination + '% / ' + todayMoonData.diameter);
+                        $('#mini_moon_sign_link').text(todayMoonData.moonsign);
+
+                        setMoonTimes(todayMoonData.date, todayMoonData.moonrise, todayMoonData.moonset);
+                        setMoonTilt(todayMoonData.tilt);
+
+                        // 更新未來五天月亮資訊
+                        if (data.days.length > 1) {
+                            for (let i = 1; i < 6; i++) {
+                                if (data.days[i]) { // 確保索引存在
+                                    const currentDayData = data.days[i];
+                                    const formattedDate = moment().isSame(moment(currentDayData.date), 'year')
+                                        ? moment(currentDayData.date).format('ddd Do MMM')
+                                        : moment(currentDayData.date).format('ddd Do MMM YYYY');
+
+                                    $('#moon' + i + '_date_text').text(formattedDate);
+                                    $('#moon' + i + '_phase_text').text(currentDayData.phase_name);
+                                    // ***** 圖片路徑修改為絕對路徑 *****
+                                    $('#moon' + i + '_img').attr('alt', currentDayData.phase_name);
+                                    $('#moon' + i + '_img').attr('src', 'https://moonphases.co.uk/images/moons/' + currentDayData.phase_img);
+                                    // ********************************
+                                    $('#moon' + i + '_illum_text').text(currentDayData.illumination + '% / ' + currentDayData.diameter);
+                                    $('#moon' + i + '_sign_link').text(currentDayData.moonsign);
+                                    // $('#moon' + i + '_sign_link').prop('href', 'https://moonphases.co.uk/moon-signs/' + currentDayData.moonsign);
+
+                                    // 設定傾斜角度
+                                    const imgSelector = '#moon' + i + '_img';
+                                    $(imgSelector).css({
+                                        "-webkit-transform": "rotate(" + currentDayData.tilt + "deg)",
+                                        "-moz-transform": "rotate(" + currentDayData.tilt + "deg)",
+                                        "-ms-transform": "rotate(" + currentDayData.tilt + "deg)",
+                                        "-o-transform": "rotate(" + currentDayData.tilt + "deg)",
+                                        "transform": "rotate(" + currentDayData.tilt + "deg)"
+                                    });
+                                } else {
+                                    // 如果資料不足 6 天，清空剩餘的顯示
+                                    $('#moon' + i + '_date_text').text('');
+                                    $('#moon' + i + '_phase_text').text('無資料');
+                                    // ***** 圖片路徑修改為絕對路徑 *****
+                                    $('#moon' + i + '_img').attr('alt', '無資料').attr('src', 'https://moonphases.co.uk/images/moons/placeholder.png');
+                                    // ********************************
+                                    $('#moon' + i + '_illum_text').text('');
+                                    $('#moon' + i + '_sign_link').text('');
+                                }
+                            }
+                        }
+
+                        // 處理月曆更新邏輯 (如果 cal_month 元素存在) - 在此 DEMO 中不實現完整月曆功能
+                        resolve(data); // 成功時解析數據
+                    } else {
+                        const errorMessage = "從 API 獲取的數據格式不正確或沒有 'days' 數組。";
+                        console.error(errorMessage);
+                        $('#error_display').text(errorMessage);
+                        reject(new Error(errorMessage));
+                    }
+                })
+                .fail(function(jqXHR, textStatus, errorThrown) {
+                    const errorMessage = `獲取月亮資料失敗: ${textStatus}, ${errorThrown}. 請檢查網路連線或 API 服務。`;
+                    console.error(errorMessage, jqXHR);
+                    $('#error_display').text(errorMessage);
+                    reject(new Error(errorMessage)); // 失敗時拒絕 Promise
+                });
+            });
+        }
+
+        function setMoonTimes(theDate, riseDate, setDate) {
+            theDate = moment(theDate);
+            riseDate = moment(riseDate);
+            setDate = moment(setDate);
+
+            let strDate = moment().isSame(theDate, 'day') ? '今天' : theDate.format('MMM D日');
+
+            const strRiseTime = riseDate.format('HH') + '<span>:</span>' + riseDate.format('mm');
+            const strSetTime = setDate.format('HH') + '<span>:</span>' + setDate.format('mm');
+
+            $('#moon_rise_date_text').text(strDate);
+            $('#moon_rise_time').html(strRiseTime);
+            $('#moon_set_time').html(strSetTime);
+
+            $('#mini_moon_rise_time').html(strRiseTime);
+            $('#mini_moon_set_time').html(strSetTime);
+        }
+
+        function setMoonTilt(theTilt) {
+            $("#moon_phase img, #mini_moon_phase img, .moon_viewer img").css({
+                "-webkit-transform": "rotate(" + theTilt + "deg)",
+                "-moz-transform": "rotate(" + theTilt + "deg)",
+                "-ms-transform": "rotate(" + theTilt + "deg)",
+                "-o-transform": "rotate(" + theTilt + "deg)",
+                "transform": "rotate(" + theTilt + "deg)"
+            });
+        }
+
+        // 模態視窗和圖片放大功能 (保持原樣，需要 leanModal 插件才能完全工作，這裡簡化處理)
+        // 由於 leanModal.js 複雜，這裡用簡單的 jQuery 顯示/隱藏替代
+        // 如果您有 leanModal.js，可以替換回原來的 $('a[rel*=moon_launch]').leanModal(...)
+        $(document).on('click', 'a[rel*=moon_launch]', function(e){
+            e.preventDefault(); // 阻止連結預設行為
+            // ***** 圖片路徑修改為絕對路徑 *****
+            const imgSrc = 'https://moonphases.co.uk/images/moons/big/' + $(this).find("img").attr('src').split('/').pop();
+            // ********************************
+            $('#moon_img_big').attr('src', imgSrc);
+            $('.moon-viewer').fadeIn(); // 顯示模態視窗
+            $('.lean-modal-overlay').fadeIn(); // 顯示遮罩
+        });
+
+        $('#moon_view_close, .lean-modal-overlay').click(function(){
+            $('.moon-viewer').fadeOut(); // 隱藏模態視窗
+            $('.lean-modal-overlay').fadeOut(); // 隱藏遮罩
+        });
+
+
+        // 初始化函式，在文件載入完成後執行
+        $(document).ready(function() {
+            // 設定今天的日期作為預設值
+            const today = moment().format('YYYY-MM-DD');
+            $('#query_date').val(today);
+
+            // 嘗試從 cookie 載入經緯度和時區，如果沒有則使用預設值
+            const savedLat = simpleCookie.get('lat');
+            const savedLng = simpleCookie.get('lng');
+            const savedTz = simpleCookie.get('tz');
+
+            if (savedLat) $('#input_lat').val(savedLat);
+            if (savedLng) $('#input_lng').val(savedLng);
+            if (savedTz) $('#input_tz').val(savedTz);
+            else simpleCookie.set('tz', 'Asia/Taipei', 30); // 預設台灣時區
+
+            // 綁定按鈕點擊事件
+            $('#fetchMoonDataBtn').on('click', function() {
+                const dateToQuery = $('#query_date').val();
+                const latToQuery = parseFloat($('#input_lat').val());
+                const lngToQuery = parseFloat($('#input_lng').val());
+                const tzToQuery = $('#input_tz').val();
+
+                // 儲存最新的輸入值到 cookie
+                simpleCookie.set('lat', latToQuery, 30);
+                simpleCookie.set('lng', lngToQuery, 30);
+                simpleCookie.set('tz', tzToQuery, 30);
+
+                getMoon(dateToQuery, {
+                    lat: latToQuery,
+                    lng: lngToQuery,
+                    tz: tzToQuery
+                })
+                .then(data => {
+                    console.log("DEMO: 成功獲取並顯示月亮資料！", data);
+                    $('#error_display').text(''); // 清除錯誤訊息
+                })
+                .catch(error => {
+                    console.error("DEMO: 獲取月亮資料時發生錯誤：", error.message);
+                    $('#error_display').text('錯誤：' + error.message);
+                });
+            });
+
+            // 頁面載入時自動執行一次查詢
+            $('#fetchMoonDataBtn').click();
+        });
+    </script>
+    <div class="lean-modal-overlay"></div> </body>
+</html>
