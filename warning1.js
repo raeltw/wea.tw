@@ -70,26 +70,44 @@
                var ii;
                for (ii =warLocations.length- 1; ii >= 0; ii--) {
 /// move
-                     var _tmp1='';
+                     //var _tmp1='';
+                     //var jj;
+                     //for (jj =0; jj < warLocations[ii].hazardConditions.hazards.hazard[0].info.affectedAreas.location.length; jj++) {
+                     //   //sendmsg('api_dataw',  ' '+warLocations[ii].hazardConditions.hazards.hazard[0].info.affectedAreas.location[jj].locationName, 0);
+                     //   _tmp1=_tmp1+' '+warLocations[ii].hazardConditions.hazards.hazard[0].info.affectedAreas.location[jj].locationName;
+                     //}
+                     //// sendmsg('api_dataw',  _tmp1, 0);
+                     // 有可能沒有 hazards 資料段落 改寫如下
+
+                     var _tmp1 = '';
                      var jj;
-                     for (jj =0; jj < warLocations[ii].hazardConditions.hazards.hazard[0].info.affectedAreas.location.length; jj++) {
-                        //sendmsg('api_dataw',  ' '+warLocations[ii].hazardConditions.hazards.hazard[0].info.affectedAreas.location[jj].locationName, 0);
-                        _tmp1=_tmp1+' '+warLocations[ii].hazardConditions.hazards.hazard[0].info.affectedAreas.location[jj].locationName;
+                     // 安全地取得 affectedAreas.location 陣列
+                     const locationsArray = warLocations[ii]?.hazardConditions?.hazards?.hazard?.[0]?.info?.affectedAreas?.location;
+                     // 檢查 locationsArray 是否存在且是一個陣列
+                     if (Array.isArray(locationsArray)) {
+                       for (jj = 0; jj < locationsArray.length; jj++) {
+                         // 再次使用選用串連來安全地存取 locationName，以防陣列元素結構不完整
+                         _tmp1 = _tmp1 + ' ' + (locationsArray[jj]?.locationName || '');
+                       }
                      }
-                     // sendmsg('api_dataw',  _tmp1, 0);
+                     // 如果 locationsArray 不存在或不是陣列，_tmp1 會保持為空字串，符合你的需求                     
+                     //sendmsg('api_dataw',  _tmp1, 0);
+                     
                      var _tmp2='<span';
                      if ( _tmp1.includes("新北") || _tmp1.includes("臺北") || _tmp1.includes("台北") ) {
                         _tmp2=_tmp2+" style='color: #dd0;'";
                      }
-                     _tmp2=_tmp2+'>';
+                     //_tmp2=_tmp2+" title='"+_tmp1+"'>";
+                     _tmp2=_tmp2+"'>";
          
                      //sendmsg('api_dataw',  ' '+, 0);
+                     _tmp2=_tmp2+"<span title='"+_tmp1+"'>";
                      _tmp2=_tmp2+warLocations[ii].datasetInfo.datasetDescription;
                      //sendmsg('api_dataw',  ' '+, 0);
                      _tmp2=_tmp2+' '+warLocations[ii].datasetInfo.validTime.startTime.substring(8, 16);
                      //sendmsg('api_dataw',  , 1);
                      _tmp2=_tmp2+' - '+warLocations[ii].datasetInfo.validTime.endTime.substring(8, 16);
-                     _tmp2=_tmp2+'<br />';
+                     _tmp2=_tmp2+"</span><br />";
                      //sendmsg('api_dataw',  _tmp1, 0);
                      
                      //sendmsg('api_dataw',  ' '+, 1);

@@ -115,7 +115,8 @@
            //_today = '20250701';
 
            //20250710
-           sendmsg('moon_data0', "<img style='float:right; width: 160px;' src='https://www.cwa.gov.tw/Data/astronomy/moon/"+_today+".jpg'>", 0 );
+           sendmsg('moon_data0', "<img style='float: right; width: 160px;' src='https://www.cwa.gov.tw/Data/astronomy/moon/"+_today+".jpg'>", 0 );
+           //  title='Gemini 說這是月過中天的角度'
            // filter: sepia(50%) saturate(100%);
 
            //sendmsg('moon_data0', `月亮:`);

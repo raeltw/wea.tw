@@ -1,0 +1,634 @@
+﻿<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>月相傾斜角度動態模擬</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            background-color: black;
+            color: #eee; /* 預設文字顏色，維持 #eee */
+            padding-top: 5px;
+        }
+        div#simulationTitle {
+            text-align: center;
+            color: #eee;
+            margin: 0;
+            padding: 5px 0;
+        }
+        .simulation-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 4px; /* 維持縮小間距 */
+            padding: 5px;
+            background-color: transparent; /* 保持透明 */
+            min-height: auto;
+            align-items: flex-start;
+        }
+        .moon-frame {
+            border: 1px solid #222; /* 標準邊框顏色，不再強制 !important，讓 Dark Reader 處理 */
+            padding: 1px; /* 確保 padding 存在，讓邊框可見 */
+            background-color: transparent; /* 保持透明 */
+            text-align: center;
+            width: 140px; /* 調整框框寬度，讓圖片更大 */
+            height: 140px; /* 調整框框高度，讓圖片更大 */
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+        }
+        /* 移除月過中天提示框的邊框高亮樣式 */
+        /* .moon-frame.culmination-highlight {
+            border: 1px solid #888 !important; 
+        } */
+
+        .moon-image-wrapper {
+            width: 136px; /* 月亮圖片尺寸調整，配合外框減去邊框和 padding */
+            height: 136px; /* 月亮圖片尺寸調整，配合外框減去邊框和 padding */
+            overflow: hidden;
+            margin: 0 auto;
+            margin-bottom: 0px; /* 確保圖片下方沒有多餘間距 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .moon-image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transition: transform 0.2s ease-out;
+        }
+        .time-label {
+            color: #fff; /* 時間文字顏色，維持 #fff */
+            margin: 0;
+            padding-bottom: 2px;
+            font-size: 0.9em; /* 稍微縮小字體以節省空間 */
+        }
+        /* 新增的樣式：為過中天時間文字添加底線 */
+        .time-label.culmination-underline {
+            text-decoration: underline;
+            text-decoration-color: #888; /* 底線顏色 */
+        }
+
+        .info-message {
+            text-align: center;
+            color: #ccc; /* 訊息文字顏色，維持 #ccc */
+            padding: 0;
+            margin: 0;
+        }
+        .info-message.main-title {
+            margin-bottom: 5px;
+        }
+        .summary-info {
+            color: #eee;
+            text-align: center;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+        /* 移除所有手機響應式調整 */
+    </style>
+</head>
+<body>
+
+    <div id="simulationTitle">載入中，請稍候...</div>
+
+    <div class="simulation-container" id="moonSimulation">
+        </div>
+
+    <script>
+        function runMoonSimulation() {
+            const lat = 24.95;  // 新北市新店區北緯 24°57′
+            const lon = 121.533; // 新北市新店區東經 121°32′
+
+            const container = document.getElementById('moonSimulation');
+            const titleElement = document.getElementById('simulationTitle');
+            const now = new Date();
+
+            console.log("當前時間:", now.toLocaleString()); // 偵錯用：顯示當前時間
+
+            container.innerHTML = "<div class='info-message'>載入中，請稍候...</div>";
+
+            function getFormattedTime(date) {
+                if (!date) return 'N/A';
+                return date.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false });
+            }
+
+            function getFormattedDate(date) {
+                if (!date) return 'N/A';
+                // 只返回日期，例如 07/16 中的 '16'
+                return ('0' + date.getDate()).slice(-2);
+            }
+
+            // 修正後的 getDirectionAndDegree 函數
+            function getDirectionAndDegree(azimuth) {
+                // 1. 將 SunCalc 的方位角 (azimuth, 範圍 -PI 到 PI, 南方為 0) 轉換為度數
+                let deg_suncalc = azimuth * 180 / Math.PI;
+
+                // 2. 將 SunCalc 的角度 (南0, 西90, 北180/-180, 東-90) 轉換為羅盤標準 (北0, 東90, 南180, 西270)
+                // 邏輯: (deg_suncalc + 180 + 360) % 360
+                let compassDeg = (deg_suncalc + 180 + 360) % 360; 
+
+                let directionName = '';
+                if (compassDeg >= 337.5 || compassDeg < 22.5) directionName = '正北方';
+                else if (compassDeg >= 22.5 && compassDeg < 67.5) directionName = '東北方';
+                else if (compassDeg >= 67.5 && compassDeg < 112.5) directionName = '正東方';
+                else if (compassDeg >= 112.5 && compassDeg < 157.5) directionName = '東南方';
+                else if (compassDeg >= 157.5 && compassDeg < 202.5) directionName = '正南方';
+                else if (compassDeg >= 202.5 && compassDeg < 247.5) directionName = '西南方';
+                else if (compassDeg >= 247.5 && compassDeg < 292.5) directionName = '正西方';
+                else if (compassDeg >= 292.5 && compassDeg < 337.5) directionName = '西北方';
+                
+                return `${directionName} (${Math.round(compassDeg)}°)`; // 返回格式如 "正北方 (0°)"
+            }
+
+            // 新增：根據月出月落範圍內的最高仰角估計中天時間
+            function estimateMoonCulmination(riseTime, setTime, latitude, longitude) {
+                if (!riseTime || !setTime) return null;
+
+                let maxAltitude = -Infinity;
+                let culminationTime = null;
+
+                let currentTime = new Date(riseTime);
+                const interval = 5 * 60 * 1000; // 每 5 分鐘檢查一次，提高估計精度
+
+                while (currentTime.getTime() <= setTime.getTime()) {
+                    const moonPos = SunCalc.getMoonPosition(currentTime, latitude, longitude);
+                    if (moonPos.altitude > maxAltitude) {
+                        maxAltitude = moonPos.altitude;
+                        culminationTime = new Date(currentTime); // 記錄最高仰角的時間
+                    }
+                    currentTime = new Date(currentTime.getTime() + interval);
+                }
+                return culminationTime;
+            }
+
+
+            let potentialPeriods = [];
+            // 擴大搜尋範圍，例如從前 3 天到後 4 天，以確保能找到當前或最近的週期
+            for (let i = -3; i <= 4; i++) { 
+                const checkDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i, 12, 0, 0);
+                try {
+                    const times = SunCalc.getMoonTimes(checkDate, lat, lon);
+
+                    // 偵錯用：輸出 SunCalc 計算的月亮時間
+                    console.log(`--- ${getFormattedDate(checkDate)} (基準日) 的 SunCalc 月亮時間 ---`);
+                    console.log(`Rise: ${times.rise ? times.rise.toLocaleString() : 'N/A'}`);
+                    console.log(`Set: ${times.set ? times.set.toLocaleString() : 'N/A'}`);
+                    console.log(`Culminate: ${times.culminate ? times.culminate.toLocaleString() : 'N/A'}`);
+                    console.log(`Always Up: ${times.alwaysUp}`);
+                    console.log(`Always Down: ${times.alwaysDown}`);
+
+
+                    // 收集可能的月亮週期
+                    const addPeriod = (rise, set, imageDate, sunCalcCulmination) => {
+                        if (rise && set && rise.getTime() < set.getTime()) {
+                            let finalCulmination = sunCalcCulmination;
+                            let isEstimated = false;
+
+                            // 優先使用 SunCalc 的 culmination，如果沒有，再進行估計
+                            if (!finalCulmination) {
+                                finalCulmination = estimateMoonCulmination(rise, set, lat, lon);
+                                if (finalCulmination) {
+                                    isEstimated = true;
+                                    console.log(`  為週期 ${getFormattedDate(rise)} ${getFormattedTime(rise)} - ${getFormattedDate(set)} ${getFormattedTime(set)} 估計中天時間為: ${finalCulmination.toLocaleString()}`);
+                                } else {
+                                    console.log(`  無法為週期 ${getFormattedDate(rise)} ${getFormattedTime(rise)} - ${getFormattedDate(set)} ${getFormattedTime(set)} 估計中天時間。`);
+                                }
+                            }
+                            potentialPeriods.push({
+                                type: 'normal',
+                                rise: rise,
+                                set: set,
+                                imageDate: imageDate,
+                                moonCulmination: finalCulmination,
+                                isEstimatedCulmination: isEstimated // 標記是否為估計時間
+                            });
+                        }
+                    };
+
+                    // 處理 alwaysUp 和 alwaysDown 的情況
+                    if (times.alwaysUp) {
+                         potentialPeriods.push({
+                            type: 'alwaysUp',
+                            date: new Date(checkDate),
+                            // 如果 alwaysUp, 月亮一直在天上, 找個當天最高點作為中天
+                            moonCulmination: SunCalc.getMoonPosition(checkDate, lat, lon).altitude > 0 ? checkDate : null, 
+                            isEstimatedCulmination: true 
+                         });
+                         console.log(`  月亮整日可見於 ${getFormattedDate(checkDate)}`);
+                         continue; 
+                    }
+                    if (times.alwaysDown) {
+                         potentialPeriods.push({
+                            type: 'alwaysDown',
+                            date: new Date(checkDate),
+                         });
+                         console.log(`  月亮整日不可見於 ${getFormattedDate(checkDate)}`);
+                         continue; 
+                    }
+
+                    // 檢查當天是否有完整的月亮週期 (月升到月落都在同一天)
+                    addPeriod(times.rise, times.set, new Date(checkDate), times.culminate);
+
+                    // 檢查月出在前一天，月落在當天
+                    // 為了避免重複添加，只在 checkDate 是當前時間或之後時才檢查 prevDayTimes
+                    const prevDay = new Date(checkDate.getFullYear(), checkDate.getMonth(), checkDate.getDate() - 1, 12, 0, 0);
+                    const prevDayTimes = SunCalc.getMoonTimes(prevDay, lat, lon);
+                    // 確保 prevDayTimes.rise 存在，且落在前一天，而 times.set 落在 checkDate 當天
+                    if (prevDayTimes.rise && times.set && prevDayTimes.rise.getTime() < times.set.getTime() && 
+                        prevDayTimes.rise.getDate() === prevDay.getDate() && times.set.getDate() === checkDate.getDate()) {
+                        addPeriod(prevDayTimes.rise, times.set, new Date(prevDay), prevDayTimes.culminate);
+                    }
+                    
+                    // 檢查月出在當天，月落在後一天
+                    // 為了避免重複添加，只在 checkDate 是當前時間或之後時才檢查 nextDayTimes
+                    const nextDay = new Date(checkDate.getFullYear(), checkDate.getMonth(), checkDate.getDate() + 1, 12, 0, 0);
+                    const nextDayTimes = SunCalc.getMoonTimes(nextDay, lat, lon);
+                    // 確保 times.rise 存在，且落在 checkDate 當天，而 nextDayTimes.set 落在後一天
+                    if (times.rise && nextDayTimes.set && times.rise.getTime() < nextDayTimes.set.getTime() && 
+                        times.rise.getDate() === checkDate.getDate() && nextDayTimes.set.getDate() === nextDay.getDate()) {
+                        addPeriod(times.rise, nextDayTimes.set, new Date(checkDate), times.culminate);
+                    }
+
+                } catch (e) {
+                    console.error(`計算 ${getFormattedDate(checkDate)} 的月亮時間時發生錯誤:`, e);
+                }
+            }
+
+            const uniquePeriods = [];
+            const seenPeriods = new Set();
+            for (const period of potentialPeriods) {
+                // 對於 normal 類型，使用 rise 和 set 時間作為唯一 ID
+                // 對於 alwaysUp/Down 類型，使用日期作為唯一 ID
+                const id = period.type === 'normal' ? 
+                           `${period.rise.getTime()}_${period.set.getTime()}` :
+                           `${period.type}_${period.date.toDateString()}`;
+                if (!seenPeriods.has(id)) {
+                    uniquePeriods.push(period);
+                    seenPeriods.add(id);
+                }
+            }
+            // 排序：normal 類型按 rise 時間，alwaysUp/Down 類型按日期
+            uniquePeriods.sort((a, b) => {
+                const timeA = a.type === 'normal' ? a.rise.getTime() : a.date.getTime();
+                const timeB = b.type === 'normal' ? b.rise.getTime() : b.date.getTime();
+                return timeA - timeB;
+            });
+
+            potentialPeriods = uniquePeriods;
+
+            console.log("計算出的不重複月亮週期 (排序後):", potentialPeriods.map(p => {
+                if (p.type === 'normal') {
+                    return {
+                        type: 'normal',
+                        rise: p.rise.toLocaleString(),
+                        set: p.set.toLocaleString(),
+                        culminate: p.moonCulmination ? p.moonCulmination.toLocaleString() : 'N/A',
+                        isEstimated: p.isEstimatedCulmination,
+                        imageDate: p.imageDate.toLocaleDateString()
+                    };
+                } else {
+                    return {
+                        type: p.type,
+                        date: p.date.toLocaleDateString(),
+                        info: p.type === 'alwaysUp' ? '月亮整日可見' : '月亮整日不可見'
+                    };
+                }
+            }));
+
+
+            let currentPeriod = null;
+            let nextPeriod = null;
+
+            // 尋找當前週期
+            for (const period of potentialPeriods) {
+                if (period.type === 'normal' && now.getTime() >= period.rise.getTime() && now.getTime() < period.set.getTime()) {
+                    currentPeriod = period;
+                    break;
+                }
+                // 如果是 alwaysUp 且當前日期是該 alwaysUp 週期涵蓋的日期
+                // 注意: 這裡的 currentPeriod 判斷是基於 "當前時刻是否在某週期內"
+                // 對於 alwaysUp, 只要當天是 alwaysUp 的日期, 就認為是 currentPeriod
+                if (period.type === 'alwaysUp' && 
+                    now.getFullYear() === period.date.getFullYear() &&
+                    now.getMonth() === period.date.getMonth() &&
+                    now.getDate() === period.date.getDate()) {
+                    currentPeriod = period;
+                    break;
+                }
+            }
+            
+            // 如果沒有當前週期，則尋找最近的下一個週期
+            if (!currentPeriod) {
+                for (const period of potentialPeriods) {
+                    // 對於 normal 類型，如果 rise 時間在當前時間之後，則為下一個週期
+                    if (period.type === 'normal' && period.rise.getTime() > now.getTime()) {
+                        nextPeriod = period;
+                        break;
+                    }
+                    // 對於 alwaysUp/Down 類型，如果日期在當前日期之後，且是最近的，則為下一個特殊週期
+                    // 這裡需要確保只找到第一個 (最近的) alwaysUp/Down
+                    if (period.type !== 'normal' && period.date.getTime() >= now.getTime()) { // >= now.getTime() 為了捕獲今天的 alwaysUp/Down
+                        nextPeriod = period;
+                        break; 
+                    }
+                }
+            }
+
+
+            if (currentPeriod) {
+                if (currentPeriod.type === 'normal') {
+                    const { rise, set, imageDate, moonCulmination, isEstimatedCulmination } = currentPeriod;
+                    titleElement.innerHTML = `<div class="info-message main-title">本次月亮週期：</div>`;
+
+                    // 獲取月出、月落、月過中天的方位和度數
+                    const risePos = SunCalc.getMoonPosition(rise, lat, lon);
+                    const setPos = SunCalc.getMoonPosition(set, lat, lon);
+                    const culminationPos = moonCulmination ? SunCalc.getMoonPosition(moonCulmination, lat, lon) : null;
+
+                    // 精簡顯示月出、月落、月過中天資訊
+                    let summaryInfo = `月出 ${getFormattedDate(rise)} ${getFormattedTime(rise)} ${getDirectionAndDegree(risePos.azimuth)}`;
+
+                    if (moonCulmination) {
+                        summaryInfo += ` | 過中天 ${getFormattedDate(moonCulmination)} ${getFormattedTime(moonCulmination)}${isEstimatedCulmination ? ' (預估)' : ''} ${getDirectionAndDegree(culminationPos.azimuth)}`;
+                    } else {
+                        summaryInfo += ` | 過中天 此週期無中天資訊`;
+                    }
+
+                    summaryInfo += ` | 月落 ${getFormattedDate(set)} ${getFormattedTime(set)} ${getDirectionAndDegree(setPos.azimuth)}`;
+
+
+                    container.innerHTML = `<div class='summary-info'>${summaryInfo}</div>`;
+                    
+                    const moonImageUrl = `https://www.cwa.gov.tw/Data/astronomy/moon/${getCwaDateString(imageDate)}.jpg`;
+
+                    let currentTime = new Date(rise);
+                    const imagesContainer = document.createElement('div');
+                    imagesContainer.style.display = 'flex';
+                    imagesContainer.style.flexWrap = 'wrap';
+                    imagesContainer.style.justifyContent = 'center';
+                    imagesContainer.style.gap = '4px'; /* 縮小間距 */
+                    imagesContainer.style.padding = '0 5px';
+                    container.appendChild(imagesContainer);
+
+                    // 調整月過中天前後的高亮範圍為 15 分鐘（即月過中天點，以及前後各一張圖片）
+                    const highlightRangeMs = 15 * 60 * 1000; // 15分鐘
+
+                    while (currentTime <= set) {
+                        const moonPos = SunCalc.getMoonPosition(currentTime, lat, lon);
+                        const rotationDeg = moonPos.parallacticAngle * 180 / Math.PI;
+
+                        const frame = document.createElement('div');
+                        frame.className = 'moon-frame';
+
+                        const displayDay = ('0' + currentTime.getDate()).slice(-2);
+                        const displayTime = ('0' + currentTime.getHours()).slice(-2) + ':' +
+                                            ('0' + currentTime.getMinutes()).slice(-2);
+
+                        const timeLabelDiv = document.createElement('div');
+                        timeLabelDiv.className = 'time-label';
+                        timeLabelDiv.textContent = `${displayDay} ${displayTime}`;
+
+                        // 判斷是否為月過中天前後的文字底線
+                        if (moonCulmination) {
+                            const diffMs = Math.abs(currentTime.getTime() - moonCulmination.getTime());
+                            if (diffMs <= highlightRangeMs) {
+                                timeLabelDiv.classList.add('culmination-underline'); // 添加底線 class
+                            }
+                        }
+
+                        frame.innerHTML = `
+                            <div class="moon-image-wrapper">
+                                <img src="${moonImageUrl}" alt="月相 ${displayDay} ${displayTime}" style="transform: rotate(${rotationDeg}deg);">
+                            </div>
+                        `;
+                        frame.appendChild(timeLabelDiv); // 將時間標籤添加到 frame
+                        imagesContainer.appendChild(frame);
+
+                        // 偵錯用：輸出每個框的時間和是否被高亮
+                        console.log(`時間: ${currentTime.toLocaleString()}, 角度: ${rotationDeg.toFixed(2)}°, 是否底線: ${timeLabelDiv.classList.contains('culmination-underline')}, ClassList: ${frame.classList.value}`);
+                        if (moonCulmination) {
+                             console.log(`   與中天時間 (${moonCulmination.toLocaleString()}) 差距: ${Math.abs(currentTime.getTime() - moonCulmination.getTime()) / 1000 / 60} 分鐘`);
+                        }
+
+                        currentTime.setMinutes(currentTime.getMinutes() + 15);
+                        if (currentTime.getTime() > set.getTime() + (5 * 60 * 1000)) { // 稍微超出一點，確保最後一張圖也顯示
+                            break;
+                        }
+                    }
+                } else if (currentPeriod.type === 'alwaysUp') {
+                     titleElement.innerHTML = `<div class="info-message main-title">月亮在 ${getFormattedDate(currentPeriod.date)} 幾乎整日可見。</div>`;
+                     let culminationInfo = '';
+                     if (currentPeriod.moonCulmination) {
+                        const culminationPos = SunCalc.getMoonPosition(currentPeriod.moonCulmination, lat, lon);
+                        culminationInfo = ` | 預估中天 ${getFormattedDate(currentPeriod.moonCulmination)} ${getFormattedTime(currentPeriod.moonCulmination)} (預估) ${getDirectionAndDegree(culminationPos.azimuth)}`;
+                     }
+                     container.innerHTML = `<div class='summary-info'>月亮在 ${getFormattedDate(currentPeriod.date)} 整日可見${culminationInfo}</div>`;
+
+                     // 如果月亮一直可見，我們仍然可以模擬一整天
+                     const moonImageUrl = `https://www.cwa.gov.tw/Data/astronomy/moon/${getCwaDateString(currentPeriod.date)}.jpg`;
+                     let currentTime = new Date(currentPeriod.date.getFullYear(), currentPeriod.date.getMonth(), currentPeriod.date.getDate(), 0, 0, 0); // 從午夜開始
+                     const endDate = new Date(currentTime.getFullYear(), currentTime.getMonth(), currentTime.getDate(), 23, 59, 59);
+
+                     const imagesContainer = document.createElement('div');
+                     imagesContainer.style.display = 'flex';
+                     imagesContainer.style.flexWrap = 'wrap';
+                     imagesContainer.style.justifyContent = 'center';
+                     imagesContainer.style.gap = '4px';
+                     imagesContainer.style.padding = '0 5px';
+                     container.appendChild(imagesContainer);
+
+                     const highlightRangeMs = 15 * 60 * 1000;
+
+                     while (currentTime <= endDate) {
+                         const moonPos = SunCalc.getMoonPosition(currentTime, lat, lon);
+                         const rotationDeg = moonPos.parallacticAngle * 180 / Math.PI;
+
+                         const frame = document.createElement('div');
+                         frame.className = 'moon-frame';
+
+                         const displayDay = ('0' + currentTime.getDate()).slice(-2);
+                         const displayTime = ('0' + currentTime.getHours()).slice(-2) + ':' +
+                                             ('0' + currentTime.getMinutes()).slice(-2);
+
+                        const timeLabelDiv = document.createElement('div');
+                        timeLabelDiv.className = 'time-label';
+                        timeLabelDiv.textContent = `${displayDay} ${displayTime}`;
+
+                         if (currentPeriod.moonCulmination) {
+                            const diffMs = Math.abs(currentTime.getTime() - currentPeriod.moonCulmination.getTime());
+                            if (diffMs <= highlightRangeMs) {
+                                timeLabelDiv.classList.add('culmination-underline');
+                            }
+                         }
+
+                         frame.innerHTML = `
+                             <div class="moon-image-wrapper">
+                                 <img src="${moonImageUrl}" alt="月相 ${displayDay} ${displayTime}" style="transform: rotate(${rotationDeg}deg);">
+                             </div>
+                         `;
+                         frame.appendChild(timeLabelDiv);
+                         imagesContainer.appendChild(frame);
+                         currentTime.setMinutes(currentTime.getMinutes() + 60); // 這裡可以改為每小時一張圖，避免圖片過多
+                     }
+
+                } else if (currentPeriod.type === 'alwaysDown') {
+                    titleElement.innerHTML = `<div class="info-message main-title">月亮在 ${getFormattedDate(currentPeriod.date)} 整日不可見。</div>`;
+                    container.innerHTML = `<div class='summary-info'>月亮在 ${getFormattedDate(currentPeriod.date)} 整日不可見。</div>`;
+                }
+
+            } else if (nextPeriod) {
+                // ****** 以下是修改的部分，用於在 nextPeriod 時也繪製圖片 ******
+                if (nextPeriod.type === 'normal') {
+                    const { rise, set, imageDate, moonCulmination, isEstimatedCulmination } = nextPeriod;
+                    titleElement.innerHTML = `<div class="info-message main-title">目前沒有月亮可見，下次月亮週期預告：</div>`;
+
+                    const risePos = SunCalc.getMoonPosition(rise, lat, lon);
+                    const setPos = SunCalc.getMoonPosition(set, lat, lon);
+                    const culminationPos = moonCulmination ? SunCalc.getMoonPosition(moonCulmination, lat, lon) : null;
+
+                    let summaryInfo = `月出 ${getFormattedDate(rise)} ${getFormattedTime(rise)} ${getDirectionAndDegree(risePos.azimuth)}`;
+
+                    if (moonCulmination) {
+                        summaryInfo += ` | 過中天 ${getFormattedDate(moonCulmination)} ${getFormattedTime(moonCulmination)}${isEstimatedCulmination ? ' (預估)' : ''} ${getDirectionAndDegree(culminationPos.azimuth)}`;
+                    } else {
+                        summaryInfo += ` | 過中天 此週期無中天資訊`;
+                    }
+
+                    summaryInfo += ` | 月落 ${getFormattedDate(set)} ${getFormattedTime(set)} ${getDirectionAndDegree(setPos.azimuth)}`;
+
+                    container.innerHTML = `<div class='summary-info'>${summaryInfo}</div>`;
+
+                    const moonImageUrl = `https://www.cwa.gov.tw/Data/astronomy/moon/${getCwaDateString(imageDate)}.jpg`;
+
+                    let currentTime = new Date(rise); // 從下個週期的月出時間開始模擬
+                    const imagesContainer = document.createElement('div');
+                    imagesContainer.style.display = 'flex';
+                    imagesContainer.style.flexWrap = 'wrap';
+                    imagesContainer.style.justifyContent = 'center';
+                    imagesContainer.style.gap = '4px';
+                    imagesContainer.style.padding = '0 5px';
+                    container.appendChild(imagesContainer);
+
+                    const highlightRangeMs = 15 * 60 * 1000;
+
+                    while (currentTime <= set) {
+                        const moonPos = SunCalc.getMoonPosition(currentTime, lat, lon);
+                        const rotationDeg = moonPos.parallacticAngle * 180 / Math.PI;
+
+                        const frame = document.createElement('div');
+                        frame.className = 'moon-frame';
+
+                        const displayDay = ('0' + currentTime.getDate()).slice(-2);
+                        const displayTime = ('0' + currentTime.getHours()).slice(-2) + ':' +
+                                            ('0' + currentTime.getMinutes()).slice(-2);
+
+                        const timeLabelDiv = document.createElement('div');
+                        timeLabelDiv.className = 'time-label';
+                        timeLabelDiv.textContent = `${displayDay} ${displayTime}`;
+
+                        if (moonCulmination) {
+                            const diffMs = Math.abs(currentTime.getTime() - moonCulmination.getTime());
+                            if (diffMs <= highlightRangeMs) {
+                                timeLabelDiv.classList.add('culmination-underline'); // 添加底線 class
+                            }
+                        }
+
+                        frame.innerHTML = `
+                            <div class="moon-image-wrapper">
+                                <img src="${moonImageUrl}" alt="月相 ${displayDay} ${displayTime}" style="transform: rotate(${rotationDeg}deg);">
+                            </div>
+                        `;
+                        frame.appendChild(timeLabelDiv); // 將時間標籤添加到 frame
+                        imagesContainer.appendChild(frame);
+
+                        currentTime.setMinutes(currentTime.getMinutes() + 15);
+                        if (currentTime.getTime() > set.getTime() + (5 * 60 * 1000)) {
+                            break;
+                        }
+                    }
+
+                } else if (nextPeriod.type === 'alwaysUp') {
+                    titleElement.innerHTML = `<div class="info-message main-title">目前沒有月亮可見，下次預計在 ${getFormattedDate(nextPeriod.date)} 月亮整日可見。</div>`;
+                    let culminationInfo = '';
+                    if (nextPeriod.moonCulmination) {
+                        const culminationPos = SunCalc.getMoonPosition(nextPeriod.moonCulmination, lat, lon);
+                        culminationInfo = ` (預估中天 ${getFormattedDate(nextPeriod.moonCulmination)} ${getFormattedTime(nextPeriod.moonCulmination)} ${getDirectionAndDegree(culminationPos.azimuth)})`;
+                    }
+                    container.innerHTML = `<div classt='summary-info'>月亮在 ${getFormattedDate(nextPeriod.date)} 整日可見${culminationInfo}</div>`;
+
+                    // 如果月亮一直可見，我們仍然可以模擬一整天
+                    const moonImageUrl = `https://www.cwa.gov.tw/Data/astronomy/moon/${getCwaDateString(nextPeriod.date)}.jpg`;
+                    let currentTime = new Date(nextPeriod.date.getFullYear(), nextPeriod.date.getMonth(), nextPeriod.date.getDate(), 0, 0, 0); // 從下個整日可見週期的午夜開始
+                    const endDate = new Date(currentTime.getFullYear(), currentTime.getMonth(), currentTime.getDate(), 23, 59, 59);
+
+                    const imagesContainer = document.createElement('div');
+                    imagesContainer.style.display = 'flex';
+                    imagesContainer.style.flexWrap = 'wrap';
+                    imagesContainer.style.justifyContent = 'center';
+                    imagesContainer.style.gap = '4px';
+                    imagesContainer.style.padding = '0 5px';
+                    container.appendChild(imagesContainer);
+
+                    const highlightRangeMs = 15 * 60 * 1000;
+
+                    while (currentTime <= endDate) {
+                        const moonPos = SunCalc.getMoonPosition(currentTime, lat, lon);
+                        const rotationDeg = moonPos.parallacticAngle * 180 / Math.PI;
+
+                        const frame = document.createElement('div');
+                        frame.className = 'moon-frame';
+
+                        const displayDay = ('0' + currentTime.getDate()).slice(-2);
+                        const displayTime = ('0' + currentTime.getHours()).slice(-2) + ':' +
+                                            ('0' + currentTime.getMinutes()).slice(-2);
+
+                        const timeLabelDiv = document.createElement('div');
+                        timeLabelDiv.className = 'time-label';
+                        timeLabelDiv.textContent = `${displayDay} ${displayTime}`;
+
+                        if (nextPeriod.moonCulmination) {
+                            const diffMs = Math.abs(currentTime.getTime() - nextPeriod.moonCulmination.getTime());
+                            if (diffMs <= highlightRangeMs) {
+                                timeLabelDiv.classList.add('culmination-underline');
+                            }
+                        }
+
+                        frame.innerHTML = `
+                            <div class="moon-image-wrapper">
+                                <img src="${moonImageUrl}" alt="月相 ${displayDay} ${displayTime}" style="transform: rotate(${rotationDeg}deg);">
+                            </div>
+                        `;
+                        frame.appendChild(timeLabelDiv);
+                        imagesContainer.appendChild(frame);
+                        currentTime.setMinutes(currentTime.getMinutes() + 60); 
+                    }
+
+
+                } else if (nextPeriod.type === 'alwaysDown') {
+                    titleElement.innerHTML = `<div class="info-message main-title">目前沒有月亮可見，預計在 ${getFormattedDate(nextPeriod.date)} 月亮整日不可見。</div>`;
+                    container.innerHTML = `<div class='summary-info'>月亮在 ${getFormattedDate(nextPeriod.date)} 整日不可見。</div>`;
+                }
+
+            } else {
+                titleElement.innerHTML = `<div class="info-message main-title">月相傾斜角度動態模擬</div>`;
+                container.innerHTML = "<div class='info-message'>抱歉，無法找到任何可見的月亮週期資訊。請檢查經緯度或網路連線。</div>";
+            }
+        }
+
+        const getCwaDateString = (date) => {
+            const year = date.getFullYear();
+            const month = ('0' + (date.getMonth() + 1)).slice(-2);
+            const day = ('0' + date.getDate()).slice(-2);
+            return `${year}${month}${day}`;
+        };
+
+        window.onload = runMoonSimulation;
+    </script>
+
+</body>
+</html>

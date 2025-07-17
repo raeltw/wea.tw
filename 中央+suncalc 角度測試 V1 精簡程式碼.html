@@ -1,0 +1,376 @@
+﻿<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>月相傾斜角度動態模擬</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            background-color: black;
+            color: #eee;
+            padding-top: 5px;
+        }
+        div#simulationTitle {
+            text-align: center;
+            color: #eee;
+            margin: 0;
+            padding: 5px 0;
+        }
+        .simulation-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 4px;
+            padding: 5px;
+            background-color: transparent;
+            min-height: auto;
+            align-items: flex-start;
+        }
+        .moon-frame {
+            border: 1px solid #222;
+            padding: 1px;
+            background-color: transparent;
+            text-align: center;
+            width: 140px;
+            height: 140px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .moon-image-wrapper {
+            width: 136px;
+            height: 136px;
+            overflow: hidden;
+            margin: 0 auto;
+            margin-bottom: 0px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .moon-image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transition: transform 0.2s ease-out;
+        }
+        .time-label {
+            color: #fff;
+            margin: 0;
+            padding-bottom: 2px;
+            font-size: 0.9em;
+        }
+        .time-label.culmination-underline {
+            text-decoration: underline;
+            text-decoration-color: #888;
+        }
+        .info-message {
+            text-align: center;
+            color: #ccc;
+            padding: 0;
+            margin: 0;
+        }
+        .info-message.main-title {
+            margin-bottom: 5px;
+        }
+        .summary-info {
+            color: #eee;
+            text-align: center;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="simulationTitle">載入中，請稍候...</div>
+
+    <div class="simulation-container" id="moonSimulation">
+        </div>
+
+    <script>
+        const LAT = 24.95;  // 新北市新店區北緯 24°57′
+        const LON = 121.533; // 新北市新店區東經 121°32′
+        const HIGHLIGHT_RANGE_MS = 15 * 60 * 1000; // 過中天前後 15 分鐘高亮
+
+        function getFormattedTime(date) {
+            return date ? date.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false }) : 'N/A';
+        }
+
+        function getFormattedDate(date) {
+            return date ? ('0' + date.getDate()).slice(-2) : 'N/A';
+        }
+
+        function getCwaDateString(date) {
+            const year = date.getFullYear();
+            const month = ('0' + (date.getMonth() + 1)).slice(-2);
+            const day = ('0' + date.getDate()).slice(-2);
+            return `${year}${month}${day}`;
+        }
+
+        // 輔助函數：將 SunCalc 方位角轉換為羅盤方向
+        function getDirectionAndDegree(azimuth) {
+            let compassDeg = (azimuth * 180 / Math.PI + 180 + 360) % 360;
+            let directionName = '';
+            if (compassDeg >= 337.5 || compassDeg < 22.5) directionName = '正北方';
+            else if (compassDeg >= 22.5 && compassDeg < 67.5) directionName = '東北方';
+            else if (compassDeg >= 67.5 && compassDeg < 112.5) directionName = '正東方';
+            else if (compassDeg >= 112.5 && compassDeg < 157.5) directionName = '東南方';
+            else if (compassDeg >= 157.5 && compassDeg < 202.5) directionName = '正南方';
+            else if (compassDeg >= 202.5 && compassDeg < 247.5) directionName = '西南方';
+            else if (compassDeg >= 247.5 && compassDeg < 292.5) directionName = '正西方';
+            else if (compassDeg >= 292.5 && compassDeg < 337.5) directionName = '西北方';
+            return `${directionName} (${Math.round(compassDeg)}°)`;
+        }
+
+        // 輔助函數：估計月過中天時間
+        function estimateMoonCulmination(riseTime, setTime) {
+            if (!riseTime || !setTime) return null;
+            let maxAltitude = -Infinity;
+            let culminationTime = null;
+            let currentTime = new Date(riseTime);
+            const interval = 5 * 60 * 1000;
+            while (currentTime.getTime() <= setTime.getTime()) {
+                const moonPos = SunCalc.getMoonPosition(currentTime, LAT, LON);
+                if (moonPos.altitude > maxAltitude) {
+                    maxAltitude = moonPos.altitude;
+                    culminationTime = new Date(currentTime);
+                }
+                currentTime.setTime(currentTime.getTime() + interval);
+            }
+            return culminationTime;
+        }
+
+        // 核心繪圖函數：精簡化重複邏輯
+        function renderMoonFrames(containerElement, period) {
+            const moonImageUrl = `https://www.cwa.gov.tw/Data/astronomy/moon/${getCwaDateString(period.imageDate || period.date)}.jpg`;
+            const imagesContainer = document.createElement('div');
+            imagesContainer.style.display = 'flex';
+            imagesContainer.style.flexWrap = 'wrap';
+            imagesContainer.style.justifyContent = 'center';
+            imagesContainer.style.gap = '4px';
+            imagesContainer.style.padding = '0 5px';
+            containerElement.appendChild(imagesContainer);
+
+            let currentTime;
+            let endTime;
+            let timeStep;
+
+            if (period.type === 'normal') {
+                currentTime = new Date(period.rise);
+                endTime = new Date(period.set);
+                timeStep = 15; // 分鐘
+            } else if (period.type === 'alwaysUp') {
+                currentTime = new Date(period.date.getFullYear(), period.date.getMonth(), period.date.getDate(), 0, 0, 0);
+                endTime = new Date(currentTime.getFullYear(), currentTime.getMonth(), currentTime.getDate(), 23, 59, 59);
+                timeStep = 60; // 每小時，避免 alwaysUp 產生過多圖片
+            } else {
+                return; // alwaysDown 或其他情況不繪圖
+            }
+
+            while (currentTime.getTime() <= endTime.getTime()) {
+                const moonPos = SunCalc.getMoonPosition(currentTime, LAT, LON);
+                const rotationDeg = moonPos.parallacticAngle * 180 / Math.PI;
+
+                const frame = document.createElement('div');
+                frame.className = 'moon-frame';
+
+                const displayDay = ('0' + currentTime.getDate()).slice(-2);
+                const displayTime = ('0' + currentTime.getHours()).slice(-2) + ':' +
+                                    ('0' + currentTime.getMinutes()).slice(-2);
+
+                const timeLabelDiv = document.createElement('div');
+                timeLabelDiv.className = 'time-label';
+                timeLabelDiv.textContent = `${displayDay} ${displayTime}`;
+
+                if (period.moonCulmination) {
+                    const diffMs = Math.abs(currentTime.getTime() - period.moonCulmination.getTime());
+                    if (diffMs <= HIGHLIGHT_RANGE_MS) {
+                        timeLabelDiv.classList.add('culmination-underline');
+                    }
+                }
+
+                frame.innerHTML = `
+                    <div class="moon-image-wrapper">
+                        <img src="${moonImageUrl}" alt="月相 ${displayDay} ${displayTime}" style="transform: rotate(${rotationDeg}deg);">
+                    </div>
+                `;
+                frame.appendChild(timeLabelDiv);
+                imagesContainer.appendChild(frame);
+
+                currentTime.setMinutes(currentTime.getMinutes() + timeStep);
+                // 為了避免因浮點數導致的無限迴圈或提早結束，稍微放寬結束條件
+                if (currentTime.getTime() > endTime.getTime() + (timeStep * 60 * 1000 * 0.5)) { 
+                    break;
+                }
+            }
+        }
+
+        // 主運行函數
+        function runMoonSimulation() {
+            const container = document.getElementById('moonSimulation');
+            const titleElement = document.getElementById('simulationTitle');
+            const now = new Date();
+
+            container.innerHTML = "<div class='info-message'>載入中，請稍候...</div>";
+
+            let potentialPeriods = [];
+            for (let i = -3; i <= 4; i++) {
+                const checkDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i, 12, 0, 0);
+                const times = SunCalc.getMoonTimes(checkDate, LAT, LON);
+
+                const addPeriod = (rise, set, imageDate, sunCalcCulmination) => {
+                    if (rise && set && rise.getTime() < set.getTime()) {
+                        let finalCulmination = sunCalcCulmination;
+                        let isEstimated = false;
+                        if (!finalCulmination) {
+                            finalCulmination = estimateMoonCulmination(rise, set);
+                            if (finalCulmination) isEstimated = true;
+                        }
+                        potentialPeriods.push({
+                            type: 'normal',
+                            rise: rise,
+                            set: set,
+                            imageDate: imageDate,
+                            moonCulmination: finalCulmination,
+                            isEstimatedCulmination: isEstimated
+                        });
+                    }
+                };
+
+                if (times.alwaysUp) {
+                    potentialPeriods.push({
+                        type: 'alwaysUp',
+                        date: new Date(checkDate),
+                        moonCulmination: SunCalc.getMoonPosition(checkDate, LAT, LON).altitude > 0 ? checkDate : null,
+                        isEstimatedCulmination: true
+                    });
+                    continue;
+                }
+                if (times.alwaysDown) {
+                    potentialPeriods.push({
+                        type: 'alwaysDown',
+                        date: new Date(checkDate),
+                    });
+                    continue;
+                }
+
+                addPeriod(times.rise, times.set, new Date(checkDate), times.culminate);
+
+                const prevDay = new Date(checkDate.getFullYear(), checkDate.getMonth(), checkDate.getDate() - 1, 12, 0, 0);
+                const prevDayTimes = SunCalc.getMoonTimes(prevDay, LAT, LON);
+                if (prevDayTimes.rise && times.set && prevDayTimes.rise.getTime() < times.set.getTime() &&
+                    prevDayTimes.rise.getDate() === prevDay.getDate() && times.set.getDate() === checkDate.getDate()) {
+                    addPeriod(prevDayTimes.rise, times.set, new Date(prevDay), prevDayTimes.culminate);
+                }
+
+                const nextDay = new Date(checkDate.getFullYear(), checkDate.getMonth(), checkDate.getDate() + 1, 12, 0, 0);
+                const nextDayTimes = SunCalc.getMoonTimes(nextDay, LAT, LON);
+                if (times.rise && nextDayTimes.set && times.rise.getTime() < nextDayTimes.set.getTime() &&
+                    times.rise.getDate() === checkDate.getDate() && nextDayTimes.set.getDate() === nextDay.getDate()) {
+                    addPeriod(times.rise, nextDayTimes.set, new Date(checkDate), times.culminate);
+                }
+            }
+
+            const uniquePeriods = [];
+            const seenPeriods = new Set();
+            for (const period of potentialPeriods) {
+                const id = period.type === 'normal' ?
+                           `${period.rise.getTime()}_${period.set.getTime()}` :
+                           `${period.type}_${period.date.toDateString()}`;
+                if (!seenPeriods.has(id)) {
+                    uniquePeriods.push(period);
+                    seenPeriods.add(id);
+                }
+            }
+            uniquePeriods.sort((a, b) => {
+                const timeA = a.type === 'normal' ? a.rise.getTime() : a.date.getTime();
+                const timeB = b.type === 'normal' ? b.rise.getTime() : b.date.getTime();
+                return timeA - timeB;
+            });
+            potentialPeriods = uniquePeriods;
+
+            let currentPeriod = null;
+            let nextPeriod = null;
+
+            for (const period of potentialPeriods) {
+                if (period.type === 'normal' && now.getTime() >= period.rise.getTime() && now.getTime() < period.set.getTime()) {
+                    currentPeriod = period;
+                    break;
+                }
+                if (period.type === 'alwaysUp' &&
+                    now.getFullYear() === period.date.getFullYear() &&
+                    now.getMonth() === period.date.getMonth() &&
+                    now.getDate() === period.date.getDate()) {
+                    currentPeriod = period;
+                    break;
+                }
+            }
+
+            if (!currentPeriod) {
+                for (const period of potentialPeriods) {
+                    if (period.type === 'normal' && period.rise.getTime() > now.getTime()) {
+                        nextPeriod = period;
+                        break;
+                    }
+                    if (period.type !== 'normal' && period.date.getTime() >= now.getTime()) {
+                        nextPeriod = period;
+                        break;
+                    }
+                }
+            }
+
+            container.innerHTML = ''; // 清空載入中訊息
+
+            const displayPeriod = currentPeriod || nextPeriod;
+
+            if (displayPeriod) {
+                let summaryInfo = '';
+                if (displayPeriod.type === 'normal') {
+                    const { rise, set, moonCulmination, isEstimatedCulmination } = displayPeriod;
+                    const risePos = SunCalc.getMoonPosition(rise, LAT, LON);
+                    const setPos = SunCalc.getMoonPosition(set, LAT, LON);
+                    const culminationPos = moonCulmination ? SunCalc.getMoonPosition(moonCulmination, LAT, LON) : null;
+
+                    summaryInfo = `月出 ${getFormattedDate(rise)} ${getFormattedTime(rise)} ${getDirectionAndDegree(risePos.azimuth)}`;
+                    if (moonCulmination) {
+                        summaryInfo += ` | 過中天 ${getFormattedDate(moonCulmination)} ${getFormattedTime(moonCulmination)}${isEstimatedCulmination ? ' (預估)' : ''} ${getDirectionAndDegree(culminationPos.azimuth)}`;
+                    } else {
+                        summaryInfo += ` | 過中天 此週期無中天資訊`;
+                    }
+                    summaryInfo += ` | 月落 ${getFormattedDate(set)} ${getFormattedTime(set)} ${getDirectionAndDegree(setPos.azimuth)}`;
+                    titleElement.innerHTML = `<div class="info-message main-title">${currentPeriod ? '本次' : '下次'}月亮週期：</div>`;
+                } else if (displayPeriod.type === 'alwaysUp') {
+                    let culminationInfo = '';
+                    if (displayPeriod.moonCulmination) {
+                        const culminationPos = SunCalc.getMoonPosition(displayPeriod.moonCulmination, LAT, LON);
+                        culminationInfo = ` (預估中天 ${getFormattedDate(displayPeriod.moonCulmination)} ${getFormattedTime(displayPeriod.moonCulmination)} ${getDirectionAndDegree(culminationPos.azimuth)})`;
+                    }
+                    summaryInfo = `月亮在 ${getFormattedDate(displayPeriod.date)} ${currentPeriod ? '幾乎整日可見' : '整日可見'}${culminationInfo}`;
+                    titleElement.innerHTML = `<div class="info-message main-title">${currentPeriod ? '' : '目前沒有月亮可見，預計'}月亮整日可見：</div>`;
+                } else if (displayPeriod.type === 'alwaysDown') {
+                    summaryInfo = `月亮在 ${getFormattedDate(displayPeriod.date)} 整日不可見。`;
+                    titleElement.innerHTML = `<div class="info-message main-title">${currentPeriod ? '' : '目前沒有月亮可見，預計'}月亮整日不可見：</div>`;
+                }
+
+                container.innerHTML = `<div class='summary-info'>${summaryInfo}</div>`;
+                
+                // 只有 'normal' 和 'alwaysUp' 繪製圖片
+                if (displayPeriod.type === 'normal' || displayPeriod.type === 'alwaysUp') {
+                    renderMoonFrames(container, displayPeriod);
+                }
+
+            } else {
+                titleElement.innerHTML = `<div class="info-message main-title">月相傾斜角度動態模擬</div>`;
+                container.innerHTML = "<div class='info-message'>抱歉，無法找到任何可見的月亮週期資訊。請檢查經緯度或網路連線。</div>";
+            }
+        }
+
+        window.onload = runMoonSimulation;
+    </script>
+
+</body>
+</html>
