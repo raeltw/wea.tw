@@ -1,0 +1,309 @@
+﻿<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- 
+   imageRotationAngle 旋轉的倍率 
+   
+   首先 如果定義英國網站是正確的
+    https://moonphases.co.uk/moon-calendar
+    本來想用氣象局的圖
+    https://www.cwa.gov.tw/Data/astronomy/moon/20250718.jpg
+    搭配 天文台 天文年鑑（出版品）
+    https://tam.gov.taipei/News.aspx?n=89DC897EDC5F95FF&sms=B7D30D34581B9714
+    的 2025年月球表 
+    https://www-ws.gov.taipei/001/Upload/439/relfile/21703/3425086/77066d7d-c094-4fc5-acf9-71a4471084dc.pdf
+    裡的'轉軸傾角'作傾斜
+    實驗結果  '2507 旋轉倍率要兩倍 才對得上
+    但切換到別的月份 就不是*2了
+    2501 02 03 *0 原圖不必旋轉都對得上
+    04 開始跑掉 有點偏右
+    但 05 06 07 08 是偏左
+    09 好像有回去一點
+    10 11 12 又對上了!
+    12 偏右
+    
+    
+    結論 光調這個數字 也沒用!
+    更正 說不定有用 要看實際月相最準!!
+-->    
+
+    <title>月相日曆</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #000; /* 黑色背景 */
+            color: #eee; /* 淺色文字 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #fff;
+        }
+        .input-section {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .input-section label {
+            margin-right: 10px;
+        }
+        .input-section input {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #555;
+            background-color: #333;
+            color: #eee;
+            width: 100px;
+        }
+        .input-section button {
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+        .input-section button:hover {
+            background-color: #0056b3;
+        }
+
+        #calendar-container {
+            width: 90%; /* 調整日曆寬度 */
+            max-width: 960px; /* 最大寬度 */
+            margin-top: 20px;
+            border: 1px solid #444; /* 輕微邊框 */
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .calendar-header {
+            text-align: center;
+            font-size: 2em;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr); /* 7列 */
+            gap: 5px; /* 格子間距 */
+        }
+
+        .weekday {
+            text-align: center;
+            font-weight: bold;
+            padding: 8px 0;
+            background-color: #333; /* 星期背景色 */
+            color: #fff;
+            border: 1px solid #444;
+        }
+
+        .day-box {
+            background-color: #000; /* 日期格子背景 - 黑色 */
+            border: 1px solid #444; /* 日期格子邊框 */
+            display: flex;
+            flex-direction: column; /* 垂直排列 */
+            align-items: center;
+            justify-content: flex-start; /* 內容靠上方對齊 */
+            padding: 5px;
+            min-height: 120px; /* 進一步增加最小高度，確保圖片和文字有足夠空間，並防止重疊 */
+            box-sizing: border-box; /* 確保 padding 和 border 包含在 min-height 內 */
+            text-align: center;
+            color: #eee;
+            font-size: 0.9em;
+            overflow: hidden; /* 防止內容溢出 */
+            position: relative; /* 設置為相對定位，以便子元素的 z-index 生效 */
+        }
+
+        .day-box.empty {
+            /* 隱藏空白格子的背景和邊框，但保留空間 */
+            background-color: transparent; /* 與 body 背景色一致 */
+            border: none;
+        }
+
+        .moon-image {
+            width: 120px; /* 固定圖片大小 */
+            height: 120px; /* 固定圖片大小 */
+            max-width: 100%; /* 確保圖片不會超出父元素寬度 */
+            max-height: 120px; /* 確保圖片不會超出預設高度 */
+            object-fit: contain; /* 確保圖片完整顯示在指定尺寸內 */
+            display: block; /* 移除圖片底部多餘空間 */
+            margin-bottom: 8px; /* 增加圖片和文字間距，避免重疊 */
+            position: relative; /* 設置為相對定位，以便與文字的 z-index 比較 */
+            z-index: 1; /* 圖片圖層在文字下方 (預設值為 auto 或 0) */
+        }
+
+        .day-box span {
+            position: relative; /* 設置為相對定位，以便 z-index 生效 */
+            z-index: 2; /* 文字圖層在圖片上方 */
+            background-color: rgba(0, 0, 0, 0.7); /* 給文字背景增加半透明黑色，確保可讀性 */
+            padding: 2px 5px;
+            border-radius: 3px;
+            margin-top: -5px; /* 微調文字位置，使其更靠近圖片但又不重疊 */
+        }
+    </style>
+</head>
+<body>
+    <h1>月相日曆 以天文台的 轉軸傾角*2 做測試</h1> 
+
+    <div class="input-section">
+        <label for="monthInput">輸入年月 (yyyymm):</label>
+        <input type="text" id="monthInput" maxlength="6" placeholder="例如: 202507">
+        <button onclick="generateCalendar()">處理</button>
+    </div>
+
+    <div id="calendar-container">
+        </div>
+
+    <script>
+        // 你的數據陣列
+        const m2501 = [348.2, 344.1, 341, 339, 338.1, 338.3, 339.6, 342, 345.7, 350.5, 356.2, 2.1, 7.8, 12.6, 16.4, 19.2, 20.9, 21.8, 21.8, 21.1, 19.7, 17.5, 14.4, 10.5, 5.8, 0.5, 355, 349.9, 345.4, 341.9, 339.5];
+        const m2502 = [338.3, 338.2, 339.1, 341.3, 344.6, 349.1, 354.4, 0.3, 6, 11.1, 15.2, 18.3, 20.4, 21.5, 21.9, 21.4, 20.2, 18.3, 15.5, 11.9, 7.5, 2.4, 357.1, 351.9, 347.1, 343.2, 340.4, 338.7];
+        const m2503 = [338.1, 338.7, 340.5, 343.5, 347.7, 352.9, 358.7, 4.5, 9.7, 14.1, 17.5, 19.8, 21.3, 21.9, 21.7, 20.7, 19, 16.4, 13, 8.9, 4.1, 358.9, 353.7, 348.8, 344.7, 341.5, 339.3, 338.2, 338.3, 339.6, 342.2];
+        const m2504 = [346.1, 351.1, 356.9, 2.9, 8.4, 13, 16.7, 19.3, 20.9, 21.8, 21.8, 21.1, 19.5, 17.2, 14, 10, 5.4, 0.3, 355.1, 350.2, 345.9, 342.5, 340, 338.5, 338.1, 338.8, 340.8, 344.2, 348.9, 354.6];
+        const m2505 = [0.7, 6.5, 11.6, 15.6, 18.6, 20.5, 21.6, 21.9, 21.4, 20.1, 17.9, 15, 11.1, 6.6, 1.5, 356.3, 351.3, 346.9, 343.3, 340.6, 338.9, 338.1, 338.4, 339.8, 342.6, 346.7, 351.9, 358, 4.1, 9.7, 14.2];
+        const m2506 = [17.6, 20, 21.4, 21.9, 21.6, 20.6, 18.7, 16, 12.3, 7.9, 2.9, 357.6, 352.5, 347.9, 344, 341.1, 339.2, 338.2, 338.2, 339.3, 341.5, 345, 349.7, 355.5, 1.6, 7.4, 12.4, 16.3, 19.2, 20.9];
+        const m2507 = [21.8, 21.8, 21.1, 19.5, 17, 13.7, 9.5, 4.6, 359.3, 354, 349.1, 344.9, 341.7, 339.5, 338.3, 338.1, 338.9, 340.8, 343.9, 348.2, 353.6, 359.5, 5.3, 10.6, 14.9, 18.2, 20.3, 21.6, 21.9, 21.5, 20.2];
+        const m2508 = [18.1, 15.1, 11.2, 6.5, 1.3, 355.9, 350.8, 346.3, 342.7, 340.1, 338.6, 338.1, 338.6, 340.3, 343.2, 347.2, 352.3, 358, 3.8, 9.1, 13.7, 17.2, 19.7, 21.2, 21.9, 21.7, 20.8, 19, 16.3, 12.7, 8.4];
+        const m2509 = [3.4, 358.1, 352.8, 348, 344, 341, 339, 338.1, 338.3, 339.7, 342.3, 346.2, 351.1, 356.8, 2.6, 8, 12.7, 16.4, 19.1, 20.9, 21.8, 21.9, 21.2, 19.6, 17.3, 14, 10, 5.2, 0.1, 354.9];
+        const m2510 = [350, 345.7, 342.3, 339.8, 338.4, 338.1, 339, 341.2, 344.8, 349.6, 355.3, 1.3, 6.9, 11.8, 15.7, 18.6, 20.6, 21.7, 22, 21.5, 20.2, 18, 15, 11.2, 6.7, 1.7, 356.6, 351.7, 347.3, 343.6, 340.8];
+        const m2511 = [338.9, 338.1, 338.4, 339.9, 342.9, 347.3, 352.9, 359.2, 5.3, 10.6, 14.9, 18.1, 20.2, 21.5, 22, 21.6, 20.5, 18.6, 15.8, 12.2, 7.9, 3.1, 358, 353, 348.5, 344.7, 341.7, 339.5, 338.3, 338.1];
+        const m2512 = [339, 341.2, 344.9, 350, 356.2, 2.6, 8.6, 13.4, 17.1, 19.7, 21.3, 21.9, 21.8, 20.9, 19.2, 16.6, 13.2, 9, 4.3, 359.2, 354.2, 349.6, 345.6, 342.4, 340, 338.5, 338, 338.5, 340.1, 343.1, 347.5];
+
+        const moonData = {
+            m2501: m2501,
+            m2502: m2502,
+            m2503: m2503,
+            m2504: m2504,
+            m2505: m2505,
+            m2506: m2506,
+            m2507: m2507,
+            m2508: m2508,
+            m2509: m2509,
+            m2510: m2510,
+            m2511: m2511,
+            m2512: m2512
+        };
+
+        window.onload = function() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = (today.getMonth() + 1).toString().padStart(2, '0');
+            document.getElementById('monthInput').value = `${year}${month}`;
+            generateCalendar(); // 自動生成當月日曆
+
+            // 為輸入框添加 'keypress' 事件監聽器
+            document.getElementById('monthInput').addEventListener('keypress', function(event) {
+                // 檢查按下的鍵是否是 'Enter' (keyCode 13 或 key 'Enter')
+                if (event.key === 'Enter' || event.keyCode === 13) {
+                    generateCalendar(); // 如果是，則執行生成日曆的函數
+                }
+            });
+        };
+
+        function generateCalendar() {
+            const monthInput = document.getElementById('monthInput').value;
+            const calendarContainer = document.getElementById('calendar-container');
+            calendarContainer.innerHTML = ''; // 清空舊的日曆
+
+            if (!/^\d{6}$/.test(monthInput)) {
+                calendarContainer.innerHTML = '<p style="color: red;">請輸入有效的 YYYYMM 格式 (例如: 202507)。</p>';
+                return;
+            }
+
+            const year = parseInt(monthInput.substring(0, 4));
+            const month = parseInt(monthInput.substring(4, 6)); // 1-12
+
+            if (month < 1 || month > 12) {
+                calendarContainer.innerHTML = '<p style="color: red;">月份輸入無效 (請輸入 01-12)。</p>';
+                return;
+            }
+
+            const date = new Date(year, month - 1, 1); // 月份在Date物件中是0-11
+            const firstDayOfWeek = date.getDay(); // 獲取該月第一天是星期幾 (0=星期日, 1=星期一...)
+            const daysInMonth = new Date(year, month, 0).getDate(); // 獲取該月總天數
+
+            const yearShort = year.toString().substring(2, 4); // 取得年份後兩位 '25'
+            const monthPadded = month.toString().padStart(2, '0'); // 補零，例如 '07'
+
+            // 生成日曆標頭
+            const monthNames = ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"];
+            const header = document.createElement('div');
+            header.className = 'calendar-header';
+            header.textContent = `${year}年 ${monthNames[month - 1]}`;
+            calendarContainer.appendChild(header);
+
+            // 生成星期標頭
+            const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+            const grid = document.createElement('div');
+            grid.className = 'calendar-grid';
+            weekdays.forEach(day => {
+                const weekdayDiv = document.createElement('div');
+                weekdayDiv.className = 'weekday';
+                weekdayDiv.textContent = day;
+                grid.appendChild(weekdayDiv);
+            });
+
+            // 填充空白格子（如果月份第一天不是星期日）
+            for (let i = 0; i < firstDayOfWeek; i++) {
+                const emptyBox = document.createElement('div');
+                emptyBox.className = 'day-box empty'; // 使用 empty class 控制樣式，使其隱藏內容但保留空間
+                grid.appendChild(emptyBox);
+            }
+
+            // 填充日期格子
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayBox = document.createElement('div');
+                dayBox.className = 'day-box';
+
+                const paddedDay = day.toString().padStart(2, '0');
+                const imageDate = `${year}${monthPadded}${paddedDay}`;
+                const imageUrl = `https://www.cwa.gov.tw/Data/astronomy/moon/${imageDate}.jpg`;
+
+                // 獲取原始旋轉角度
+                const arrayName = `m${yearShort}${monthPadded}`;
+                const currentMonthArray = moonData[arrayName]; // 確保這裡正確引用 moonData 物件
+                
+                // 檢查陣列是否存在且索引是否有效
+                const originalAngle = (currentMonthArray && currentMonthArray[day - 1] !== undefined) ? currentMonthArray[day - 1] : 0;
+                // 計算圖片旋轉角度（原始角度的兩倍）
+                const imageRotationAngle = originalAngle * 2;
+
+                // 圖片元素
+                const img = document.createElement('img');
+                img.src = imageUrl;
+                img.alt = `月相 ${imageDate}`;
+                img.className = 'moon-image';
+                img.style.transform = `rotate(${imageRotationAngle}deg)`; // 應用加倍後的旋轉
+
+                // 說明文字 (顯示原始角度)
+                const text = document.createElement('span');
+                text.textContent = `${day} (${originalAngle})`;
+
+                dayBox.appendChild(img);
+                dayBox.appendChild(text);
+                grid.appendChild(dayBox);
+            }
+
+            // 填充月底的空白格子（如果最後一天不是星期六）
+            // 計算日曆總格子數，需要是7的倍數
+            const totalCells = firstDayOfWeek + daysInMonth;
+            const remainingCells = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+
+            for (let i = 0; i < remainingCells; i++) {
+                const emptyBox = document.createElement('div');
+                emptyBox.className = 'day-box empty'; // 使用 empty class 控制樣式，使其隱藏內容但保留空間
+                grid.appendChild(emptyBox);
+            }
+
+            calendarContainer.appendChild(grid);
+        }
+    </script>
+</body>
+</html>
