@@ -93,12 +93,12 @@
                      // 如果 locationsArray 不存在或不是陣列，_tmp1 會保持為空字串，符合你的需求                     
                      //sendmsg('api_dataw',  _tmp1, 0);
                      
-                     var _tmp2='<span';
+                     var _tmp2='<span ';
                      if ( _tmp1.includes("新北") || _tmp1.includes("臺北") || _tmp1.includes("台北") ) {
                         _tmp2=_tmp2+" style='color: #dd0;'";
                      }
                      //_tmp2=_tmp2+" title='"+_tmp1+"'>";
-                     _tmp2=_tmp2+"'>";
+                     _tmp2=_tmp2+">";
          
                      //sendmsg('api_dataw',  ' '+, 0);
                      _tmp2=_tmp2+"<span title='"+_tmp1+"'>";
