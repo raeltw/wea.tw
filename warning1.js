@@ -94,7 +94,7 @@
                      //sendmsg('api_dataw',  _tmp1, 0);
                      
                      var _tmp2='<span ';
-                     if ( _tmp1.includes("新北") || _tmp1.includes("臺北") || _tmp1.includes("台北") ) {
+                     if ( _tmp1.includes("新北") || _tmp1.includes("臺北") || _tmp1.includes("台北") || _tmp1.includes("北海岸")  ) {
                         _tmp2=_tmp2+" style='color: #dd0;'";
                      }
                      //_tmp2=_tmp2+" title='"+_tmp1+"'>";
