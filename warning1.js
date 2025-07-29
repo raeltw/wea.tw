@@ -79,23 +79,36 @@
                      //// sendmsg('api_dataw',  _tmp1, 0);
                      // 有可能沒有 hazards 資料段落 改寫如下
 
-                     var _tmp1 = ' ';
-                     var jj;
-                     // 安全地取得 affectedAreas.location 陣列
-                     const locationsArray = warLocations[ii]?.hazardConditions?.hazards?.hazard?.[0]?.info?.affectedAreas?.location;
-                     // 檢查 locationsArray 是否存在且是一個陣列
-                     if (Array.isArray(locationsArray)) {
-                       for (jj = 0; jj < locationsArray.length; jj++) {
-                         // 再次使用選用串連來安全地存取 locationName，以防陣列元素結構不完整
-                         _tmp1 = _tmp1 + (locationsArray[jj]?.locationName || '') + ' ';
-                       }
-                     }
+                     var _tmp1 = '';
+                     var jj, kk;
+                     const hazardArray = warLocations[ii]?.hazardConditions?.hazards?.hazard;
+                     if (Array.isArray(hazardArray)) {
+                       //window.alert(hazardArray.length);
+                       for (kk = 0; kk < hazardArray.length; kk++) {
+                           _tmp1 = _tmp1 + (hazardArray[kk]?.info?.phenomena || '') + (hazardArray[kk]?.info?.significance	 || '') + ': ';
+                          // 安全地取得 affectedAreas.location 陣列
+                          const locationsArray = hazardArray[kk]?.info?.affectedAreas?.location;
+                          //window.alert(locationsArray.length);
+                          // 檢查 locationsArray 是否存在且是一個陣列
+                          if (Array.isArray(locationsArray)) {
+                            for (jj = 0; jj < locationsArray.length; jj++) {
+                              // 再次使用選用串連來安全地存取 locationName，以防陣列元素結構不完整
+                              _tmp1 = _tmp1 + (locationsArray[jj]?.locationName || '') + ' ';
+                            }
+                            if ( kk < hazardArray.length - 1 ) {
+                              _tmp1 = _tmp1 + '|| ';
+                            }
+                          }
+                        }
+                      }
                      // 如果 locationsArray 不存在或不是陣列，_tmp1 會保持為空字串，符合你的需求                     
                      //sendmsg('api_dataw',  _tmp1, 0);
                      
                      var _tmp2='<span ';
                      if ( _tmp1.includes("新北") || _tmp1.includes("臺北") || _tmp1.includes("台北") || _tmp1.includes("北海岸")  ) {
                         _tmp2=_tmp2+" style='color: #dd0;'";
+                     } else {
+                        _tmp2=_tmp2+" style='color: #777;'";
                      }
                      //_tmp2=_tmp2+" title='"+_tmp1+"'>";
                      _tmp2=_tmp2+">";
@@ -160,5 +173,3 @@ function modistr1(_str1) {
 
   return result;
 }
-
-f
