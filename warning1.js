@@ -106,7 +106,7 @@
                      
                      var _tmp2='<span ';
                      if ( _tmp1.includes("新北") || _tmp1.includes("臺北") || _tmp1.includes("台北") || _tmp1.includes("北海岸")  ) {
-                        _tmp2=_tmp2+" style='color: #dd0;'";
+                        //_tmp2=_tmp2+" style='color: #dd0;'";
                      } else {
                         _tmp2=_tmp2+" style='color: #777;'";
                      }
