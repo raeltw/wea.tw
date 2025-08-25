@@ -61,8 +61,8 @@
                      
                      var _tmp1='';
                      sendmsg('api_dataa',  '觀測地點: '+airLocations[ii].county+" "+airLocations[ii].sitename, 1);
-                     sendmsg('api_dataa',  '空氣品質指標值: '+airLocations[ii].aqi, 1);
                      sendmsg('api_dataa',  '狀態: '+airLocations[ii].status, 1);
+                     sendmsg('api_dataa',  '空氣品質指標值: '+airLocations[ii].aqi, 1);
                      //if 
                      if ( airLocations[ii].pollutant.length> 0 ) {
                         sendmsg('api_dataa',  '空氣污染指標物: '+airLocations[ii].pollutant, 1);
