@@ -267,6 +267,45 @@
                 w11chart();
                 writedh('Chart7', 'xaxis7d', 'U', _dt0, 0, +40);
                 writeicon('Chart7', 'xicon7d', _dt0, _wc0, 38, _weat7, 0, 0);
+
+// 260710 日期標籤變色（不預設顏色，僅特定星期變色）
+                ((savedDt0) => {
+                    setTimeout(() => {
+                        const xAxisContainer = document.getElementById('xaxis7d');
+                        if (xAxisContainer) {
+                            const dateLabels = xAxisContainer.children;
+                            for (let idx = 0; idx < savedDt0.length; idx++) {
+                                if (!dateLabels[idx]) break;
+                                
+                                const rawDateStr = savedDt0[idx];
+                                if (typeof rawDateStr === 'string' && rawDateStr.length >= 13) {
+                                    const formattedDateStr = rawDateStr.substring(0, 10) + ' ' + rawDateStr.substring(11, 13) + ':00';
+                                    const d = new Date(formattedDateStr);
+                                    
+                                    if (!isNaN(d.getTime())) {
+                                        const dateSpan = dateLabels[idx].querySelector('.line2');
+                                        if (dateSpan) {
+                                            const dateText = dateSpan.textContent.trim();
+                                            if (dateText && dateText !== ' ') {
+                                                const dayOfWeek = d.getDay();
+                                                
+                                                // 只有符合特定星期才主動上色，其餘情況完全不設定 style.color
+                                                if (dayOfWeek === 0) {
+                                                    dateSpan.style.color = '#ff0000'; // 週日：紅色
+                                                } else if (dayOfWeek === 6) {
+                                                    dateSpan.style.color = '#dd33aa'; // 週六：粉紫
+                                                } else if (dayOfWeek === 1 || dayOfWeek === 4) {
+                                                    dateSpan.style.color = '#84DBD1'; // 週一、週四：青綠色
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }, 50);
+                })([..._dt0]); 
+// ======================================
     
                 //不要浪費記憶體
                 //sendmsg('1warea', '(完整數據請按[F12]至Console頁面查看)<br />');
