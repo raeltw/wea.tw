@@ -295,7 +295,7 @@
                                                 } else if (dayOfWeek === 6) {
                                                     dateSpan.style.color = '#dd33aa'; // 週六：粉紫
                                                 } else if (dayOfWeek === 1 || dayOfWeek === 4) {
-                                                    dateSpan.style.color = '#84DBD1'; // 週一、週四：青綠色
+                                                    dateSpan.style.color = '#00CC00'; // 週一、週四：青綠色
                                                 }
                                             }
                                         }
