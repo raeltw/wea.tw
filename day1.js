@@ -35,7 +35,7 @@
   // 表頭 7 個欄位（最左與最右為 4px 空欄位）
   const headers = [
     { isPaddingCol: true }, // 左邊凸出 4px 欄位
-    { text: '注意', align: 'left' },
+    { text: '*注意', align: 'left' },
     { text: '日數', align: 'right', paddingRight: '20px' },
     { text: '日期', align: 'left', paddingRight: '20px' },
     { text: '折點', align: 'left' },
